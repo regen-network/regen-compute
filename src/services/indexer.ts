@@ -1,8 +1,10 @@
 /**
  * Regen Indexer GraphQL client
  *
- * Queries retirement certificates and aggregate statistics
- * from the Regen Network indexer.
+ * Queries retirement certificates, marketplace orders, and aggregate statistics
+ * from the Regen Network indexer at api.regen.network/indexer/v1/graphql.
+ *
+ * Schema discovered via introspection on 2026-02-18.
  */
 
 const REGEN_INDEXER_URL =
@@ -40,63 +42,177 @@ async function queryGraphQL<T>(
   return result.data;
 }
 
-export interface RetirementCertificate {
+// --- Retirement types and queries ---
+
+export interface Retirement {
   nodeId: string;
-  owner: string;
+  type: string;
   amount: string;
   batchDenom: string;
   jurisdiction: string;
+  owner: string;
   reason: string;
-  timestamp: string;
+  timestamp: string | null;
   txHash: string;
+  blockHeight: string;
+  chainNum: number;
 }
 
-export async function getRetirement(
-  retirementId: string
-): Promise<RetirementCertificate | null> {
-  // TODO: Refine query based on actual indexer schema
+export async function getRetirementByTxHash(
+  txHash: string
+): Promise<Retirement | null> {
   const query = `
-    query GetRetirement($id: String!) {
-      retirementByNodeId(nodeId: $id) {
-        nodeId
-        owner
-        amount
-        batchDenom
-        jurisdiction
-        reason
-        timestamp
-        txHash
+    query GetRetirementByTx($hash: String!) {
+      txByHash(hash: $hash) {
+        retirementsByChainNumAndBlockHeightAndTxIdx(first: 1) {
+          nodes {
+            nodeId
+            type
+            amount
+            batchDenom
+            jurisdiction
+            owner
+            reason
+            timestamp
+            txHash
+            blockHeight
+            chainNum
+          }
+        }
+      }
+    }
+  `;
+
+  // Try lookup by tx hash first
+  try {
+    const data = await queryGraphQL<{
+      txByHash: {
+        retirementsByChainNumAndBlockHeightAndTxIdx: {
+          nodes: Retirement[];
+        };
+      } | null;
+    }>(query, { hash: txHash });
+
+    const nodes =
+      data.txByHash?.retirementsByChainNumAndBlockHeightAndTxIdx?.nodes;
+    return nodes?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getRecentRetirements(
+  count: number = 5
+): Promise<Retirement[]> {
+  const query = `
+    query RecentRetirements($count: Int!) {
+      allRetirements(first: $count, orderBy: BLOCK_HEIGHT_DESC) {
+        nodes {
+          nodeId
+          type
+          amount
+          batchDenom
+          jurisdiction
+          owner
+          reason
+          timestamp
+          txHash
+          blockHeight
+          chainNum
+        }
       }
     }
   `;
 
   const data = await queryGraphQL<{
-    retirementByNodeId: RetirementCertificate | null;
-  }>(query, { id: retirementId });
-  return data.retirementByNodeId;
+    allRetirements: { nodes: Retirement[] };
+  }>(query, { count });
+  return data.allRetirements.nodes;
 }
 
 export interface RetirementStats {
-  totalRetired: string;
   totalRetirements: number;
 }
 
 export async function getRetirementStats(): Promise<RetirementStats> {
-  // TODO: Refine query based on actual indexer schema
   const query = `
     query RetirementStats {
-      retirements {
+      allRetirements(first: 0) {
         totalCount
       }
     }
   `;
 
   const data = await queryGraphQL<{
-    retirements: { totalCount: number };
+    allRetirements: { totalCount: number };
   }>(query);
 
   return {
-    totalRetired: "1400000", // TODO: compute from actual aggregation
-    totalRetirements: data.retirements.totalCount,
+    totalRetirements: data.allRetirements.totalCount,
   };
+}
+
+// --- Order (marketplace purchase) types and queries ---
+
+export interface MarketplaceOrder {
+  nodeId: string;
+  type: string;
+  creditsAmount: string;
+  projectId: string;
+  buyerAddress: string;
+  totalPrice: string;
+  askDenom: string;
+  retiredCredits: boolean;
+  retirementReason: string | null;
+  retirementJurisdiction: string | null;
+  txHash: string;
+  timestamp: string | null;
+  blockHeight: string;
+}
+
+export async function getRecentOrders(
+  count: number = 10
+): Promise<MarketplaceOrder[]> {
+  const query = `
+    query RecentOrders($count: Int!) {
+      allOrders(first: $count, orderBy: BLOCK_HEIGHT_DESC) {
+        nodes {
+          nodeId
+          type
+          creditsAmount
+          projectId
+          buyerAddress
+          totalPrice
+          askDenom
+          retiredCredits
+          retirementReason
+          retirementJurisdiction
+          txHash
+          timestamp
+          blockHeight
+        }
+      }
+    }
+  `;
+
+  const data = await queryGraphQL<{
+    allOrders: { nodes: MarketplaceOrder[] };
+  }>(query, { count });
+  return data.allOrders.nodes;
+}
+
+export async function getOrderStats(): Promise<{ totalOrders: number }> {
+  const query = `
+    query OrderStats {
+      allOrders(first: 0) {
+        totalCount
+      }
+    }
+  `;
+
+  const data = await queryGraphQL<{
+    allOrders: { totalCount: number };
+  }>(query);
+
+  return { totalOrders: data.allOrders.totalCount };
 }

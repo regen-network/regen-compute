@@ -1,8 +1,9 @@
-import { getRetirement } from "../services/indexer.js";
+import { getRetirementByTxHash, getRecentRetirements } from "../services/indexer.js";
 
 export async function getRetirementCertificate(retirementId: string) {
   try {
-    const retirement = await getRetirement(retirementId);
+    // Try looking up by tx hash first, fall back to recent retirements search
+    const retirement = await getRetirementByTxHash(retirementId);
 
     if (!retirement) {
       return {
@@ -27,6 +28,7 @@ export async function getRetirementCertificate(retirementId: string) {
       `| Jurisdiction | ${retirement.jurisdiction} |`,
       `| Reason | ${retirement.reason || "Ecological regeneration"} |`,
       `| Timestamp | ${retirement.timestamp} |`,
+      `| Block Height | ${retirement.blockHeight} |`,
       `| Transaction Hash | ${retirement.txHash} |`,
       ``,
       `**On-chain verification**: This retirement is permanently recorded on Regen Ledger and cannot be altered or reversed.`,

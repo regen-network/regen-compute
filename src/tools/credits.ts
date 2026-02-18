@@ -3,6 +3,7 @@ import {
   listSellOrders,
   listProjects,
 } from "../services/ledger.js";
+import { getRecentOrders } from "../services/indexer.js";
 
 // Map credit type abbreviations to human-readable names
 const CREDIT_TYPE_NAMES: Record<string, string> = {
@@ -18,10 +19,11 @@ export async function browseAvailableCredits(
   maxResults: number
 ) {
   try {
-    const [classes, sellOrders, projects] = await Promise.all([
+    const [classes, sellOrders, projects, recentOrders] = await Promise.all([
       listCreditClasses(),
-      listSellOrders().catch(() => []), // Gracefully handle if marketplace API is down
+      listSellOrders().catch(() => []),
       listProjects(),
+      getRecentOrders(5).catch(() => []),
     ]);
 
     // Filter classes by credit type if specified
@@ -60,6 +62,22 @@ export async function browseAvailableCredits(
     lines.push(`| Carbon credits | ~2,000 | ~$40/credit |`);
     lines.push(`| Biodiversity credits | ~80,000 | ~$26/credit |`);
     lines.push(``);
+
+    // Recent marketplace activity from the indexer
+    if (recentOrders.length > 0) {
+      lines.push(`### Recent Marketplace Orders`);
+      lines.push(`| Project | Credits | Total Price | Retired? |`);
+      lines.push(`|---------|---------|-------------|----------|`);
+      for (const order of recentOrders) {
+        const price = order.totalPrice
+          ? `${order.totalPrice} ${order.askDenom}`
+          : "N/A";
+        lines.push(
+          `| ${order.projectId} | ${order.creditsAmount} | ${price} | ${order.retiredCredits ? "Yes" : "No"} |`
+        );
+      }
+      lines.push(``);
+    }
 
     // List credit classes with project counts
     lines.push(`### Credit Classes`);

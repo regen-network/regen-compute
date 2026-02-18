@@ -1,17 +1,18 @@
 import { listCreditClasses, listProjects } from "../services/ledger.js";
-import { getRetirementStats } from "../services/indexer.js";
+import { getRetirementStats, getOrderStats } from "../services/indexer.js";
 
 export async function getImpactSummary() {
   try {
-    const [classes, projects, retirementStats] = await Promise.all([
+    const [classes, projects, retirementStats, orderStats] = await Promise.all([
       listCreditClasses(),
       listProjects(),
       getRetirementStats().catch(() => null),
+      getOrderStats().catch(() => null),
     ]);
 
     const jurisdictions = [...new Set(projects.map((p) => p.jurisdiction))];
 
-    const text = [
+    const lines = [
       `## Regen Network Ecological Impact`,
       ``,
       `### On-Chain Statistics`,
@@ -20,6 +21,20 @@ export async function getImpactSummary() {
       `| Credit classes | ${classes.length} |`,
       `| Active projects | ${projects.length} |`,
       `| Jurisdictions | ${jurisdictions.length} countries/regions |`,
+    ];
+
+    if (retirementStats) {
+      lines.push(
+        `| Total retirements on-chain | ${retirementStats.totalRetirements.toLocaleString()} |`
+      );
+    }
+    if (orderStats) {
+      lines.push(
+        `| Total marketplace orders | ${orderStats.totalOrders.toLocaleString()} |`
+      );
+    }
+
+    lines.push(
       `| Credits issued | ~6.1 million |`,
       `| Credits retired | ~1.4 million (~23%) |`,
       `| Hectares under stewardship | 420,000+ |`,
@@ -39,10 +54,10 @@ export async function getImpactSummary() {
       `- **Multiple ecosystems**: Carbon, biodiversity, soil, marine — holistic regeneration`,
       `- **Direct impact**: Credits fund real projects with verified ecological outcomes`,
       ``,
-      `Browse and retire credits at [registry.regen.network](https://registry.regen.network)`,
-    ].join("\n");
+      `Browse and retire credits at [registry.regen.network](https://registry.regen.network)`
+    );
 
-    return { content: [{ type: "text" as const, text }] };
+    return { content: [{ type: "text" as const, text: lines.join("\n") }] };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";
