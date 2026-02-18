@@ -9,9 +9,9 @@ import { getRecentOrders } from "../services/indexer.js";
 const CREDIT_TYPE_NAMES: Record<string, string> = {
   C: "Carbon",
   BT: "Biodiversity (Terrasos)",
-  KSH: "Kashmere Stewardship",
+  KSH: "Kilo-Sheep-Hour",
   MBS: "Marine Biodiversity Stewardship",
-  USS: "Unstructured Soil Stewardship",
+  USS: "Umbrella Species Stewardship",
 };
 
 export async function browseAvailableCredits(
@@ -47,6 +47,20 @@ export async function browseAvailableCredits(
       projectsByClass.set(project.class_id, existing);
     }
 
+    // Aggregate sell order data by credit type
+    const classLookup = new Map(classes.map((c) => [c.id, c]));
+    const sellOrdersByType = new Map<string, { quantity: number; count: number }>();
+    for (const order of sellOrders) {
+      // batch_denom format: C01-001-... → class is the prefix before first dash-digit
+      const classId = order.batch_denom.replace(/-\d.*$/, "");
+      const cls = classLookup.get(classId);
+      const typeAbbrev = cls?.credit_type_abbrev || "Other";
+      const existing = sellOrdersByType.get(typeAbbrev) || { quantity: 0, count: 0 };
+      existing.quantity += parseFloat(order.quantity) || 0;
+      existing.count += 1;
+      sellOrdersByType.set(typeAbbrev, existing);
+    }
+
     const lines: string[] = [
       `## Available Ecocredits on Regen Network`,
       ``,
@@ -55,13 +69,17 @@ export async function browseAvailableCredits(
       ``,
     ];
 
-    // Current marketplace snapshot
-    lines.push(`### Marketplace Snapshot`);
-    lines.push(`| Credit Type | Approx. Available | Approx. Price |`);
-    lines.push(`|-------------|-------------------|---------------|`);
-    lines.push(`| Carbon credits | ~2,000 | ~$40/credit |`);
-    lines.push(`| Biodiversity credits | ~80,000 | ~$26/credit |`);
-    lines.push(``);
+    // Live marketplace snapshot from sell orders
+    if (sellOrdersByType.size > 0) {
+      lines.push(`### Marketplace Snapshot (Live)`);
+      lines.push(`| Credit Type | Available Credits | Sell Orders |`);
+      lines.push(`|-------------|-------------------|-------------|`);
+      for (const [abbrev, stats] of sellOrdersByType) {
+        const name = CREDIT_TYPE_NAMES[abbrev] || abbrev;
+        lines.push(`| ${name} | ${stats.quantity.toLocaleString(undefined, { maximumFractionDigits: 1 })} | ${stats.count} |`);
+      }
+      lines.push(``);
+    }
 
     // Recent marketplace activity from the indexer
     if (recentOrders.length > 0) {

@@ -13,7 +13,7 @@ Read `docs/analysis.md` for the full business analysis. Key points:
 - **Problem**: Regen Network's REGEN token burn mechanics depend on ecocredit retirement volume, which is currently low. The demand-side flywheel is missing.
 - **Solution**: AI compute users become the demand engine. Subscriptions → credit purchases → retirements → REGEN burns. Outside capital enters the system.
 - **Framing**: This is "regenerative contribution," NOT "carbon offset." We fund verified ecological regeneration. We do not claim carbon neutrality. This distinction is strategic and legal.
-- **Marketplace state**: ~2,000 carbon credits @ ~$40, ~80,000 biodiversity credits @ ~$26, credit card purchases live, retirement certificates exist on-chain.
+- **Marketplace state**: Live sell order data served dynamically. Credit card purchases live, retirement certificates exist on-chain.
 
 ## Tech Stack
 
@@ -29,18 +29,25 @@ Read `docs/analysis.md` for the full business analysis. Key points:
 
 ```
 src/
-├── index.ts              # MCP server entry point, tool registration
+├── index.ts              # MCP server entry point, tool/prompt registration, server instructions
 ├── tools/
 │   ├── footprint.ts      # estimate_session_footprint tool
-│   ├── credits.ts        # browse_available_credits tool
-│   ├── certificates.ts   # get_retirement_certificate tool
+│   ├── credits.ts        # browse_available_credits tool (live sell order aggregation)
+│   ├── certificates.ts   # get_retirement_certificate tool (nodeId + txHash lookup)
 │   ├── impact.ts         # get_impact_summary tool
 │   └── retire.ts         # retire_credits tool (marketplace link)
 ├── services/
-│   ├── ledger.ts         # Regen Ledger REST client
-│   ├── indexer.ts        # Regen Indexer GraphQL client
+│   ├── ledger.ts         # Regen Ledger REST client (lcd-regen.keplr.app)
+│   ├── indexer.ts        # Regen Indexer GraphQL client (api.regen.network)
 │   └── estimator.ts      # Footprint estimation heuristics
 ```
+
+## MCP Features
+
+- **Server instructions**: Detailed guidance for when/why to use this server, injected into model system prompt
+- **Tool annotations**: All tools marked `readOnlyHint: true`, `destructiveHint: false`
+- **Prompt templates**: `offset_my_session` (footprint → browse → retire workflow), `show_regen_impact` (network stats)
+- **Live data**: Marketplace snapshot computed from real sell orders, not hardcoded
 
 ## Build Phases
 
@@ -63,12 +70,15 @@ src/
 - Projects: `GET /regen/ecocredit/v1/projects`
 - Batches: `GET /regen/ecocredit/v1/batches`
 - Sell orders: `GET /regen/ecocredit/marketplace/v1/sell-orders`
-- Credit types on-chain: C (carbon), BT (biodiversity - Terrasos), KSH, MBS, USS
+- Credit types on-chain: C (carbon), BT (biodiversity - Terrasos), KSH (Kilo-Sheep-Hour), MBS (Marine Biodiversity Stewardship), USS (Umbrella Species Stewardship)
+- Default LCD endpoint: `lcd-regen.keplr.app` (stavr.tech was unreliable)
+- Indexer GraphQL supports `condition` arg (not `filter`) for field-level queries
+- `txByHash` returns null — use `allRetirements(condition: { txHash: ... })` instead
 
 ## Conventions
 
 - Use ESM imports (`import`, not `require`)
 - Prefer `fetch` (native in Node 20) over axios/node-fetch
 - Error handling: throw typed errors, let MCP SDK handle serialization
-- Keep tool descriptions concise — Claude reads them as context
+- Tool descriptions should include trigger language ("Use this when...") — Claude reads them as context
 - Config via environment variables (dotenv in dev, system env in production)

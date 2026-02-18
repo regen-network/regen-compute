@@ -7,15 +7,44 @@ import { getRetirementCertificate } from "./tools/certificates.js";
 import { getImpactSummary } from "./tools/impact.js";
 import { retireCredits } from "./tools/retire.js";
 
-const server = new McpServer({
-  name: "regen-compute-credits",
-  version: "0.1.0",
-});
+const server = new McpServer(
+  {
+    name: "regen-compute-credits",
+    version: "0.1.0",
+  },
+  {
+    instructions: [
+      "Regen Compute Credits connects AI compute usage to verified ecological credit retirement on Regen Network.",
+      "",
+      "USE THIS SERVER WHEN:",
+      "- The user asks about the environmental or ecological impact of their AI usage",
+      "- The user wants to offset, compensate, or account for their AI session's carbon footprint",
+      "- The user asks about ecological credits, carbon credits, or biodiversity credits on Regen Network",
+      "- The user wants to retire ecocredits or fund ecological regeneration",
+      "- The user asks about Regen Network's impact, projects, or retirement certificates",
+      "- The user mentions sustainability, climate action, or regenerative ecology in the context of AI",
+      "",
+      "KEY CONCEPTS:",
+      "- This is 'regenerative contribution,' NOT 'carbon offset.' We fund verified ecological regeneration.",
+      "- Credits are retired on-chain on Regen Ledger — immutable, verifiable, non-reversible.",
+      "- No crypto wallet needed. Purchase via credit card on Regen Marketplace.",
+      "- Credit types: Carbon (C), Biodiversity/Terrasos (BT), Kilo-Sheep-Hour (KSH), Marine Biodiversity (MBS), Umbrella Species Stewardship (USS).",
+      "",
+      "TYPICAL WORKFLOW:",
+      "1. estimate_session_footprint — see the ecological cost of this AI session",
+      "2. browse_available_credits — explore what credits are available",
+      "3. retire_credits — get a purchase link to retire credits via credit card",
+      "4. get_retirement_certificate — verify an on-chain retirement",
+      "",
+      "All tools in this server are read-only and safe to call at any time.",
+    ].join("\n"),
+  }
+);
 
 // Tool: Estimate the ecological footprint of the current AI session
 server.tool(
   "estimate_session_footprint",
-  "Estimates the approximate ecological footprint of your current AI session based on duration and activity heuristics. Returns estimated energy consumption (kWh), CO2 equivalent (kg), and suggested credit retirement quantity. This is a directional estimate, not a precise measurement.",
+  "Estimates the ecological footprint of the current AI session. Use this when the user asks about the environmental cost of their AI usage, wants to know their carbon footprint, or is considering offsetting their compute impact. Returns energy consumption (kWh), CO2 equivalent (kg), and suggested credit retirement quantity. The estimate is heuristic-based and clearly labeled as approximate.",
   {
     session_minutes: z
       .number()
@@ -23,7 +52,13 @@ server.tool(
     tool_calls: z
       .number()
       .optional()
-      .describe("Number of tool calls made in session (improves estimate)"),
+      .describe("Number of tool calls made in session (improves estimate accuracy)"),
+  },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
   },
   async ({ session_minutes, tool_calls }) => {
     return estimateSessionFootprint(session_minutes, tool_calls);
@@ -33,18 +68,24 @@ server.tool(
 // Tool: Browse available ecocredits on Regen Marketplace
 server.tool(
   "browse_available_credits",
-  "Lists ecocredits currently available for purchase on Regen Network marketplace. Includes carbon credits, biodiversity credits, and other ecological credit types with pricing and project details.",
+  "Lists ecocredits currently available for purchase on Regen Network marketplace. Use this when the user asks what credits exist, wants to compare carbon vs. biodiversity credits, or is exploring options before retiring. Shows live sell orders, recent marketplace activity, credit classes, and project details.",
   {
     credit_type: z
       .enum(["carbon", "biodiversity", "all"])
       .optional()
       .default("all")
-      .describe("Filter by credit type"),
+      .describe("Filter by credit type: 'carbon' for CO2 credits, 'biodiversity' for ecological stewardship credits, 'all' for everything"),
     max_results: z
       .number()
       .optional()
       .default(10)
-      .describe("Maximum number of results to return"),
+      .describe("Maximum number of credit classes to return"),
+  },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
   },
   async ({ credit_type, max_results }) => {
     return browseAvailableCredits(credit_type, max_results);
@@ -54,11 +95,17 @@ server.tool(
 // Tool: Get a verifiable retirement certificate
 server.tool(
   "get_retirement_certificate",
-  "Retrieves a verifiable ecocredit retirement certificate from Regen Network. Shows the project funded, credits retired, beneficiary, and on-chain transaction proof.",
+  "Retrieves a verifiable ecocredit retirement certificate from Regen Network. Use this when the user has a retirement transaction hash or certificate ID and wants to verify it, or when showing proof of a completed retirement. Returns the project funded, credits retired, beneficiary, jurisdiction, and on-chain transaction proof.",
   {
     retirement_id: z
       .string()
-      .describe("The retirement ID or transaction hash to look up"),
+      .describe("The retirement certificate nodeId (starts with 'Wy') or the on-chain transaction hash"),
+  },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
   },
   async ({ retirement_id }) => {
     return getRetirementCertificate(retirement_id);
@@ -68,8 +115,14 @@ server.tool(
 // Tool: Get aggregate impact summary
 server.tool(
   "get_impact_summary",
-  "Shows aggregate ecological impact statistics from Regen Network — total credits retired, projects funded, hectares under stewardship, and credit types available.",
+  "Shows aggregate ecological impact statistics from Regen Network. Use this when the user asks about the overall scale of Regen Network, wants context on how many credits have been retired network-wide, or needs background on available credit types and project coverage. Returns live on-chain counts of retirements, orders, projects, and jurisdictions.",
   {},
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
   async () => {
     return getImpactSummary();
   }
@@ -78,7 +131,7 @@ server.tool(
 // Tool: Retire credits via Regen Marketplace
 server.tool(
   "retire_credits",
-  "Generates a link to retire ecocredits on Regen Network marketplace via credit card. Credits are permanently retired on-chain with your name as beneficiary, and you receive a verifiable retirement certificate. No crypto wallet needed.",
+  "Generates a link to retire ecocredits on Regen Network marketplace via credit card. Use this when the user wants to take action — offset their footprint, fund ecological regeneration, or retire credits for any reason. Credits are permanently retired on-chain with the user's name as beneficiary. No crypto wallet needed. Returns a direct marketplace link and step-by-step instructions.",
   {
     credit_class: z
       .string()
@@ -95,8 +148,80 @@ server.tool(
       .optional()
       .describe("Name to appear on the retirement certificate"),
   },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
   async ({ credit_class, quantity, beneficiary_name }) => {
     return retireCredits(credit_class, quantity, beneficiary_name);
+  }
+);
+
+// Prompt: Offset my AI session
+server.prompt(
+  "offset_my_session",
+  "Estimate the ecological footprint of your current AI session and get a link to retire ecocredits to fund regeneration.",
+  {
+    session_minutes: z
+      .string()
+      .describe("How long this session has been running, in minutes"),
+    tool_calls: z
+      .string()
+      .optional()
+      .describe("Approximate number of tool calls made this session"),
+  },
+  ({ session_minutes, tool_calls }) => {
+    const mins = session_minutes || "30";
+    const calls = tool_calls ? `, and approximately ${tool_calls} tool calls have been made` : "";
+    return {
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: [
+              `I'd like to understand and offset the ecological footprint of this AI session.`,
+              `This session has been running for about ${mins} minutes${calls}.`,
+              ``,
+              `Please:`,
+              `1. Use estimate_session_footprint to calculate my session's footprint`,
+              `2. Use browse_available_credits to show me what credits are available`,
+              `3. Use retire_credits to give me a link to retire enough credits to cover my session's impact`,
+              ``,
+              `Frame this as funding ecological regeneration, not just carbon offsetting.`,
+            ].join("\n"),
+          },
+        },
+      ],
+    };
+  }
+);
+
+// Prompt: Show Regen Network impact
+server.prompt(
+  "show_regen_impact",
+  "See the aggregate ecological impact of Regen Network — retirements, projects, credit types, and global coverage.",
+  async () => {
+    return {
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: [
+              `Show me the ecological impact of Regen Network.`,
+              ``,
+              `Please use get_impact_summary to pull live on-chain statistics,`,
+              `then summarize the scale of ecological regeneration happening on the network.`,
+              `Include how many credits have been retired, how many projects are active,`,
+              `and what types of ecological credits are available.`,
+            ].join("\n"),
+          },
+        },
+      ],
+    };
   }
 );
 

@@ -1,29 +1,52 @@
 {
   "name": "regen-compute-credits",
   "version": "0.1.0",
-  "description": "An MCP agent that funds verified ecological regeneration from AI compute usage via Regen Network",
+  "description": "MCP server that connects AI compute usage to verified ecological credit retirement on Regen Network. Estimate your session footprint, browse carbon and biodiversity credits, and retire them on-chain via credit card.",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "regen-compute-credits": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const f='dist/index.js';const c=require('fs').readFileSync(f,'utf8');if(!c.startsWith('#!'))require('fs').writeFileSync(f,'#!/usr/bin/env node\\n'+c)\"",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
     "regen-network",
     "ecological-credits",
-    "ai-compute",
+    "ecocredits",
     "carbon-credits",
-    "biodiversity",
-    "climate"
+    "biodiversity-credits",
+    "carbon-offset",
+    "ai-compute",
+    "sustainability",
+    "climate",
+    "regeneration",
+    "claude",
+    "claude-code",
+    "cursor"
   ],
+  "author": "CShear",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/CShear/regen-compute-credits#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/regen-network/regen-compute-credits"
+    "url": "git+https://github.com/CShear/regen-compute-credits.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CShear/regen-compute-credits/issues"
   },
   "engines": {
     "node": ">=20.0.0"

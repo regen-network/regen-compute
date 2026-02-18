@@ -46,11 +46,7 @@ export async function retireCredits(
   lines.push(`4. Your name appears as beneficiary on the on-chain retirement certificate`);
   lines.push(`5. Credits are permanently retired — verifiable, immutable, non-reversible`);
   lines.push(``);
-  lines.push(`### Current Pricing`);
-  lines.push(`| Type | Price | Available |`);
-  lines.push(`|------|-------|-----------|`);
-  lines.push(`| Carbon credits | ~$40/credit | ~2,000 |`);
-  lines.push(`| Biodiversity credits | ~$26/credit | ~80,000 |`);
+  lines.push(`Use \`browse_available_credits\` to see current pricing and availability.`);
   lines.push(``);
   lines.push(`After retiring, use \`get_retirement_certificate\` to retrieve your verifiable certificate.`);
 
