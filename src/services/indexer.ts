@@ -96,7 +96,7 @@ export async function getRetirementById(
     `;
     const data = await queryGraphQL<{
       allRetirements: { nodes: Retirement[] };
-    }>(query, { hash: id });
+    }>(query, { hash: id.toLowerCase() });
     return data.allRetirements.nodes[0] ?? null;
   } catch {
     return null;
