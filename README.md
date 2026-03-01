@@ -1,6 +1,6 @@
 # Regen for AI
 
-**Add Regenerative AI to your Claude Code in 30 seconds.**
+**Add Regenerative AI to your AI coding assistant in 30 seconds.**
 
 [![npm version](https://img.shields.io/npm/v/regen-for-ai)](https://www.npmjs.com/package/regen-for-ai)
 [![CI](https://github.com/CShear/regen-for-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/CShear/regen-for-ai/actions/workflows/ci.yml)
@@ -19,21 +19,172 @@ claude mcp add -s user regen-for-ai -- npx regen-for-ai
 
 That's it. Works immediately — no API keys, no wallet, no configuration needed for read-only tools.
 
-### Other MCP clients (Cursor, Windsurf, etc.)
+### Supported Platforms
 
-Add to your MCP config:
+<details>
+<summary><b>Cursor</b></summary>
+
+Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project):
 
 ```json
 {
   "mcpServers": {
     "regen-for-ai": {
-      "type": "stdio",
       "command": "npx",
       "args": ["regen-for-ai"]
     }
   }
 }
 ```
+
+Restart Cursor. Tools appear in Cursor's AI chat.
+
+</details>
+
+<details>
+<summary><b>Windsurf</b></summary>
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "regen-for-ai": {
+      "command": "npx",
+      "args": ["regen-for-ai"]
+    }
+  }
+}
+```
+
+Open Windsurf Settings > Cascade > MCP Servers to verify the connection.
+
+</details>
+
+<details>
+<summary><b>VS Code (GitHub Copilot)</b></summary>
+
+Add to `.vscode/mcp.json` in your workspace:
+
+```json
+{
+  "servers": {
+    "regen-for-ai": {
+      "command": "npx",
+      "args": ["regen-for-ai"]
+    }
+  }
+}
+```
+
+Requires VS Code 1.99+ with GitHub Copilot. Tools are available in Agent mode.
+
+</details>
+
+<details>
+<summary><b>JetBrains (IntelliJ, WebStorm, PyCharm, etc.)</b></summary>
+
+Go to **Settings > Tools > AI Assistant > Model Context Protocol (MCP)**, click **+**, and paste:
+
+```json
+{
+  "mcpServers": {
+    "regen-for-ai": {
+      "command": "npx",
+      "args": ["regen-for-ai"]
+    }
+  }
+}
+```
+
+Requires a JetBrains AI Assistant subscription.
+
+</details>
+
+<details>
+<summary><b>Gemini CLI</b></summary>
+
+Add to `~/.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "regen-for-ai": {
+      "command": "npx",
+      "args": ["regen-for-ai"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Continue.dev</b></summary>
+
+Create `.continue/mcpServers/regen-for-ai.yaml` in your workspace:
+
+```yaml
+name: Regen for AI
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: regen-for-ai
+    type: stdio
+    command: npx
+    args:
+      - "regen-for-ai"
+```
+
+Note: MCP tools are only available in Continue's agent mode.
+
+</details>
+
+<details>
+<summary><b>Sourcegraph Cody</b></summary>
+
+Cody uses the OpenCtx bridge, which requires a local file path (not npx). Install first:
+
+```bash
+npm install -g regen-for-ai
+```
+
+Then add to your VS Code `settings.json`:
+
+```json
+{
+  "openctx.providers": {
+    "https://openctx.org/npm/@openctx/provider-modelcontextprotocol": {
+      "nodeCommand": "node",
+      "mcp.provider.uri": "file:///ABSOLUTE/PATH/TO/node_modules/regen-for-ai/dist/index.js"
+    }
+  }
+}
+```
+
+Replace the path with the actual location of the installed package.
+
+</details>
+
+<details>
+<summary><b>Any MCP-compatible client</b></summary>
+
+Most MCP clients accept this standard config:
+
+```json
+{
+  "mcpServers": {
+    "regen-for-ai": {
+      "command": "npx",
+      "args": ["regen-for-ai"]
+    }
+  }
+}
+```
+
+</details>
+
+> **ChatGPT and OpenAI API**: These platforms require a remote HTTP MCP server (streamable HTTP or SSE transport). Regen for AI currently uses stdio transport. HTTP transport support is on the [roadmap](ROADMAP.md).
 
 ## What You Get
 
