@@ -1,12 +1,12 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Regen for AI — Developer API",
+    "title": "Regenerative Compute — Developer API",
     "description": "REST API for embedding ecological credit retirement, browsing, and footprint estimation into your applications. Powered by Regen Network.",
     "version": "1.0.0",
     "contact": {
-      "name": "Regen for AI",
-      "url": "https://github.com/CShear/regen-for-ai"
+      "name": "Regenerative Compute",
+      "url": "https://github.com/CShear/regen-compute"
     },
     "license": {
       "name": "Apache-2.0",

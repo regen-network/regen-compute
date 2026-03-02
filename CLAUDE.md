@@ -1,10 +1,10 @@
-# CLAUDE.md — Regen for AI
+# CLAUDE.md — Regenerative Compute
 
 This file provides context to Claude Code when working on this project.
 
 ## Project Overview
 
-Regen for AI is an MCP (Model Context Protocol) server that connects AI compute usage to verified ecological credit retirement on Regen Network. The product name is **Regen for AI**; the category it creates is **Regenerative AI**. Users connect it to Claude Code or Cursor, and it provides tools to estimate their AI session's ecological footprint, browse available credits, and retire them via Regen Marketplace's existing credit card flow.
+Regenerative Compute is an MCP (Model Context Protocol) server that connects AI compute usage to verified ecological credit retirement on Regen Network. The product name is **Regenerative Compute**; the category it creates is **Regenerative AI**. Users connect it to Claude Code or Cursor, and it provides tools to estimate their AI session's ecological footprint, browse available credits, and retire them via Regen Marketplace's existing credit card flow.
 
 ## Strategic Context
 

@@ -1,5 +1,5 @@
 /**
- * Centralized configuration for Regen for AI.
+ * Centralized configuration for Regenerative Compute.
  *
  * Reads all environment variables once and exports a typed config object.
  * The key gate is `isWalletConfigured()` — when true, the server can
@@ -102,7 +102,7 @@ export function loadConfig(): Config {
     stripePortalReturnUrl: process.env.STRIPE_PORTAL_RETURN_URL || undefined,
 
     postmarkServerToken: process.env.POSTMARK_SERVER_TOKEN || undefined,
-    emailFromAddress: process.env.EMAIL_FROM_ADDRESS || "impact@regen-for-ai.com",
+    emailFromAddress: process.env.EMAIL_FROM_ADDRESS || "impact@regen-compute.com",
     emailEnabled: process.env.EMAIL_ENABLED !== "false",
 
     burnEnabled: process.env.REGEN_BURN_ENABLED === "true",

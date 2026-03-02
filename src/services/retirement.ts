@@ -147,7 +147,7 @@ export async function executeRetirement(params: RetirementParams): Promise<Retir
   const config = loadConfig();
   const usePrepaid = !!(config.balanceApiKey && config.balanceUrl);
   const retireJurisdiction = params.jurisdiction || config.defaultJurisdiction;
-  const retireReason = params.reason || "Regenerative contribution via Regen for AI";
+  const retireReason = params.reason || "Regenerative contribution via Regenerative Compute";
   const retireQuantity = params.quantity || 1;
 
   try {

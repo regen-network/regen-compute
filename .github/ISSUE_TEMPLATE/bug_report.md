@@ -29,7 +29,7 @@ assignees: ""
 - **OS**:
 - **Node.js version**:
 - **MCP client**: (Claude Code / Cursor / other)
-- **regen-for-ai version**:
+- **regen-compute version**:
 - **Wallet configured**: yes / no
 - **ecoBridge enabled**: yes / no
 

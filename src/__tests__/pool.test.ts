@@ -202,7 +202,7 @@ describe("Pool Service", () => {
       expect(result.errors).toContain("No active subscribers found");
     });
 
-    it("applies 85/10/5 revenue split before credit type allocation", async () => {
+    it("applies 85/5/10 revenue split before credit type allocation", async () => {
       addTestSubscribers(10, 1000); // 10 subs x $10 = $100 total
 
       const result = await executePoolRun({ dryRun: true });
@@ -212,11 +212,11 @@ describe("Pool Service", () => {
       // 85% to credits = 8500
       expect(result.creditsBudgetCents).toBe(8500);
 
-      // 10% to burn = 1000
-      expect(result.burn.allocationCents).toBe(1000);
+      // 5% to burn = 500
+      expect(result.burn.allocationCents).toBe(500);
 
-      // 5% to operations = 500
-      expect(result.opsAllocationCents).toBe(500);
+      // 10% to operations = 1000
+      expect(result.opsAllocationCents).toBe(1000);
 
       // Revenue split accounts for all cents
       expect(result.creditsBudgetCents + result.burn.allocationCents + result.opsAllocationCents)
@@ -356,7 +356,7 @@ describe("Pool Service", () => {
 
       const result = await executePoolRun({ dryRun: true });
 
-      // Revenue split: 85/10/5
+      // Revenue split: 85/5/10
       const splitTotal = result.creditsBudgetCents + result.burn.allocationCents + result.opsAllocationCents;
       expect(splitTotal).toBe(333); // No cents lost
     });
@@ -375,7 +375,7 @@ describe("Pool Service", () => {
 
       const result = await executePoolRun({ dryRun: true });
 
-      // floor(1 * 0.85) = 0, floor(1 * 0.10) = 0, remainder = 1
+      // floor(1 * 0.85) = 0, floor(1 * 0.05) = 0, remainder = 1
       expect(result.creditsBudgetCents).toBe(0);
       expect(result.burn.allocationCents).toBe(0);
       expect(result.opsAllocationCents).toBe(1);
@@ -389,14 +389,14 @@ describe("Pool Service", () => {
       const result = await executePoolRun({ dryRun: true });
 
       expect(result.burn.status).toBe("skipped");
-      expect(result.burn.allocationCents).toBe(200); // 10% of 2000
+      expect(result.burn.allocationCents).toBe(100); // 5% of 2000
       expect(result.burn.error).toContain("disabled");
 
       // Verify burn record in DB
       const burns = db.prepare("SELECT * FROM burns").all() as any[];
       expect(burns.length).toBe(1);
       expect(burns[0].status).toBe("skipped");
-      expect(burns[0].allocation_cents).toBe(200);
+      expect(burns[0].allocation_cents).toBe(100);
     });
 
     it("records burn allocation in pool_runs table", async () => {
@@ -405,8 +405,8 @@ describe("Pool Service", () => {
       const result = await executePoolRun({ dryRun: true });
 
       const poolRun = db.prepare("SELECT * FROM pool_runs WHERE id = ?").get(result.poolRunId) as any;
-      expect(poolRun.burn_allocation_cents).toBe(200);  // 10% of 2000
-      expect(poolRun.ops_allocation_cents).toBe(100);    // 5% of 2000
+      expect(poolRun.burn_allocation_cents).toBe(100);  // 5% of 2000
+      expect(poolRun.ops_allocation_cents).toBe(200);    // 10% of 2000
     });
 
     it("includes burn result in pool run result", async () => {
@@ -415,8 +415,8 @@ describe("Pool Service", () => {
       const result = await executePoolRun({ dryRun: true });
 
       expect(result.burn).toBeDefined();
-      expect(result.burn.allocationCents).toBe(50); // 10% of 500
-      expect(result.opsAllocationCents).toBe(25); // 5% of 500
+      expect(result.burn.allocationCents).toBe(25); // 5% of 500
+      expect(result.opsAllocationCents).toBe(50); // 10% of 500
       expect(result.creditsBudgetCents).toBe(425); // 85% of 500
     });
   });

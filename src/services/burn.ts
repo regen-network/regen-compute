@@ -2,7 +2,7 @@
  * REGEN token buy-and-burn service.
  *
  * Burns REGEN tokens from the wallet as part of the monthly pool run.
- * The 85/10/5 revenue split allocates 10% for REGEN burns, which
+ * The 85/5/10 revenue split allocates 5% for REGEN burns, which
  * drives the flywheel: retirements → REGEN burns → token scarcity
  * → increased demand → more retirements.
  *
@@ -189,7 +189,7 @@ export async function executeBurn(options: {
       value: {
         burner: address,
         amount: burnUregen.toString(),
-        reason: `Monthly pool burn — Regen for AI (pool run #${options.poolRunId})`,
+        reason: `Monthly pool burn — Regenerative Compute (pool run #${options.poolRunId})`,
       },
     };
 

@@ -128,7 +128,7 @@ export function createApiRoutes(
       const spec = readFileSync(specPath, "utf-8");
       // Inject the actual server URL
       const parsed = JSON.parse(spec);
-      parsed.servers = [{ url: `${baseUrl}/api/v1`, description: "Regen for AI API" }];
+      parsed.servers = [{ url: `${baseUrl}/api/v1`, description: "Regenerative Compute API" }];
       res.setHeader("Content-Type", "application/json");
       res.setHeader("Cache-Control", "public, max-age=3600");
       res.json(parsed);

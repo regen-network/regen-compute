@@ -6,12 +6,12 @@ The "green AI" solutions that exist today fall into two categories: corporate ma
 
 We built one.
 
-## Introducing Regen for AI
+## Introducing Regenerative Compute
 
-[Regen for AI](https://github.com/CShear/regen-for-ai) is an MCP (Model Context Protocol) server that connects your AI coding assistant to verified ecological credit retirement on [Regen Network](https://regen.network). Install it with one command:
+[Regenerative Compute](https://github.com/CShear/regen-compute) is an MCP (Model Context Protocol) server that connects your AI coding assistant to verified ecological credit retirement on [Regen Network](https://regen.network). Install it with one command:
 
 ```bash
-claude mcp add -s user regen-for-ai -- npx regen-for-ai
+claude mcp add -s user regen-compute -- npx regen-compute
 ```
 
 That's it. No API keys. No wallet. No configuration. It works immediately.
@@ -93,7 +93,7 @@ Your AI Assistant (Claude Code / Cursor / etc.)
     |
     | MCP Protocol (stdio)
     v
-Regen for AI MCP Server (TypeScript, Node.js 20+)
+Regenerative Compute MCP Server (TypeScript, Node.js 20+)
     |
     |-- Footprint estimation (heuristic, labeled as approximate)
     |-- Credit browsing (live sell order data from Regen Ledger REST)
@@ -116,7 +116,7 @@ The project is open source under the Apache-2.0 license.
 ### Claude Code (one command)
 
 ```bash
-claude mcp add -s user regen-for-ai -- npx regen-for-ai
+claude mcp add -s user regen-compute -- npx regen-compute
 ```
 
 ### Cursor, Windsurf, or any MCP client
@@ -126,10 +126,10 @@ Add to your MCP configuration:
 ```json
 {
   "mcpServers": {
-    "regen-for-ai": {
+    "regen-compute": {
       "type": "stdio",
       "command": "npx",
-      "args": ["regen-for-ai"]
+      "args": ["regen-compute"]
     }
   }
 }
@@ -150,14 +150,14 @@ Three levels of engagement:
 
 ## What's Next
 
-Regen for AI v0.3.0 is live on [npm](https://www.npmjs.com/package/regen-for-ai) today. Here is what is coming:
+Regenerative Compute v0.3.0 is live on [npm](https://www.npmjs.com/package/regen-compute) today. Here is what is coming:
 
-- **Subscription pool** — $2-$10/month tiers with automated monthly batch retirements and per-subscriber attribution
+- **Subscription pool** — $2.50-$15/month tiers with automated monthly batch retirements and per-subscriber attribution
 - **Smart contract** — CosmWasm on-chain pool aggregation on Regen Ledger, replacing the centralized batch service
 - **Platform partnerships** — native "Regenerative AI" integration in AI assistants
 - **Credit supply expansion** — onboarding new project developers for soil carbon, biochar, mangrove, and kelp credits
 
-Want to contribute? The project is open source: [github.com/CShear/regen-for-ai](https://github.com/CShear/regen-for-ai). Check the [issues](https://github.com/CShear/regen-for-ai/issues) for open tasks, or read the [ROADMAP.md](https://github.com/CShear/regen-for-ai/blob/main/ROADMAP.md) for the full strategic context.
+Want to contribute? The project is open source: [github.com/CShear/regen-compute](https://github.com/CShear/regen-compute). Check the [issues](https://github.com/CShear/regen-compute/issues) for open tasks, or read the [ROADMAP.md](https://github.com/CShear/regen-compute/blob/main/ROADMAP.md) for the full strategic context.
 
 ## The Vision
 
@@ -169,4 +169,4 @@ That is what Regenerative AI looks like.
 
 ---
 
-*Regen for AI is published on [npm](https://www.npmjs.com/package/regen-for-ai) as v0.3.0. Source code: [github.com/CShear/regen-for-ai](https://github.com/CShear/regen-for-ai). Licensed Apache-2.0.*
+*Regenerative Compute is published on [npm](https://www.npmjs.com/package/regen-compute) as v0.3.0. Source code: [github.com/CShear/regen-compute](https://github.com/CShear/regen-compute). Licensed Apache-2.0.*

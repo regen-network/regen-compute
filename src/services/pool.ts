@@ -1,7 +1,7 @@
 /**
  * Monthly pool retirement service.
  *
- * Aggregates subscription revenue, applies 85/10/5 revenue split
+ * Aggregates subscription revenue, applies 85/5/10 revenue split
  * (credits/REGEN burn/operations), allocates credit budget across
  * credit types (50/30/20), executes on-chain retirements via MsgBuyDirect,
  * burns REGEN tokens, and records per-subscriber fractional attributions.
@@ -49,11 +49,11 @@ export interface CreditTypeResult {
   error: string | null;
 }
 
-/** Revenue split: 85% credit purchases / 10% REGEN burn / 5% operations */
+/** Revenue split: 85% credit purchases / 5% REGEN burn / 10% operations */
 const REVENUE_SPLIT = {
   credits: 0.85,
-  burn: 0.10,
-  operations: 0.05,
+  burn: 0.05,
+  operations: 0.10,
 } as const;
 
 /** Allocation percentages for each credit type (within the credits budget) */
@@ -141,7 +141,7 @@ export async function executePoolRun(options: {
     }
   }
 
-  // 5. Apply 85/10/5 revenue split
+  // 5. Apply 85/5/10 revenue split
   const creditsBudgetCents = Math.floor(totalRevenueCents * REVENUE_SPLIT.credits);
   const burnBudgetCents = Math.floor(totalRevenueCents * REVENUE_SPLIT.burn);
   const opsAllocationCents = totalRevenueCents - creditsBudgetCents - burnBudgetCents;
@@ -339,7 +339,7 @@ async function purchaseCreditType(
       },
       disableAutoRetire: false,
       retirementJurisdiction: config.defaultJurisdiction,
-      retirementReason: `Monthly pool retirement — Regen for AI`,
+      retirementReason: `Monthly pool retirement — Regenerative Compute`,
     }));
 
     const msg = {
@@ -428,8 +428,8 @@ export function formatPoolRunResult(result: PoolRunResult): string {
     `Subscribers: ${result.subscriberCount}`,
     `Total Revenue: $${(result.totalRevenueCents / 100).toFixed(2)}`,
     `  Credits (85%): $${(result.creditsBudgetCents / 100).toFixed(2)}`,
-    `  Burn (10%): $${(result.burn.allocationCents / 100).toFixed(2)}`,
-    `  Operations (5%): $${(result.opsAllocationCents / 100).toFixed(2)}`,
+    `  Burn (5%): $${(result.burn.allocationCents / 100).toFixed(2)}`,
+    `  Operations (10%): $${(result.opsAllocationCents / 100).toFixed(2)}`,
     `Credits Spent: $${(result.totalSpentCents / 100).toFixed(2)}`,
     `Carry Forward: $${(result.carryForwardCents / 100).toFixed(2)}`,
     ``,

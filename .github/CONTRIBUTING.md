@@ -1,4 +1,4 @@
-# Contributing to Regen for AI
+# Contributing to Regenerative Compute
 
 Thank you for your interest in contributing! This project connects AI compute usage to verified ecological regeneration through Regen Network.
 
@@ -16,7 +16,7 @@ Thank you for your interest in contributing! This project connects AI compute us
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/regen-for-ai.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/regen-compute.git`
 3. Install dependencies: `npm install`
 4. Copy environment config: `cp .env.example .env`
 5. Build: `npm run build`
@@ -33,7 +33,7 @@ npm run build     # Production build to dist/
 
 ## Issue Workflow
 
-All tasks live in [GitHub Issues](https://github.com/CShear/regen-for-ai/issues). Here's how they're organized:
+All tasks live in [GitHub Issues](https://github.com/CShear/regen-compute/issues). Here's how they're organized:
 
 ### Labels
 

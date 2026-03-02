@@ -14,7 +14,7 @@
                        │ MCP Protocol (stdio)
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Regen for AI MCP Server                           │
+│  Regenerative Compute MCP Server                           │
 │                                                             │
 │  Tools:                                                     │
 │  ┌─────────────────────┐  ┌────────────────────────┐       │
@@ -90,7 +90,7 @@ Queries Regen Indexer GraphQL for retirement records:
 ```
 ┌────────────┐     ┌───────────────┐     ┌──────────────────┐
 │ User pays  │────▶│ Stripe        │────▶│ Pool Service     │
-│ $2/month   │     │ Subscription  │     │                  │
+│ $2.50/month│     │ Subscription  │     │                  │
 └────────────┘     └───────────────┘     │ - Track members  │
                                           │ - Aggregate funds│
                                           │ - Monthly batch  │

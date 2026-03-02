@@ -29,17 +29,17 @@ import { dirname, join } from "path";
 const args = process.argv.slice(2);
 
 if (args.includes("--help") || args.includes("-h")) {
-  console.log(`Regen for AI — Verified ecological accountability for AI compute
+  console.log(`Regenerative Compute — Verified ecological accountability for AI compute
 
 USAGE:
-  npx regen-for-ai              Start the MCP server (stdio transport)
-  npx regen-for-ai serve        Start the payment & balance web server
-  npx regen-for-ai pool-run     Execute monthly pool retirement batch
-  regen-for-ai --help           Show this help message
-  regen-for-ai --version        Show version
+  npx regen-compute              Start the MCP server (stdio transport)
+  npx regen-compute serve        Start the payment & balance web server
+  npx regen-compute pool-run     Execute monthly pool retirement batch
+  regen-compute --help           Show this help message
+  regen-compute --version        Show version
 
 INSTALL (Claude Code):
-  claude mcp add -s user regen-for-ai -- npx regen-for-ai
+  claude mcp add -s user regen-compute -- npx regen-compute
 
 MCP TOOLS:
   estimate_session_footprint    Estimate your AI session's ecological footprint
@@ -51,12 +51,12 @@ MCP TOOLS:
   retire_via_ecobridge          Pay with any token via ecoBridge (when enabled)
 
 PAYMENT SERVER:
-  npx regen-for-ai serve [--port 3141]
+  npx regen-compute serve [--port 3141]
   Runs the Stripe Checkout + balance API server.
   Requires STRIPE_SECRET_KEY in environment.
 
 POOL RETIREMENT:
-  npx regen-for-ai pool-run [--dry-run]
+  npx regen-compute pool-run [--dry-run]
   Executes monthly batch retirement from subscription pool.
   Use --dry-run to calculate without broadcasting transactions.
   Requires REGEN_WALLET_MNEMONIC for live runs.
@@ -75,7 +75,7 @@ CONFIGURATION:
   See .env.example for all options.
 
 DOCUMENTATION:
-  https://github.com/CShear/regen-for-ai`);
+  https://github.com/CShear/regen-compute`);
   process.exit(0);
 }
 
@@ -124,12 +124,12 @@ const ecoBridgeEnabled = config.ecoBridgeEnabled;
 
 const server = new McpServer(
   {
-    name: "regen-for-ai",
+    name: "regen-compute",
     version: "0.3.0",
   },
   {
     instructions: [
-      "Regen for AI connects AI compute usage to verified ecological credit retirement on Regen Network.",
+      "Regenerative Compute connects AI compute usage to verified ecological credit retirement on Regen Network.",
       "",
       "USE THIS SERVER WHEN:",
       "- The user asks about the environmental or ecological impact of their AI usage",
@@ -676,7 +676,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(
-    `Regen for AI MCP server running (wallet mode: ${walletMode ? "enabled" : "disabled"}, ecoBridge: ${ecoBridgeEnabled ? "enabled" : "disabled"}, prepaid: ${config.balanceApiKey ? "enabled" : "disabled"})`
+    `Regenerative Compute MCP server running (wallet mode: ${walletMode ? "enabled" : "disabled"}, ecoBridge: ${ecoBridgeEnabled ? "enabled" : "disabled"}, prepaid: ${config.balanceApiKey ? "enabled" : "disabled"})`
   );
 }
 

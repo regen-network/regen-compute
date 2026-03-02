@@ -141,7 +141,7 @@ function renderLoginPage(error?: string, success?: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Login - Regen for AI</title>
+  <title>Dashboard Login - Regenerative Compute</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -194,7 +194,7 @@ function renderLoginPage(error?: string, success?: string): string {
 </head>
 <body>
   <div class="card">
-    <div class="brand">Regen for AI</div>
+    <div class="brand">Regenerative Compute</div>
     <h1>Dashboard Login</h1>
     <p class="subtitle">Enter your subscriber email to receive a login link.</p>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
@@ -205,7 +205,7 @@ function renderLoginPage(error?: string, success?: string): string {
       <button type="submit" class="btn">Send Login Link</button>
     </form>
     <div class="footer">
-      <a href="/">Back to Regen for AI</a>
+      <a href="/">Back to Regenerative Compute</a>
     </div>
   </div>
 </body>
@@ -276,7 +276,7 @@ function renderDashboardPage(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Impact Dashboard - Regen for AI</title>
+  <title>Your Impact Dashboard - Regenerative Compute</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -435,7 +435,7 @@ function renderDashboardPage(
     <!-- Header -->
     <div class="header">
       <div class="header-left">
-        <span class="header-brand">Regen for AI</span>
+        <span class="header-brand">Regenerative Compute</span>
         <span class="plan-badge">${escapeHtml(planName)} Plan</span>
       </div>
       <div class="header-right">

@@ -1,5 +1,5 @@
 /**
- * Express routes for the Regen for AI payment service.
+ * Express routes for the Regenerative Compute payment service.
  *
  * GET  /                  — Subscription landing page with live stats
  * POST /checkout          — Create a Stripe Checkout session
@@ -69,14 +69,14 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regen for AI — Regenerative AI</title>
+  <title>Regenerative Compute — Regenerative AI</title>
   <meta name="description" content="Fund verified ecological regeneration from your AI sessions. Monthly subscriptions retire real carbon and biodiversity credits on Regen Network.">
-  <meta property="og:title" content="Regen for AI — Regenerative AI">
+  <meta property="og:title" content="Regenerative Compute — Regenerative AI">
   <meta property="og:description" content="Fund verified ecological regeneration from your AI sessions. Monthly subscriptions retire real carbon and biodiversity credits on Regen Network.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Regen for AI — Regenerative AI">
+  <meta name="twitter:title" content="Regenerative Compute — Regenerative AI">
   <meta name="twitter:description" content="Fund verified ecological regeneration from your AI sessions.">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
@@ -268,7 +268,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
         <div class="step">
           <div class="step-num">1</div>
           <h3>Install</h3>
-          <p>One command:<br><code>claude mcp add regen-for-ai</code></p>
+          <p>One command:<br><code>claude mcp add regen-compute</code></p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
@@ -296,21 +296,21 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
       <div class="tiers">
         <div class="tier">
           <div class="tier-name">Seedling</div>
-          <div class="tier-price">$2<span>/mo</span></div>
+          <div class="tier-price">$2.50<span>/mo</span></div>
           <div class="tier-desc">~0.5 carbon credits retired per month. Perfect for individual developers.</div>
           <a class="tier-btn" href="${seedlingUrl}">Subscribe</a>
         </div>
         <div class="tier featured">
           <div class="tier-badge">Most Popular</div>
           <div class="tier-name">Grove</div>
-          <div class="tier-price">$5<span>/mo</span></div>
-          <div class="tier-desc">~1 carbon credit + 0.5 biodiversity credits per month. The sweet spot.</div>
+          <div class="tier-price">$7<span>/mo</span></div>
+          <div class="tier-desc">~1.5 carbon credits + biodiversity credits per month. The sweet spot.</div>
           <a class="tier-btn" href="${groveUrl}">Subscribe</a>
         </div>
         <div class="tier">
           <div class="tier-name">Forest</div>
-          <div class="tier-price">$10<span>/mo</span></div>
-          <div class="tier-desc">~2.5 carbon credits + 1 biodiversity credit per month. For teams and power users.</div>
+          <div class="tier-price">$15<span>/mo</span></div>
+          <div class="tier-desc">~3 carbon credits + biodiversity credits per month. For teams and power users.</div>
           <a class="tier-btn" href="${forestUrl}">Subscribe</a>
         </div>
       </div>
@@ -341,7 +341,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
   <!-- Trust -->
   <section class="trust">
     <div class="container">
-      <h2 class="section-title">Why Regen for AI</h2>
+      <h2 class="section-title">Why Regenerative Compute</h2>
       <div class="trust-grid">
         <div class="trust-item">
           <h3>Verified On-Chain</h3>
@@ -364,7 +364,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
     <div class="container">
       <a class="cta-btn" href="#pricing">Choose Your Plan</a>
       <p>Powered by <a href="https://regen.network">Regen Network</a></p>
-      <p><a href="https://github.com/CShear/regen-for-ai">GitHub</a></p>
+      <p><a href="https://github.com/CShear/regen-compute">GitHub</a></p>
     </div>
   </section>
 
@@ -397,7 +397,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
               currency: "usd",
               unit_amount: amount_cents,
               product_data: {
-                name: "Regen for AI — Ecological Credit Balance",
+                name: "Regenerative Compute — Ecological Credit Balance",
                 description: `$${amountDollars} prepaid balance for retiring verified ecocredits via your AI assistant`,
               },
             },
@@ -519,7 +519,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Regen for AI — Payment Successful</title>
+  <title>Regenerative Compute — Payment Successful</title>
   <style>
     body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.6; }
     h1 { color: #2d6a4f; }
@@ -532,7 +532,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
 </head>
 <body>
   <h1>Payment Successful</h1>
-  <p>You've added <strong>$${amountDollars.toFixed(2)}</strong> to your Regen for AI balance.</p>
+  <p>You've added <strong>$${amountDollars.toFixed(2)}</strong> to your Regenerative Compute balance.</p>
   <p>Current balance: <span class="balance">$${(user.balance_cents / 100).toFixed(2)}</span></p>
 
   <div class="key-box">
@@ -544,7 +544,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
   <h2>Setup (30 seconds)</h2>
 
   <p><strong>1. Install the MCP server</strong> (if you haven't already):</p>
-  <pre>claude mcp add -s user regen-for-ai -- npx regen-for-ai</pre>
+  <pre>claude mcp add -s user regen-compute -- npx regen-compute</pre>
 
   <p><strong>2. Set your API key</strong> — add to your shell profile or <code>.env</code>:</p>
   <pre>export REGEN_API_KEY=${user.api_key}
@@ -579,7 +579,7 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Regen for AI — Checkout Cancelled</title>
+  <title>Regenerative Compute — Checkout Cancelled</title>
   <style>
     body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; }
     h1 { color: #666; }
@@ -607,7 +607,7 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Regen for AI — Fund Ecological Regeneration</title>
+  <title>Regenerative Compute — Fund Ecological Regeneration</title>
   <style>
     body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.6; }
     h1 { color: #2d6a4f; }
@@ -624,7 +624,7 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
   </style>
 </head>
 <body>
-  <h1>Regen for AI</h1>
+  <h1>Regenerative Compute</h1>
   <p>Fund verified ecological regeneration from your AI sessions. Pay once, retire credits seamlessly from Claude Code.</p>
 
   <div class="info">
@@ -652,7 +652,7 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
   <h2>After payment</h2>
   <ol class="steps">
     <li>You'll receive an API key on the confirmation page</li>
-    <li>Install the MCP: <code>claude mcp add -s user regen-for-ai -- npx regen-for-ai</code></li>
+    <li>Install the MCP: <code>claude mcp add -s user regen-compute -- npx regen-compute</code></li>
     <li>Set your key: <code>export REGEN_API_KEY=your_key</code> and <code>export REGEN_BALANCE_URL=${baseUrl}</code></li>
     <li>In Claude, say "retire 1 carbon credit" — it happens automatically from your balance</li>
   </ol>

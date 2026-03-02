@@ -17,7 +17,7 @@ import { dirname } from "path";
 
 let _db: Database.Database | undefined;
 
-export function getDb(dbPath = "data/regen-for-ai.db"): Database.Database {
+export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
   if (_db) return _db;
 
   const dir = dirname(dbPath);

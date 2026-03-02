@@ -1,9 +1,9 @@
-# Regen for AI
+# Regenerative Compute
 
 **Add Regenerative AI to your AI coding assistant in 30 seconds.**
 
-[![npm version](https://img.shields.io/npm/v/regen-for-ai)](https://www.npmjs.com/package/regen-for-ai)
-[![CI](https://github.com/CShear/regen-for-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/CShear/regen-for-ai/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/regen-compute)](https://www.npmjs.com/package/regen-compute)
+[![CI](https://github.com/CShear/regen-compute/actions/workflows/ci.yml/badge.svg)](https://github.com/CShear/regen-compute/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
 
@@ -14,7 +14,7 @@ This is **regenerative contribution**, not carbon offsetting. No neutrality clai
 ## Install
 
 ```bash
-claude mcp add -s user regen-for-ai -- npx regen-for-ai
+claude mcp add -s user regen-compute -- npx regen-compute
 ```
 
 That's it. Works immediately — no API keys, no wallet, no configuration needed for read-only tools.
@@ -29,9 +29,9 @@ Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project):
 ```json
 {
   "mcpServers": {
-    "regen-for-ai": {
+    "regen-compute": {
       "command": "npx",
-      "args": ["regen-for-ai"]
+      "args": ["regen-compute"]
     }
   }
 }
@@ -49,9 +49,9 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-    "regen-for-ai": {
+    "regen-compute": {
       "command": "npx",
-      "args": ["regen-for-ai"]
+      "args": ["regen-compute"]
     }
   }
 }
@@ -69,9 +69,9 @@ Add to `.vscode/mcp.json` in your workspace:
 ```json
 {
   "servers": {
-    "regen-for-ai": {
+    "regen-compute": {
       "command": "npx",
-      "args": ["regen-for-ai"]
+      "args": ["regen-compute"]
     }
   }
 }
@@ -89,9 +89,9 @@ Go to **Settings > Tools > AI Assistant > Model Context Protocol (MCP)**, click 
 ```json
 {
   "mcpServers": {
-    "regen-for-ai": {
+    "regen-compute": {
       "command": "npx",
-      "args": ["regen-for-ai"]
+      "args": ["regen-compute"]
     }
   }
 }
@@ -109,9 +109,9 @@ Add to `~/.gemini/settings.json`:
 ```json
 {
   "mcpServers": {
-    "regen-for-ai": {
+    "regen-compute": {
       "command": "npx",
-      "args": ["regen-for-ai"]
+      "args": ["regen-compute"]
     }
   }
 }
@@ -122,18 +122,18 @@ Add to `~/.gemini/settings.json`:
 <details>
 <summary><b>Continue.dev</b></summary>
 
-Create `.continue/mcpServers/regen-for-ai.yaml` in your workspace:
+Create `.continue/mcpServers/regen-compute.yaml` in your workspace:
 
 ```yaml
-name: Regen for AI
+name: Regenerative Compute
 version: 0.0.1
 schema: v1
 mcpServers:
-  - name: regen-for-ai
+  - name: regen-compute
     type: stdio
     command: npx
     args:
-      - "regen-for-ai"
+      - "regen-compute"
 ```
 
 Note: MCP tools are only available in Continue's agent mode.
@@ -146,7 +146,7 @@ Note: MCP tools are only available in Continue's agent mode.
 Cody uses the OpenCtx bridge, which requires a local file path (not npx). Install first:
 
 ```bash
-npm install -g regen-for-ai
+npm install -g regen-compute
 ```
 
 Then add to your VS Code `settings.json`:
@@ -156,7 +156,7 @@ Then add to your VS Code `settings.json`:
   "openctx.providers": {
     "https://openctx.org/npm/@openctx/provider-modelcontextprotocol": {
       "nodeCommand": "node",
-      "mcp.provider.uri": "file:///ABSOLUTE/PATH/TO/node_modules/regen-for-ai/dist/index.js"
+      "mcp.provider.uri": "file:///ABSOLUTE/PATH/TO/node_modules/regen-compute/dist/index.js"
     }
   }
 }
@@ -174,9 +174,9 @@ Most MCP clients accept this standard config:
 ```json
 {
   "mcpServers": {
-    "regen-for-ai": {
+    "regen-compute": {
       "command": "npx",
-      "args": ["regen-for-ai"]
+      "args": ["regen-compute"]
     }
   }
 }
@@ -184,7 +184,7 @@ Most MCP clients accept this standard config:
 
 </details>
 
-> **ChatGPT and OpenAI API**: These platforms require a remote HTTP MCP server (streamable HTTP or SSE transport). Regen for AI currently uses stdio transport. HTTP transport support is on the [roadmap](ROADMAP.md).
+> **ChatGPT and OpenAI API**: These platforms require a remote HTTP MCP server (streamable HTTP or SSE transport). Regenerative Compute currently uses stdio transport. HTTP transport support is on the [roadmap](ROADMAP.md).
 
 ## What You Get
 
@@ -211,7 +211,7 @@ Your AI Assistant (Claude Code / Cursor / etc.)
     │
     │ MCP Protocol (stdio)
     ▼
-Regen for AI MCP Server
+Regenerative Compute MCP Server
     │
     ├─ Footprint estimation (heuristic, clearly labeled as approximate)
     ├─ Credit browsing (live sell order data from Regen Ledger)
@@ -275,8 +275,8 @@ Pre-built workflows you can invoke:
 ### Local setup
 
 ```bash
-git clone https://github.com/CShear/regen-for-ai.git
-cd regen-for-ai
+git clone https://github.com/CShear/regen-compute.git
+cd regen-compute
 npm install
 cp .env.example .env  # fill in your keys (optional — read-only tools work without)
 npm run build
@@ -287,15 +287,15 @@ npm run build
 Point your MCP config at the local build so changes are reflected immediately:
 
 ```bash
-claude mcp add regen-for-ai -s user -- node /path/to/regen-for-ai/dist/index.js
+claude mcp add regen-compute -s user -- node /path/to/regen-compute/dist/index.js
 ```
 
 To enable ecoBridge tools locally:
 
 ```bash
-claude mcp add regen-for-ai -s user \
+claude mcp add regen-compute -s user \
   --env ECOBRIDGE_ENABLED=true \
-  -- node /path/to/regen-for-ai/dist/index.js
+  -- node /path/to/regen-compute/dist/index.js
 ```
 
 ### Scripts
@@ -333,7 +333,7 @@ See [ROADMAP.md](ROADMAP.md) for the full 3-track rollout plan, dependency graph
 
 We welcome contributions! See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the issue workflow, label guide, and branch conventions.
 
-Good first issues: [`gh issue list --label "good first issue"`](https://github.com/CShear/regen-for-ai/labels/good%20first%20issue)
+Good first issues: [`gh issue list --label "good first issue"`](https://github.com/CShear/regen-compute/labels/good%20first%20issue)
 
 ## License
 

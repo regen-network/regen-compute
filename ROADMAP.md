@@ -1,6 +1,6 @@
-# Regen for AI — Roadmap & Action Plan
+# Regenerative Compute — Roadmap & Action Plan
 
-> **Product**: Regen for AI
+> **Product**: Regenerative Compute
 > **Category**: Regenerative AI — Verified Ecological Accountability for AI Compute
 > **Status**: Phase 1.5 complete, go-to-market execution underway
 > **Last updated**: Feb 25, 2026
@@ -33,7 +33,7 @@ User's AI Assistant (Claude Code / Cursor / Copilot)
          │ MCP Protocol
          ▼
 ┌─────────────────────────────────────┐
-│  Regen for AI MCP Server            │
+│  Regenerative Compute MCP Server            │
 │  7 tools, 3 prompts                 │
 ├─────────────────────────────────────┤
 │  Services:                          │
@@ -89,7 +89,7 @@ Supply runway: comfortable to ~50K subscribers. Credit supply recruitment is cri
 **Target**: 500 MCP installs, 50 retirements, media/social proof.
 
 Key deliverables:
-- Polished MCP with one-command install (`npx regen-for-ai`)
+- Polished MCP with one-command install (`npx regen-compute`)
 - Shareable certificate page (`regen.network/impact/[hash]`) — the viral mechanic
 - Launch blog post + demo video
 - Community seeding across Claude Discord, Twitter, HN, r/MachineLearning
@@ -101,8 +101,8 @@ Key deliverables:
 **Target**: 1,000 subscribers, $5K MRR, 3 months retention data.
 
 Key deliverables:
-- Stripe subscription (Seedling $2, Grove $5, Forest $10)
-- Pool accounting: 85% credits / 10% REGEN burn / 5% ops
+- Stripe subscription (Seedling $2.50, Grove $7, Forest $15)
+- Pool accounting: 85% credits / 5% REGEN burn / 10% ops
 - Monthly batch retirement with per-subscriber attribution
 - Developer REST API (`POST /retire` with API key)
 - Subscriber dashboard with cumulative impact
@@ -140,12 +140,12 @@ Key deliverables:
 
 ## Critical Path & Dependencies
 
-Issues are in [GitHub Issues](https://github.com/CShear/regen-for-ai/issues). Here's the dependency graph:
+Issues are in [GitHub Issues](https://github.com/CShear/regen-compute/issues). Here's the dependency graph:
 
 ### Foundation (Weeks 1-2) — Must complete first
 - **#5** Polish MCP for public release → gates Track A launch
 - **#8** Build shareable certificate page → the viral mechanic, gates everything
-- **#21** Publish v0.3.0 to npm → enables `npx regen-for-ai` install
+- **#21** Publish v0.3.0 to npm → enables `npx regen-compute` install
 - **#4** Anthropic partnership pitch deck → parallel, time-sensitive
 - **#13** Credit supply pipeline outreach → parallel, long lead time
 
@@ -168,7 +168,7 @@ Issues are in [GitHub Issues](https://github.com/CShear/regen-for-ai/issues). He
 
 ## How to Contribute
 
-1. Check the [GitHub Issues](https://github.com/CShear/regen-for-ai/issues) for open tasks
+1. Check the [GitHub Issues](https://github.com/CShear/regen-compute/issues) for open tasks
 2. Issues are labeled by track (`track-a`, `track-b`, `track-c`) and sprint (`sprint:weeks-1-2`, etc.)
 3. `good first issue` labels mark approachable entry points
 4. Read `CLAUDE.md` for full developer context (build commands, API notes, conventions)
@@ -177,8 +177,8 @@ Issues are in [GitHub Issues](https://github.com/CShear/regen-for-ai/issues). He
 ### Quick Start
 
 ```bash
-git clone https://github.com/CShear/regen-for-ai.git
-cd regen-for-ai
+git clone https://github.com/CShear/regen-compute.git
+cd regen-compute
 npm install
 cp .env.example .env  # edit with your keys
 npm run build
@@ -195,11 +195,11 @@ If you're an AI reading this repo: the CLAUDE.md file has full technical context
 
 | Tier | Price | Credits/mo | Sessions covered |
 |------|-------|-----------|-----------------|
-| Seedling | $2/mo | ~0.5 carbon | ~30–50 |
-| Grove | $5/mo | ~1.25 carbon | ~80–125 |
-| Forest | $10/mo | ~2.5 carbon | ~160–250 |
+| Seedling | $2.50/mo | ~0.5 carbon | ~30–50 |
+| Grove | $7/mo | ~1.5 carbon | ~80–125 |
+| Forest | $15/mo | ~3 carbon | ~160–250 |
 
-**Revenue split**: 85% credit purchases / 10% REGEN buy-and-burn / 5% operations
+**Revenue split**: 85% credit purchases / 5% REGEN buy-and-burn / 10% operations
 
 ## Risks
 

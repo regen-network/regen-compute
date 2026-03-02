@@ -28,7 +28,7 @@
 
 ## Phase 2 — Subscription Pool Service
 
-**Goal**: Users subscribe for $1–5/month. A pool service aggregates funds and executes monthly batch credit retirements with fractional attribution per subscriber.
+**Goal**: Users subscribe for $2.50–15/month. A pool service aggregates funds and executes monthly batch credit retirements with fractional attribution per subscriber.
 
 **Duration**: 4–8 weeks
 **Team**: 1–2 developers

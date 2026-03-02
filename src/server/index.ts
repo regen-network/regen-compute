@@ -1,5 +1,5 @@
 /**
- * Regen for AI — Payment & Balance Server
+ * Regenerative Compute — Payment & Balance Server
  *
  * A small Express server that handles:
  * - Shareable retirement certificate pages (/impact/:nodeId)
@@ -8,7 +8,7 @@
  * - Balance checking and debiting for MCP clients
  * - Developer REST API (/api/v1/) for programmatic access
  *
- * Run: npx regen-for-ai serve [--port 3141]
+ * Run: npx regen-compute serve [--port 3141]
  *
  * Certificate routes work without Stripe configuration.
  * Payment routes require STRIPE_SECRET_KEY.
@@ -26,7 +26,7 @@ import { loadConfig } from "../config.js";
 
 export function startServer(options: { port?: number; dbPath?: string } = {}) {
   const port = options.port ?? parseInt(process.env.REGEN_SERVER_PORT ?? "3141", 10);
-  const dbPath = options.dbPath ?? process.env.REGEN_DB_PATH ?? "data/regen-for-ai.db";
+  const dbPath = options.dbPath ?? process.env.REGEN_DB_PATH ?? "data/regen-compute.db";
 
   const baseUrl = process.env.REGEN_SERVER_URL ?? `http://localhost:${port}`;
 
@@ -70,7 +70,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   }
 
   app.listen(port, () => {
-    console.log(`Regen for AI server running on ${baseUrl}`);
+    console.log(`Regenerative Compute server running on ${baseUrl}`);
     console.log(`  Certificates: ${baseUrl}/impact/:nodeId`);
     if (stripeKey) {
       console.log(`  Checkout page: ${baseUrl}/checkout-page`);

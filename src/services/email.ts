@@ -103,7 +103,7 @@ function renderEmailHtml(data: EmailData): string {
   const totalCumulative = data.cumulative.total_carbon + data.cumulative.total_biodiversity + data.cumulative.total_uss;
 
   const shareText = encodeURIComponent(
-    `I just funded the retirement of ${formatCredits(totalThisMonth)} ecological credits on Regen Network via Regen for AI. Regenerative contribution, not carbon offset.`
+    `I just funded the retirement of ${formatCredits(totalThisMonth)} ecological credits on Regen Network via Regenerative Compute. Regenerative contribution, not carbon offset.`
   );
   const shareUrl = data.certificateUrl ? encodeURIComponent(data.certificateUrl) : "";
 
@@ -130,7 +130,7 @@ function renderEmailHtml(data: EmailData): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Your Monthly Impact Report - Regen for AI</title>
+  <title>Your Monthly Impact Report - Regenerative Compute</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -151,7 +151,7 @@ function renderEmailHtml(data: EmailData): string {
           <!-- Header -->
           <tr>
             <td align="center" style="padding: 24px 0 16px;">
-              <span style="font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #2d6a4f;">REGEN FOR AI</span>
+              <span style="font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #2d6a4f;">REGENERATIVE COMPUTE</span>
             </td>
           </tr>
 
@@ -301,7 +301,7 @@ function renderEmailHtml(data: EmailData): string {
                       <a href="${escapeHtml(data.manageUrl)}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a>
                     </p>
                     <p style="margin: 0; font-family: Arial, sans-serif; font-size: 11px; color: #d1d5db;">
-                      Regen for AI &middot; Regenerative AI
+                      Regenerative Compute &middot; Regenerative AI
                     </p>
                   </td>
                 </tr>
@@ -383,7 +383,7 @@ export async function sendMonthlyEmails(
     return { sent: 0, failed: 0, errors: ["POSTMARK_SERVER_TOKEN not configured"] };
   }
 
-  const serverUrl = baseUrl ?? config.balanceUrl ?? "https://regen-for-ai.com";
+  const serverUrl = baseUrl ?? config.balanceUrl ?? "https://regen-compute.com";
 
   // Get attributions for this pool run
   const attributions = getAttributionsByRun(db, poolRunId);
@@ -434,7 +434,7 @@ export async function sendMonthlyEmails(
     };
 
     const html = renderEmailHtml(emailData);
-    const subject = `Your ${runDate} Impact Report - Regen for AI`;
+    const subject = `Your ${runDate} Impact Report - Regenerative Compute`;
 
     try {
       await sendViaPostmark(
@@ -481,7 +481,7 @@ export async function sendMagicLinkEmail(
         <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" style="max-width: 480px; width: 100%; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb;">
           <tr>
             <td style="padding: 32px; text-align: center;">
-              <p style="margin: 0 0 8px; font-size: 14px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #2d6a4f;">REGEN FOR AI</p>
+              <p style="margin: 0 0 8px; font-size: 14px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #2d6a4f;">REGENERATIVE COMPUTE</p>
               <h1 style="margin: 0 0 20px; font-size: 22px; color: #1a1a1a;">Log in to Your Dashboard</h1>
               <p style="margin: 0 0 24px; font-size: 15px; color: #555; line-height: 1.6;">Click the button below to access your ecological impact dashboard. This link expires in ${ttlMinutes} minutes.</p>
               <a href="${escapeHtml(verifyUrl)}" style="display: inline-block; padding: 14px 36px; background-color: #2d6a4f; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px;">Log In</a>
@@ -505,7 +505,7 @@ export async function sendMagicLinkEmail(
     body: JSON.stringify({
       From: config.emailFromAddress,
       To: email,
-      Subject: "Log in to your Regen for AI Dashboard",
+      Subject: "Log in to your Regenerative Compute Dashboard",
       HtmlBody: html,
       MessageStream: "outbound",
     }),

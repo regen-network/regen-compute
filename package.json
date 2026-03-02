@@ -1,11 +1,11 @@
 {
-  "name": "regen-for-ai",
+  "name": "regen-compute",
   "version": "0.3.0",
   "description": "Regenerative AI — fund verified ecological regeneration from your AI sessions via Regen Network. Estimate your footprint, browse carbon and biodiversity credits, and retire them on-chain via credit card.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "regen-for-ai": "dist/index.js"
+    "regen-compute": "dist/index.js"
   },
   "files": [
     "dist",
@@ -32,7 +32,7 @@
     "carbon-credits",
     "biodiversity-credits",
     "regenerative-ai",
-    "regen-for-ai",
+    "regen-compute",
     "ai-compute",
     "sustainability",
     "climate",
@@ -43,13 +43,13 @@
   ],
   "author": "CShear",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/CShear/regen-for-ai#readme",
+  "homepage": "https://github.com/CShear/regen-compute#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CShear/regen-for-ai.git"
+    "url": "git+https://github.com/CShear/regen-compute.git"
   },
   "bugs": {
-    "url": "https://github.com/CShear/regen-for-ai/issues"
+    "url": "https://github.com/CShear/regen-compute/issues"
   },
   "engines": {
     "node": ">=20.0.0"

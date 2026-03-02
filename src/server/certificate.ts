@@ -152,14 +152,14 @@ function renderCertificatePage(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${theme.label} — Regen for AI</title>
+  <title>${theme.label} — Regenerative Compute</title>
 
   <meta property="og:title" content="Ecological Regeneration Certificate" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${escapeHtml(certUrl)}" />
   <meta property="og:image" content="${escapeHtml(badgeUrl)}" />
-  <meta property="og:site_name" content="Regen for AI" />
+  <meta property="og:site_name" content="Regenerative Compute" />
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Ecological Regeneration Certificate" />
@@ -428,7 +428,7 @@ function renderCertificatePage(
 <body>
   <div class="container">
     <div class="header">
-      <div class="header-brand">Regen for AI</div>
+      <div class="header-brand">Regenerative Compute</div>
     </div>
 
     <div class="card">
@@ -502,7 +502,7 @@ function renderCertificatePage(
       <div class="footer-brand">
         Powered by <a href="https://regen.network" target="_blank" rel="noopener">Regen Network</a>
       </div>
-      <div class="footer-install">claude mcp add -s user regen-for-ai -- npx regen-for-ai</div>
+      <div class="footer-install">claude mcp add -s user regen-compute -- npx regen-compute</div>
       <div class="footer-note">
         This retirement is permanently recorded on Regen Ledger and cannot be altered or reversed.
       </div>
@@ -549,7 +549,7 @@ function renderErrorPage(status: number, message: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} — Regen for AI</title>
+  <title>${title} — Regenerative Compute</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
