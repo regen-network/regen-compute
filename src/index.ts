@@ -75,7 +75,7 @@ CONFIGURATION:
   See .env.example for all options.
 
 DOCUMENTATION:
-  https://github.com/CShear/regen-compute`);
+  https://github.com/regen-network/regen-compute`);
   process.exit(0);
 }
 

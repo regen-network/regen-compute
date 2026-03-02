@@ -3,7 +3,7 @@
 **Add Regenerative AI to your AI coding assistant in 30 seconds.**
 
 [![npm version](https://img.shields.io/npm/v/regen-compute)](https://www.npmjs.com/package/regen-compute)
-[![CI](https://github.com/CShear/regen-compute/actions/workflows/ci.yml/badge.svg)](https://github.com/CShear/regen-compute/actions/workflows/ci.yml)
+[![CI](https://github.com/regen-network/regen-compute/actions/workflows/ci.yml/badge.svg)](https://github.com/regen-network/regen-compute/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
 
@@ -275,7 +275,7 @@ Pre-built workflows you can invoke:
 ### Local setup
 
 ```bash
-git clone https://github.com/CShear/regen-compute.git
+git clone https://github.com/regen-network/regen-compute.git
 cd regen-compute
 npm install
 cp .env.example .env  # fill in your keys (optional — read-only tools work without)
@@ -333,7 +333,7 @@ See [ROADMAP.md](ROADMAP.md) for the full 3-track rollout plan, dependency graph
 
 We welcome contributions! See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the issue workflow, label guide, and branch conventions.
 
-Good first issues: [`gh issue list --label "good first issue"`](https://github.com/CShear/regen-compute/labels/good%20first%20issue)
+Good first issues: [`gh issue list --label "good first issue"`](https://github.com/regen-network/regen-compute/labels/good%20first%20issue)
 
 ## License
 

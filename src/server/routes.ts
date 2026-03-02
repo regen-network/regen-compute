@@ -364,7 +364,7 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
     <div class="container">
       <a class="cta-btn" href="#pricing">Choose Your Plan</a>
       <p>Powered by <a href="https://regen.network">Regen Network</a></p>
-      <p><a href="https://github.com/CShear/regen-compute">GitHub</a></p>
+      <p><a href="https://github.com/regen-network/regen-compute">GitHub</a></p>
     </div>
   </section>
 

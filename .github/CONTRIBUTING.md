@@ -33,7 +33,7 @@ npm run build     # Production build to dist/
 
 ## Issue Workflow
 
-All tasks live in [GitHub Issues](https://github.com/CShear/regen-compute/issues). Here's how they're organized:
+All tasks live in [GitHub Issues](https://github.com/regen-network/regen-compute/issues). Here's how they're organized:
 
 ### Labels
 

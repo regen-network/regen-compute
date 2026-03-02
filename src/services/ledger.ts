@@ -8,6 +8,9 @@
 const REGEN_LCD_URL =
   process.env.REGEN_LCD_URL || "https://lcd-regen.keplr.app";
 
+// Credit classes excluded from the regen-compute program (Verra/VCS credits)
+const EXCLUDED_CLASS_IDS = new Set(["C01", "C03"]);
+
 export interface CreditClass {
   id: string;
   admin: string;
@@ -64,7 +67,7 @@ export async function listCreditClasses(): Promise<CreditClass[]> {
   const data = await fetchJSON<{ classes: CreditClass[] }>(
     "/regen/ecocredit/v1/classes"
   );
-  return data.classes;
+  return data.classes.filter((c) => !EXCLUDED_CLASS_IDS.has(c.id));
 }
 
 export async function listProjects(classId?: string): Promise<Project[]> {
@@ -72,7 +75,7 @@ export async function listProjects(classId?: string): Promise<Project[]> {
     ? `/regen/ecocredit/v1/projects-by-class/${classId}`
     : "/regen/ecocredit/v1/projects";
   const data = await fetchJSON<{ projects: Project[] }>(path);
-  return data.projects;
+  return data.projects.filter((p) => !EXCLUDED_CLASS_IDS.has(p.class_id));
 }
 
 export async function listBatches(projectId?: string): Promise<CreditBatch[]> {
@@ -80,14 +83,20 @@ export async function listBatches(projectId?: string): Promise<CreditBatch[]> {
     ? `/regen/ecocredit/v1/batches-by-project/${projectId}`
     : "/regen/ecocredit/v1/batches";
   const data = await fetchJSON<{ batches: CreditBatch[] }>(path);
-  return data.batches;
+  return data.batches.filter((b) => {
+    const classId = b.denom.replace(/-\d.*$/, "");
+    return !EXCLUDED_CLASS_IDS.has(classId);
+  });
 }
 
 export async function listSellOrders(): Promise<SellOrder[]> {
   const data = await fetchJSON<{ sell_orders: SellOrder[] }>(
     "/regen/ecocredit/marketplace/v1/sell-orders"
   );
-  return data.sell_orders;
+  return data.sell_orders.filter((o) => {
+    const classId = o.batch_denom.replace(/-\d.*$/, "");
+    return !EXCLUDED_CLASS_IDS.has(classId);
+  });
 }
 
 export async function getAllowedDenoms(): Promise<AllowedDenom[]> {

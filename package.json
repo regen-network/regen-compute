@@ -41,15 +41,15 @@
     "claude-code",
     "cursor"
   ],
-  "author": "CShear",
+  "author": "Regen Network Development, PBC",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/CShear/regen-compute#readme",
+  "homepage": "https://github.com/regen-network/regen-compute#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CShear/regen-compute.git"
+    "url": "git+https://github.com/regen-network/regen-compute.git"
   },
   "bugs": {
-    "url": "https://github.com/CShear/regen-compute/issues"
+    "url": "https://github.com/regen-network/regen-compute/issues"
   },
   "engines": {
     "node": ">=20.0.0"

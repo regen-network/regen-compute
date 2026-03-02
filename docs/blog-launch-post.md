@@ -8,7 +8,7 @@ We built one.
 
 ## Introducing Regenerative Compute
 
-[Regenerative Compute](https://github.com/CShear/regen-compute) is an MCP (Model Context Protocol) server that connects your AI coding assistant to verified ecological credit retirement on [Regen Network](https://regen.network). Install it with one command:
+[Regenerative Compute](https://github.com/regen-network/regen-compute) is an MCP (Model Context Protocol) server that connects your AI coding assistant to verified ecological credit retirement on [Regen Network](https://regen.network). Install it with one command:
 
 ```bash
 claude mcp add -s user regen-compute -- npx regen-compute
@@ -157,7 +157,7 @@ Regenerative Compute v0.3.0 is live on [npm](https://www.npmjs.com/package/regen
 - **Platform partnerships** — native "Regenerative AI" integration in AI assistants
 - **Credit supply expansion** — onboarding new project developers for soil carbon, biochar, mangrove, and kelp credits
 
-Want to contribute? The project is open source: [github.com/CShear/regen-compute](https://github.com/CShear/regen-compute). Check the [issues](https://github.com/CShear/regen-compute/issues) for open tasks, or read the [ROADMAP.md](https://github.com/CShear/regen-compute/blob/main/ROADMAP.md) for the full strategic context.
+Want to contribute? The project is open source: [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute). Check the [issues](https://github.com/regen-network/regen-compute/issues) for open tasks, or read the [ROADMAP.md](https://github.com/regen-network/regen-compute/blob/main/ROADMAP.md) for the full strategic context.
 
 ## The Vision
 
@@ -169,4 +169,4 @@ That is what Regenerative AI looks like.
 
 ---
 
-*Regenerative Compute is published on [npm](https://www.npmjs.com/package/regen-compute) as v0.3.0. Source code: [github.com/CShear/regen-compute](https://github.com/CShear/regen-compute). Licensed Apache-2.0.*
+*Regenerative Compute is published on [npm](https://www.npmjs.com/package/regen-compute) as v0.3.0. Source code: [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute). Licensed Apache-2.0.*

@@ -6,14 +6,10 @@ This file provides context to Claude Code when working on this project.
 
 Regenerative Compute is an MCP (Model Context Protocol) server that connects AI compute usage to verified ecological credit retirement on Regen Network. The product name is **Regenerative Compute**; the category it creates is **Regenerative AI**. Users connect it to Claude Code or Cursor, and it provides tools to estimate their AI session's ecological footprint, browse available credits, and retire them via Regen Marketplace's existing credit card flow.
 
-## Strategic Context
+## Framing
 
-Read `docs/analysis.md` for the full business analysis. Key points:
-
-- **Problem**: Regen Network's REGEN token burn mechanics depend on ecocredit retirement volume, which is currently low. The demand-side flywheel is missing.
-- **Solution**: AI compute users become the demand engine. Subscriptions → credit purchases → retirements → REGEN burns. Outside capital enters the system.
-- **Framing**: This is "regenerative contribution," NOT "carbon offset." We fund verified ecological regeneration. We do not claim carbon neutrality. This distinction is strategic and legal.
-- **Marketplace state**: Live sell order data served dynamically. Credit card purchases live, retirement certificates exist on-chain.
+- This is "regenerative contribution," NOT "carbon offset." We fund verified ecological regeneration. We do not claim carbon neutrality.
+- Live sell order data served dynamically from Regen Ledger. Credit card purchases available via Regen Marketplace. Retirement certificates verifiable on-chain.
 
 ## Tech Stack
 
@@ -72,8 +68,8 @@ src/
 
 1. **Heuristic footprint, not precise metering** — MCP servers cannot see Claude's internal compute. We estimate based on session duration and tool call count. Label clearly as an estimate.
 2. **Graceful degradation** — When no wallet is configured, retire_credits returns marketplace links (Phase 1 behavior). When wallet is configured, it executes on-chain. Every error in the on-chain path falls back to a marketplace link — users are never stuck.
-3. **Both carbon AND biodiversity credits** — Biodiversity is the deeper inventory pool. Mix both for narrative strength ("ecological regeneration" > "carbon offset").
-4. **Certificates are the shareable artifact** — The `regen.network/certificate/XYZ` page is the most viral, defensible piece. Prioritize making it beautiful and linkable.
+3. **Both carbon AND biodiversity credits** — Support both credit types for broader ecological impact.
+4. **Certificates are the shareable artifact** — The `regen.network/certificate/XYZ` page is the key proof-of-retirement artifact. Prioritize making it beautiful and linkable.
 5. **Two-phase payment** — `PaymentProvider` uses authorize → capture pattern. For crypto: authorize = balance check, capture = no-op. For Stripe (future): authorize = hold card, capture = charge after on-chain success. This prevents charging users for failed transactions.
 6. **Cheapest-first order routing** — `order-selector.ts` sorts eligible sell orders by `ask_amount` ascending and fills greedily across multiple orders if needed.
 
@@ -85,7 +81,7 @@ src/
 - Batches: `GET /regen/ecocredit/v1/batches`
 - Sell orders: `GET /regen/ecocredit/marketplace/v1/sell-orders`
 - Credit types on-chain: C (carbon), BT (biodiversity - Terrasos), KSH (Kilo-Sheep-Hour), MBS (Marine Biodiversity Stewardship), USS (Umbrella Species Stewardship)
-- Default LCD endpoint: `lcd-regen.keplr.app` (stavr.tech was unreliable)
+- Default LCD endpoint: `lcd-regen.keplr.app`
 - Indexer GraphQL supports `condition` arg (not `filter`) for field-level queries
 - `txByHash` returns null — use `allRetirements(condition: { txHash: ... })` instead
 
@@ -120,35 +116,16 @@ src/
 
 ## Collaboration & Issue Workflow
 
-This project uses GitHub Issues as the task backlog. Read `ROADMAP.md` for the full strategic context.
+This project uses GitHub Issues as the task backlog.
 
 ### For AI assistants analyzing this repo
 
 When a collaborator asks you to understand what's needed:
 1. Read this file (CLAUDE.md) for technical context
-2. Read ROADMAP.md for strategic context and the 3-track rollout plan
-3. Run `gh issue list --label "priority:critical"` to see what's most urgent
-4. Issues are organized by:
-   - **Track**: `track-a` (developer community), `track-b` (subscriptions), `track-c` (enterprise)
-   - **Sprint**: `sprint:weeks-1-2` through `sprint:weeks-9-12`
-   - **Priority**: `priority:critical` > `priority:high` > `priority:medium`
-   - **Type**: `infra`, `design`, `documentation`, `enhancement`
-5. Each issue has acceptance criteria as a checklist
-6. Check issue comments for dependency notes (e.g., "Depends on #6")
-
-### Key dependencies (critical path)
-
-```
-#5 Polish MCP ──┐
-#8 Certificate ─┤──→ #18 Community seeding ──→ #12 Blog + #15 Demo
-#21 Publish npm ┘
-                     #6 Stripe ──→ #9 Pool accounting ──→ #11 Email flow
-                                                       ──→ #17 Dashboard
-                                                       ──→ #20 REGEN burn
-                                                       ──→ #14 Dev API
-#4 Anthropic pitch (parallel, starts Week 1)
-#13 Credit supply (parallel, starts Week 1)
-```
+2. Read ROADMAP.md for the project roadmap
+3. Run `gh issue list` to see open issues
+4. Each issue has acceptance criteria as a checklist
+5. Check issue comments for dependency notes (e.g., "Depends on #6")
 
 ### Branch conventions
 - Feature branches: `feature/<issue-number>-short-description`

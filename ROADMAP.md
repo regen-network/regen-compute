@@ -140,7 +140,7 @@ Key deliverables:
 
 ## Critical Path & Dependencies
 
-Issues are in [GitHub Issues](https://github.com/CShear/regen-compute/issues). Here's the dependency graph:
+Issues are in [GitHub Issues](https://github.com/regen-network/regen-compute/issues). Here's the dependency graph:
 
 ### Foundation (Weeks 1-2) — Must complete first
 - **#5** Polish MCP for public release → gates Track A launch
@@ -168,7 +168,7 @@ Issues are in [GitHub Issues](https://github.com/CShear/regen-compute/issues). H
 
 ## How to Contribute
 
-1. Check the [GitHub Issues](https://github.com/CShear/regen-compute/issues) for open tasks
+1. Check the [GitHub Issues](https://github.com/regen-network/regen-compute/issues) for open tasks
 2. Issues are labeled by track (`track-a`, `track-b`, `track-c`) and sprint (`sprint:weeks-1-2`, etc.)
 3. `good first issue` labels mark approachable entry points
 4. Read `CLAUDE.md` for full developer context (build commands, API notes, conventions)
@@ -177,7 +177,7 @@ Issues are in [GitHub Issues](https://github.com/CShear/regen-compute/issues). H
 ### Quick Start
 
 ```bash
-git clone https://github.com/CShear/regen-compute.git
+git clone https://github.com/regen-network/regen-compute.git
 cd regen-compute
 npm install
 cp .env.example .env  # edit with your keys
