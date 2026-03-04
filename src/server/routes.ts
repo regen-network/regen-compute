@@ -850,18 +850,18 @@ ${betaBannerJS()}
     <div class="regen-tiers">
       <a class="regen-tier regen-card--interactive" href="${seedlingUrl}">
         <div class="regen-tier__name">Dabbler</div>
-        <div class="regen-tier__price">$5</div>
-        <div class="regen-tier__desc">Casual AI user<br>~125 sessions</div>
+        <div class="regen-tier__price">$2.50/mo</div>
+        <div class="regen-tier__desc">I chat with AI sometimes</div>
       </a>
       <a class="regen-tier regen-card--interactive" href="${groveUrl}">
         <div class="regen-tier__name">Builder</div>
-        <div class="regen-tier__price">$10</div>
-        <div class="regen-tier__desc">Regular AI user<br>~250 sessions</div>
+        <div class="regen-tier__price">$7/mo</div>
+        <div class="regen-tier__desc">I regularly use AI for work</div>
       </a>
       <a class="regen-tier regen-card--interactive" href="${forestUrl}">
         <div class="regen-tier__name">Maximalist</div>
-        <div class="regen-tier__price">$25</div>
-        <div class="regen-tier__desc">AI power user<br>~625 sessions</div>
+        <div class="regen-tier__price">$15/mo</div>
+        <div class="regen-tier__desc">AI is my co-pilot at all times</div>
       </a>
     </div>
 

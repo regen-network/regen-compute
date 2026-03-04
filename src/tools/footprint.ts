@@ -34,6 +34,10 @@ export async function estimateMonthlyFootprintTool(
 ) {
   const estimate = estimateMonthlyFootprint({ hoursPerDay, location, aiProducts });
 
+  // Recommend a tier based on estimated monthly cost
+  const baseCost = estimate.monthly_co2_kg / 1000 * 40; // tonnes * $/tonne
+  const recommended = baseCost <= 3.5 ? "Dabbler" : baseCost <= 10 ? "Builder" : "Maximalist";
+
   const text = [
     `## Personalized Monthly Footprint Estimate`,
     ``,
@@ -46,17 +50,17 @@ export async function estimateMonthlyFootprintTool(
     `| Monthly energy | ~${estimate.monthly_energy_kwh} kWh |`,
     `| Monthly CO2 | ~${estimate.monthly_co2_kg} kg |`,
     ``,
-    `### Recommended Monthly Contribution`,
+    `### Subscription Tiers`,
     ``,
-    `| Level | Coverage | Amount |`,
-    `|-------|----------|--------|`,
-    `| **Dabbler** | Casual AI use | **$${estimate.dabbler_amount_usd}/mo** |`,
-    `| **Builder** | Regular AI use | **$${estimate.builder_amount_usd}/mo** |`,
-    `| **Maximalist** | AI power user | **$${estimate.maximalist_amount_usd}/mo** |`,
+    `| Tier | Price | Best for |`,
+    `|------|-------|----------|`,
+    `| **Dabbler** | $2.50/mo | I chat with AI sometimes${recommended === "Dabbler" ? " ← recommended for you" : ""} |`,
+    `| **Builder** | $7/mo | I regularly use AI for work${recommended === "Builder" ? " ← recommended for you" : ""} |`,
+    `| **Maximalist** | $15/mo | AI is my co-pilot at all times${recommended === "Maximalist" ? " ← recommended for you" : ""} |`,
     ``,
     `> ${estimate.methodology_note}`,
     ``,
-    `Subscribe at your recommended level: https://compute.regen.network`,
+    `Subscribe: https://compute.regen.network`,
   ].join("\n");
 
   return { content: [{ type: "text" as const, text }] };
