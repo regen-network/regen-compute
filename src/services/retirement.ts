@@ -85,9 +85,12 @@ async function debitPrepaidBalance(
   }
 }
 
-function getMarketplaceLink(): string {
+function getMarketplaceLink(creditClass?: string): string {
   const config = loadConfig();
-  return `${config.marketplaceUrl}/projects/1?buying_options_filters=credit_card`;
+  if (creditClass) {
+    return `${config.marketplaceUrl}/credit-classes/${creditClass}`;
+  }
+  return `${config.marketplaceUrl}/credit-classes`;
 }
 
 function getPaymentProvider(): PaymentProvider {
@@ -116,7 +119,7 @@ export function formatAmount(
 function fallback(message: string, params: RetirementParams): RetirementResult {
   return {
     status: "marketplace_fallback",
-    marketplaceUrl: getMarketplaceLink(),
+    marketplaceUrl: getMarketplaceLink(params.creditClass),
     message,
     beneficiaryName: params.beneficiaryName,
   };

@@ -567,8 +567,13 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
         res.status(400).json({ error: `Webhook Error: ${msg}` });
         return;
       }
+    } else if (process.env.NODE_ENV === "production") {
+      console.error("Webhook rejected: STRIPE_WEBHOOK_SECRET is required in production");
+      res.status(500).json({ error: "Webhook signature verification not configured" });
+      return;
     } else {
-      // In test mode without webhook secret, parse the raw body
+      // Development only: accept unverified webhooks for local testing
+      console.warn("WARNING: Processing unverified webhook (no STRIPE_WEBHOOK_SECRET set)");
       const body = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : req.body;
       event = (typeof body === "string" ? JSON.parse(body) : body) as Stripe.Event;
     }

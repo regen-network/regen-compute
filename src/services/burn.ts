@@ -237,7 +237,7 @@ export async function executeBurn(options: {
 /** Format a burn result for human-readable output. */
 export function formatBurnResult(result: BurnResult): string {
   const lines: string[] = [
-    `--- REGEN Burn (10%) ---`,
+    `--- REGEN Burn (5%) ---`,
     `  Allocation: $${(result.allocationCents / 100).toFixed(2)}`,
   ];
 

@@ -47,7 +47,7 @@ export async function initWallet(): Promise<{ address: string; client: SigningSt
     {
       registry,
       aminoTypes,
-      gasPrice: GasPrice.fromString("0.025uregen"),
+      gasPrice: GasPrice.fromString(config.gasPrice),
     }
   );
 

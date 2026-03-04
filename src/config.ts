@@ -56,6 +56,9 @@ export interface Config {
   burnEnabled: boolean;
   regenPriceApiUrl: string;
 
+  // Gas price
+  gasPrice: string;
+
   // Developer API
   apiRateLimit: number;
 
@@ -113,6 +116,8 @@ export function loadConfig(): Config {
     postmarkServerToken: process.env.POSTMARK_SERVER_TOKEN || undefined,
     emailFromAddress: process.env.EMAIL_FROM_ADDRESS || "impact@regen-compute.com",
     emailEnabled: process.env.EMAIL_ENABLED !== "false",
+
+    gasPrice: process.env.REGEN_GAS_PRICE || "0.025uregen",
 
     burnEnabled: process.env.REGEN_BURN_ENABLED === "true",
     regenPriceApiUrl:
