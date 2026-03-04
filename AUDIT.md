@@ -79,15 +79,13 @@ db.prepare("UPDATE magic_links SET used = 1 WHERE token = ?").run(token);
 
 **Fix:**
 ```typescript
-const result = db.prepare(
-  "UPDATE magic_links SET used = 1 WHERE token = ? AND used = 0 AND expires_at > datetime('now')"
-).run(token);
-if (result.changes === 0) return null;
-const row = db.prepare("SELECT email FROM magic_links WHERE token = ?").get(token);
+const row = db.prepare(
+  "UPDATE magic_links SET used = 1 WHERE token = ? AND used = 0 AND expires_at > datetime('now') RETURNING email"
+).get(token) as { email: string } | undefined;
 return row?.email ?? null;
 ```
 
-### S4 — MEDIUM: Dependency Vulnerabilities
+### S4 — HIGH: Dependency Vulnerabilities
 
 **npm audit:** 9 vulnerabilities (4 low, 5 high)
 

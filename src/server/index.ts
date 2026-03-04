@@ -43,6 +43,10 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
 
   // Payment routes — require Stripe
   const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (stripeKey && process.env.NODE_ENV === "production" && !process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("FATAL: STRIPE_WEBHOOK_SECRET is required in production when Stripe is enabled");
+    process.exit(1);
+  }
   if (stripeKey) {
     const stripe = new Stripe(stripeKey);
     const db = getDb(dbPath);
