@@ -431,9 +431,9 @@ export function createApiRoutes(
         referral_link: referralLink,
         referral_count: referralCount,
         plans: [
-          { name: "Seedling", price: "$2.50/mo", description: "~0.5 carbon credits/mo" },
-          { name: "Grove", price: "$7/mo", description: "~1.5 carbon + biodiversity credits/mo" },
-          { name: "Forest", price: "$15/mo", description: "~3 carbon + biodiversity credits/mo" },
+          { name: "Dabbler", price: "$2.50/mo", description: "I chat with AI sometimes" },
+          { name: "Builder", price: "$7/mo", description: "I regularly use AI for work" },
+          { name: "Maximalist", price: "$15/mo", description: "AI is my co-pilot at all times" },
         ],
       });
       return;

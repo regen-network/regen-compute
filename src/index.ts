@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { estimateSessionFootprint } from "./tools/footprint.js";
+import { estimateSessionFootprint, estimateMonthlyFootprintTool } from "./tools/footprint.js";
 import { browseAvailableCredits } from "./tools/credits.js";
 import { getRetirementCertificate } from "./tools/certificates.js";
 import { getImpactSummary } from "./tools/impact.js";
@@ -222,6 +222,34 @@ server.tool(
   },
   async ({ session_minutes, tool_calls }) => {
     return estimateSessionFootprint(session_minutes, tool_calls);
+  }
+);
+
+// Tool: Estimate personalized monthly footprint
+server.tool(
+  "estimate_monthly_footprint",
+  "Estimates a personalized monthly ecological footprint based on daily AI usage hours, location, and AI products used. Returns recommended contribution amounts at three levels (Partial ~50%, Full ~100%, Regenerate! ~200%). Use this when the user wants a personalized recommendation for their subscription amount.",
+  {
+    hours_per_day: z
+      .number()
+      .describe("Average hours per day spent using AI tools"),
+    location: z
+      .string()
+      .optional()
+      .describe("Country code for grid carbon intensity (e.g., 'us', 'de', 'in'). Defaults to global average."),
+    ai_products: z
+      .array(z.string())
+      .optional()
+      .describe("List of AI products used (e.g., ['claude code', 'copilot', 'chatgpt'])"),
+  },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
+  async ({ hours_per_day, location, ai_products }) => {
+    return estimateMonthlyFootprintTool(hours_per_day, location, ai_products);
   }
 );
 
@@ -649,6 +677,42 @@ server.prompt(
               `then summarize the scale of ecological regeneration happening on the network.`,
               `Include how many credits have been retired, how many projects are active,`,
               `and what types of ecological credits are available.`,
+            ].join("\n"),
+          },
+        },
+      ],
+    };
+  }
+);
+
+// Prompt: Personalize your subscription
+server.prompt(
+  "personalize_subscription",
+  "Get a personalized recommendation for your Regenerative Compute subscription based on your actual AI usage, location, and tools.",
+  async () => {
+    return {
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: [
+              `I'd like to figure out the right Regenerative Compute subscription amount for me.`,
+              ``,
+              `Please walk me through this step by step:`,
+              ``,
+              `1. **Ask me** roughly how many hours per day I spend using AI tools (coding assistants, chat, etc.)`,
+              `2. **Ask me** what country I'm in (for grid carbon intensity — it's fine to skip if I'm not sure)`,
+              `3. **Ask me** which AI products I use regularly (Claude, Claude Code, ChatGPT, Copilot, Cursor, Gemini, etc.)`,
+              `4. **Call** \`estimate_monthly_footprint\` with my answers`,
+              `5. **Present** the three recommendation levels:`,
+              `   - **Dabbler** — "I chat with AI sometimes" (~casual usage coverage)`,
+              `   - **Builder** — "I regularly use AI for work" (~full usage coverage)`,
+              `   - **Maximalist** — "AI is my co-pilot at all times" (~double impact, go beyond neutral)`,
+              `6. **Share** the link to subscribe: the Regenerative Compute landing page`,
+              ``,
+              `Keep the tone encouraging and informative — this is about empowering the user, not guilt-tripping them.`,
+              `Explain that these are estimates based on published research, and any level of contribution matters.`,
             ].join("\n"),
           },
         },

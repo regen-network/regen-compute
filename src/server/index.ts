@@ -41,36 +41,41 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     res.json({ status: "ok", version: "0.3.0" });
   });
 
-  // Payment routes — require Stripe
+  // Always init DB and config — display-only pages need them
+  const db = getDb(dbPath);
+  const config = loadConfig();
+
+  // Stripe setup (optional — display pages work without it)
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   if (stripeKey && process.env.NODE_ENV === "production" && !process.env.STRIPE_WEBHOOK_SECRET) {
     console.error("FATAL: STRIPE_WEBHOOK_SECRET is required in production when Stripe is enabled");
     process.exit(1);
   }
-  if (stripeKey) {
-    const stripe = new Stripe(stripeKey);
-    const db = getDb(dbPath);
+  const stripe = stripeKey ? new Stripe(stripeKey) : null;
 
-    // Stripe webhooks need raw body for signature verification
+  // Stripe webhooks need raw body for signature verification
+  if (stripe) {
     app.use("/webhook", express.raw({ type: "application/json" }));
+  }
 
-    // Everything else uses JSON
-    app.use(express.json());
+  // JSON + URL-encoded body parsing
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
 
-    // Mount payment routes
-    const config = loadConfig();
-    const routes = createRoutes(stripe, db, baseUrl, config);
-    app.use(routes);
+  // Mount routes (landing page, feedback, cancel, checkout-page always work;
+  // Stripe-dependent routes like /subscribe, /checkout, /webhook, /success, /manage
+  // are conditionally registered inside createRoutes when stripe is non-null)
+  const routes = createRoutes(stripe, db, baseUrl, config);
+  app.use(routes);
 
-    // Mount developer API routes
+  // Dashboard routes (login page works without Stripe; full dashboard needs DB)
+  const dashboardRoutes = createDashboardRoutes(db, baseUrl, config);
+  app.use(dashboardRoutes);
+
+  if (stripe) {
+    // Developer API routes (require Stripe for the full API key system)
     const apiRoutes = createApiRoutes(db, baseUrl, config);
     app.use(apiRoutes);
-
-    // Mount subscriber dashboard routes
-    // JSON + URL-encoded body parsing is already set up above
-    app.use(express.urlencoded({ extended: false }));
-    const dashboardRoutes = createDashboardRoutes(db, baseUrl, config);
-    app.use(dashboardRoutes);
   }
 
   app.listen(port, () => {

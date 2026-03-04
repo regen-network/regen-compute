@@ -10,6 +10,8 @@
 
 import { Router, Request, Response } from "express";
 import { getRetirementById, type Retirement } from "../services/indexer.js";
+import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 
 // --- Credit type visual themes ---
 
@@ -166,369 +168,155 @@ function renderCertificatePage(
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${escapeHtml(badgeUrl)}" />
 
+  ${brandFonts()}
   <style>
-    :root {
-      --accent: ${theme.accent};
-      --accent-light: ${theme.accentLight};
-      --gradient-from: ${theme.gradientFrom};
-      --gradient-to: ${theme.gradientTo};
-    }
+    ${betaBannerCSS()}
+    ${brandCSS()}
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --cert-accent: ${theme.accent};
+      --cert-accent-light: ${theme.accentLight};
+      --cert-gradient-from: ${theme.gradientFrom};
+      --cert-gradient-to: ${theme.gradientTo};
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #1a1a1a;
-      line-height: 1.6;
-      background: linear-gradient(135deg, var(--accent-light) 0%, #fafafa 40%, #fafafa 100%);
+      background: linear-gradient(135deg, var(--cert-accent-light) 0%, #fafafa 40%, #fafafa 100%);
       min-height: 100vh;
-      padding: 40px 16px;
+      padding: 0;
     }
 
-    .container {
-      max-width: 640px;
-      margin: 0 auto;
-    }
+    .cert-container { max-width: 640px; margin: 0 auto; padding: 32px 16px 0; }
 
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .header-brand {
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 4px;
-    }
-
-    .card {
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    .cert-card {
+      background: var(--regen-white);
+      border: 1px solid var(--regen-gray-200);
+      border-radius: var(--regen-radius-lg);
+      box-shadow: var(--regen-shadow-card);
       overflow: hidden;
     }
 
-    .card-top {
-      background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
-      color: #fff;
-      padding: 32px 32px 28px;
-      text-align: center;
+    .cert-top {
+      background: linear-gradient(135deg, var(--cert-gradient-from), var(--cert-gradient-to));
+      color: #fff; padding: 32px 32px 28px; text-align: center;
+    }
+    .cert-top-label {
+      font-family: var(--regen-font-secondary);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; opacity: 0.85; margin-bottom: 8px;
+    }
+    .cert-top-title { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 16px; }
+    .cert-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.2); border-radius: 24px;
+      padding: 6px 16px 6px 10px; font-size: 14px; font-weight: 700;
+    }
+    .cert-badge svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .cert-amount { font-size: 40px; font-weight: 900; letter-spacing: -0.02em; margin: 16px 0 4px; }
+    .cert-amount-label { font-size: 14px; opacity: 0.85; }
+
+    .cert-body { padding: 28px 32px; }
+
+    .cert-details { width: 100%; border-collapse: collapse; }
+    .cert-details tr { border-bottom: 1px solid var(--regen-gray-100); }
+    .cert-details tr:last-child { border-bottom: none; }
+    .cert-details td { padding: 12px 0; vertical-align: top; }
+    .cert-details .cert-label {
+      font-family: var(--regen-font-secondary);
+      font-size: 13px; font-weight: 600; color: var(--regen-gray-500);
+      width: 140px; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .cert-details .cert-value { font-size: 14px; color: var(--regen-black); word-break: break-all; }
+
+    .cert-embed { margin-top: 32px; }
+    .cert-embed-code {
+      display: block; width: 100%; min-height: 80px;
+      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      font-size: 11px; line-height: 1.5; padding: 12px;
+      border: 1px solid var(--regen-gray-200); border-radius: 8px;
+      background: var(--regen-gray-50); color: var(--regen-gray-700); resize: vertical;
     }
 
-    .card-top-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      opacity: 0.85;
-      margin-bottom: 8px;
-    }
-
-    .card-top-title {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 16px;
-    }
-
-    .credit-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 24px;
-      padding: 6px 16px 6px 10px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .credit-badge svg {
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-    }
-
-    .amount-hero {
-      font-size: 40px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin: 16px 0 4px;
-    }
-
-    .amount-label {
-      font-size: 14px;
-      opacity: 0.85;
-    }
-
-    .card-body {
-      padding: 28px 32px;
-    }
-
-    .details-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .details-table tr {
-      border-bottom: 1px solid #f3f4f6;
-    }
-
-    .details-table tr:last-child {
-      border-bottom: none;
-    }
-
-    .details-table td {
-      padding: 12px 0;
-      vertical-align: top;
-    }
-
-    .details-table .label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #6b7280;
-      width: 140px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .details-table .value {
-      font-size: 14px;
-      color: #1a1a1a;
-      word-break: break-all;
-    }
-
-    .proof-section {
-      margin-top: 24px;
-      padding: 16px 20px;
-      background: #f9fafb;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .proof-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #6b7280;
-      margin-bottom: 10px;
-    }
-
-    .proof-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-
-    .proof-row:last-child { margin-bottom: 0; }
-
-    .proof-label {
-      color: #6b7280;
-      font-weight: 500;
-    }
-
-    .proof-value {
-      font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-      font-size: 12px;
-      color: #1a1a1a;
-    }
-
-    .proof-value a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .proof-value a:hover {
-      text-decoration: underline;
-    }
-
-    .embed-section {
-      margin-top: 32px;
-    }
-
-    .embed-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #374151;
-      margin-bottom: 8px;
-    }
-
-    .embed-desc {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 12px;
-    }
-
-    .embed-preview {
-      text-align: center;
-      margin-bottom: 12px;
-    }
-
-    .embed-code {
-      display: block;
-      width: 100%;
-      min-height: 80px;
-      font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-      font-size: 11px;
-      line-height: 1.5;
-      padding: 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #f9fafb;
-      color: #374151;
-      resize: vertical;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 32px;
-      padding: 0 16px;
-    }
-
-    .footer-brand {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 8px;
-    }
-
-    .footer-brand a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .footer-brand a:hover {
-      text-decoration: underline;
-    }
-
-    .footer-install {
-      font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-      font-size: 11px;
-      color: #9ca3af;
-      background: #f3f4f6;
-      border-radius: 6px;
-      padding: 8px 12px;
-      display: inline-block;
-      margin-top: 4px;
-    }
-
-    .footer-note {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-top: 12px;
+    .cert-cta {
+      text-align: center; margin: 28px auto; max-width: 480px;
+      background: var(--regen-green-bg); border: 2px solid var(--regen-green);
+      border-radius: var(--regen-radius-lg); padding: 24px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="header-brand">Regenerative Compute</div>
-    </div>
+  ${betaBannerHTML()}
+  ${brandHeader()}
 
-    <div class="card">
-      <div class="card-top">
-        <div class="card-top-label">Ecological Regeneration Certificate</div>
-        <div class="card-top-title">Verified Credit Retirement</div>
-        <div class="credit-badge">
+  <div class="cert-container">
+    <div class="cert-card">
+      <div class="cert-top">
+        <div class="cert-top-label">Ecological Regeneration Certificate</div>
+        <div class="cert-top-title">Verified Credit Retirement</div>
+        <div class="cert-badge">
           <svg viewBox="0 0 24 24" fill="none">${theme.icon}</svg>
           ${escapeHtml(theme.label)} (${escapeHtml(abbrev)})
         </div>
-        <div class="amount-hero">${escapeHtml(amount)}</div>
-        <div class="amount-label">credits permanently retired</div>
+        <div class="cert-amount">${escapeHtml(amount)}</div>
+        <div class="cert-amount-label">credits permanently retired</div>
       </div>
 
-      <div class="card-body">
-        <table class="details-table">
-          <tr>
-            <td class="label">Credit Batch</td>
-            <td class="value">${escapeHtml(retirement.batchDenom)}</td>
-          </tr>
-          <tr>
-            <td class="label">Beneficiary</td>
-            <td class="value">${escapeHtml(retirement.owner)}</td>
-          </tr>
-          <tr>
-            <td class="label">Jurisdiction</td>
-            <td class="value">${escapeHtml(retirement.jurisdiction || "N/A")}</td>
-          </tr>
-          <tr>
-            <td class="label">Reason</td>
-            <td class="value">${escapeHtml(retirement.reason || "Ecological regeneration")}</td>
-          </tr>
-          <tr>
-            <td class="label">Date</td>
-            <td class="value">${escapeHtml(date)}</td>
-          </tr>
+      <div class="cert-body">
+        <table class="cert-details">
+          <tr><td class="cert-label">Credit Batch</td><td class="cert-value">${escapeHtml(retirement.batchDenom)}</td></tr>
+          <tr><td class="cert-label">Beneficiary</td><td class="cert-value">${escapeHtml(retirement.owner)}</td></tr>
+          <tr><td class="cert-label">Jurisdiction</td><td class="cert-value">${escapeHtml(retirement.jurisdiction || "N/A")}</td></tr>
+          <tr><td class="cert-label">Reason</td><td class="cert-value">${escapeHtml(retirement.reason || "Ecological regeneration")}</td></tr>
+          <tr><td class="cert-label">Date</td><td class="cert-value">${escapeHtml(date)}</td></tr>
         </table>
 
-        <div class="proof-section">
-          <div class="proof-title">On-Chain Proof</div>
-          <div class="proof-row">
-            <span class="proof-label">Transaction</span>
-            <span class="proof-value">
-              <a href="${escapeHtml(explorerUrl)}" target="_blank" rel="noopener">${escapeHtml(truncateHash(retirement.txHash))}</a>
-            </span>
+        <div class="regen-proof-section">
+          <div class="regen-proof-title">On-Chain Proof</div>
+          <div class="regen-proof-row">
+            <span class="regen-proof-label">Transaction</span>
+            <span class="regen-proof-value"><a href="${escapeHtml(explorerUrl)}" target="_blank" rel="noopener">${escapeHtml(truncateHash(retirement.txHash))}</a></span>
           </div>
-          <div class="proof-row">
-            <span class="proof-label">Block</span>
-            <span class="proof-value">${escapeHtml(retirement.blockHeight)}</span>
+          <div class="regen-proof-row">
+            <span class="regen-proof-label">Block</span>
+            <span class="regen-proof-value">${escapeHtml(retirement.blockHeight)}</span>
           </div>
-          <div class="proof-row">
-            <span class="proof-label">Ledger</span>
-            <span class="proof-value">Regen Network (regen-1)</span>
+          <div class="regen-proof-row">
+            <span class="regen-proof-label">Ledger</span>
+            <span class="regen-proof-value">Regen Network (regen-1)</span>
           </div>
         </div>
 
-        <div class="embed-section">
-          <div class="embed-title">Share this certificate</div>
-          <div class="embed-desc">Add this badge to your README, website, or profile:</div>
-          <div class="embed-preview">
+        <div class="cert-embed">
+          <div style="font-size:14px;font-weight:700;color:var(--regen-navy);margin-bottom:8px;">Share this certificate</div>
+          <div style="font-size:13px;color:var(--regen-gray-500);margin-bottom:12px;">Add this badge to your README, website, or profile:</div>
+          <div style="text-align:center;margin-bottom:12px;">
             <a href="${escapeHtml(certUrl)}">
               <img src="${escapeHtml(badgeUrl)}" alt="${escapeHtml(amount)} ${escapeHtml(theme.name.toLowerCase())} credits retired via Regenerative AI" width="320" height="80" />
             </a>
           </div>
-          <textarea class="embed-code" readonly onclick="this.select()">${embedSnippet}</textarea>
+          <textarea class="cert-embed-code" readonly onclick="this.select()">${embedSnippet}</textarea>
         </div>
 
-        <div class="share-section" style="margin-top: 28px; text-align: center;">
-          <div style="font-size: 14px; font-weight: 700; color: #374151; margin-bottom: 12px;">Share your impact</div>
-          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just retired ${amount} ${theme.name.toLowerCase()} credits on Regen Network — funding verified ecological regeneration.`)}&url=${encodeURIComponent(certUrl)}"
-               target="_blank" rel="noopener"
-               style="display: inline-block; padding: 10px 20px; background: #1a1a1a; color: #fff; font-size: 13px; font-weight: 600; border-radius: 6px; text-decoration: none;">Post on X</a>
-            <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certUrl)}"
-               target="_blank" rel="noopener"
-               style="display: inline-block; padding: 10px 20px; background: #0a66c2; color: #fff; font-size: 13px; font-weight: 600; border-radius: 6px; text-decoration: none;">Share on LinkedIn</a>
-            <button onclick="navigator.clipboard.writeText('${escapeHtml(certUrl)}').then(function(){this.textContent='Copied!'}.bind(this))"
-                    style="padding: 10px 20px; background: #6b7280; color: #fff; font-size: 13px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer;">Copy Link</button>
+        <div style="margin-top:28px;text-align:center;">
+          <div style="font-size:14px;font-weight:700;color:var(--regen-navy);margin-bottom:12px;">Share your impact</div>
+          <div class="regen-share-btns">
+            <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just retired ${amount} ${theme.name.toLowerCase()} credits on Regen Network — funding verified ecological regeneration.`)}&url=${encodeURIComponent(certUrl)}" target="_blank" rel="noopener">Post on X</a>
+            <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certUrl)}" target="_blank" rel="noopener">Share on LinkedIn</a>
+            <button class="regen-share-btn regen-share-btn--copy" onclick="navigator.clipboard.writeText('${escapeHtml(certUrl)}').then(function(){this.textContent='Copied!'}.bind(this))">Copy Link</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div style="text-align: center; margin: 28px auto; max-width: 480px; background: #f0f7f4; border: 2px solid #2d6a4f; border-radius: 12px; padding: 24px;">
-      <div style="font-size: 16px; font-weight: 700; color: #2d6a4f; margin-bottom: 8px;">Fund regeneration for your AI sessions</div>
-      <div style="font-size: 14px; color: #555; margin-bottom: 16px;">Monthly subscriptions from $2.50/mo retire verified ecological credits on Regen Network.</div>
-      <a href="${escapeHtml(baseUrl)}/#pricing"
-         style="display: inline-block; padding: 12px 28px; background: #2d6a4f; color: #fff; font-size: 15px; font-weight: 600; border-radius: 8px; text-decoration: none;">Subscribe</a>
-    </div>
-
-    <div class="footer">
-      <div class="footer-brand">
-        Powered by <a href="https://regen.network" target="_blank" rel="noopener">Regen Network</a>
-      </div>
-      <div class="footer-install">claude mcp add -s user regen-compute -- npx regen-compute</div>
-      <div class="footer-note">
-        This retirement is permanently recorded on Regen Ledger and cannot be altered or reversed.
-      </div>
+    <div class="cert-cta">
+      <div style="font-size:16px;font-weight:800;color:var(--regen-green);margin-bottom:8px;">Fund regeneration for your AI sessions</div>
+      <div style="font-size:14px;color:var(--regen-gray-500);margin-bottom:16px;">Monthly subscriptions from $2.50/mo retire verified ecological credits on Regen Network.</div>
+      <a class="regen-btn regen-btn--solid" href="${escapeHtml(baseUrl)}/#pricing">Subscribe</a>
     </div>
   </div>
+
+  ${brandFooter({ showInstall: true })}
+${betaBannerJS()}
 </body>
 </html>`;
 }

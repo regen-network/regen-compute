@@ -150,9 +150,9 @@ export async function checkSubscriptionStatus(): Promise<{
         }
       } else {
         lines.push(
-          `| Seedling | $2.50/mo | ~0.5 carbon credits/mo |`,
-          `| Grove | $7/mo | ~1.5 carbon + biodiversity credits/mo |`,
-          `| Forest | $15/mo | ~3 carbon + biodiversity credits/mo |`
+          `| Dabbler | $2.50/mo | I chat with AI sometimes |`,
+          `| Builder | $7/mo | I regularly use AI for work |`,
+          `| Maximalist | $15/mo | AI is my co-pilot at all times |`
         );
       }
 

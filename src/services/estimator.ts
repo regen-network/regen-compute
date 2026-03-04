@@ -44,6 +44,114 @@ export interface FootprintEstimate {
   methodology_note: string;
 }
 
+// --- Monthly footprint estimation (personalized) ---
+
+// Regional grid carbon intensity (kg CO2 per kWh)
+// Source: IEA Electricity Information 2023, Ember Global Electricity Review 2024
+const GRID_INTENSITY: Record<string, number> = {
+  global: 0.4,
+  us: 0.37,
+  uk: 0.21,
+  de: 0.35,
+  fr: 0.06,
+  se: 0.04,
+  no: 0.02,
+  ca: 0.12,
+  au: 0.56,
+  jp: 0.46,
+  cn: 0.54,
+  in: 0.71,
+  br: 0.07,
+  za: 0.87,
+  kr: 0.42,
+  pl: 0.63,
+};
+
+// AI product relative energy multipliers (base = 1.0 for Claude/GPT-4 class)
+// Accounts for model size, inference strategy, and typical session patterns
+const AI_PRODUCT_MULTIPLIER: Record<string, number> = {
+  claude: 1.0,
+  "claude code": 1.3,
+  chatgpt: 1.0,
+  "gpt-4": 1.1,
+  copilot: 0.7,
+  cursor: 1.2,
+  gemini: 0.9,
+  "gemini pro": 1.0,
+  llama: 0.8,
+  mistral: 0.7,
+  perplexity: 0.8,
+  windsurf: 1.1,
+};
+
+export interface MonthlyFootprintEstimate {
+  hours_per_day: number;
+  location: string;
+  grid_intensity_kg_per_kwh: number;
+  ai_products: string[];
+  energy_multiplier: number;
+  monthly_queries: number;
+  monthly_energy_kwh: number;
+  monthly_co2_kg: number;
+  dabbler_amount_usd: number;
+  builder_amount_usd: number;
+  maximalist_amount_usd: number;
+  methodology_note: string;
+}
+
+function round(n: number, decimals: number): number {
+  const f = Math.pow(10, decimals);
+  return Math.round(n * f) / f;
+}
+
+export function estimateMonthlyFootprint(params: {
+  hoursPerDay: number;
+  location?: string;
+  aiProducts?: string[];
+}): MonthlyFootprintEstimate {
+  const { hoursPerDay } = params;
+  const location = (params.location ?? "global").toLowerCase().trim();
+  const aiProducts = (params.aiProducts ?? ["claude"]).map((p) => p.toLowerCase().trim());
+
+  // Resolve grid intensity
+  const gridIntensity = GRID_INTENSITY[location] ?? GRID_INTENSITY.global;
+
+  // Resolve energy multiplier (take max across all products)
+  const multiplier = aiProducts.length > 0
+    ? Math.max(...aiProducts.map((p) => AI_PRODUCT_MULTIPLIER[p] ?? 1.0))
+    : 1.0;
+
+  // Queries: hoursPerDay * 60min * QUERIES_PER_MINUTE * 30 days
+  const monthlyQueries = hoursPerDay * 60 * QUERIES_PER_MINUTE * 30;
+  const monthlyEnergyKwh = monthlyQueries * KWH_PER_QUERY * multiplier;
+  const monthlyCo2Kg = monthlyEnergyKwh * gridIntensity;
+  const monthlyCo2Tonnes = monthlyCo2Kg / 1000;
+
+  // Cost at $40/tonne, with 50%, 100%, 200% coverage
+  const baseCost = monthlyCo2Tonnes * USD_PER_TONNE_CO2;
+  const dabbler = Math.max(2.5, round(baseCost * 0.5, 2));
+  const builder = Math.max(2.5, round(baseCost * 1.0, 2));
+  const maximalist = Math.max(2.5, round(baseCost * 2.0, 2));
+
+  return {
+    hours_per_day: hoursPerDay,
+    location: location,
+    grid_intensity_kg_per_kwh: gridIntensity,
+    ai_products: aiProducts,
+    energy_multiplier: multiplier,
+    monthly_queries: Math.round(monthlyQueries),
+    monthly_energy_kwh: round(monthlyEnergyKwh, 3),
+    monthly_co2_kg: round(monthlyCo2Kg, 3),
+    dabbler_amount_usd: dabbler,
+    builder_amount_usd: builder,
+    maximalist_amount_usd: maximalist,
+    methodology_note:
+      "Estimate based on AI energy research (IEA 2024, Luccioni et al. 2023) " +
+      "with regional grid intensity from IEA/Ember 2024. Your actual footprint " +
+      "depends on model, data center location, and usage patterns.",
+  };
+}
+
 export function estimateFootprint(
   sessionMinutes: number,
   toolCalls?: number

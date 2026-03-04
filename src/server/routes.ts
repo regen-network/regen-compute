@@ -31,6 +31,8 @@ import {
   createReferralReward,
   getReferralCount,
 } from "./db.js";
+import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 
 // 5-minute in-memory cache for network stats
 let statsCache: { data: NetworkStats; fetchedAt: number } | null = null;
@@ -49,7 +51,11 @@ async function getCachedStats(): Promise<NetworkStats | null> {
   }
 }
 
-export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: string, config?: Config): Router {
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export function createRoutes(stripe: Stripe | null, db: Database.Database, baseUrl: string, config?: Config): Router {
   const router = Router();
 
   // --- Public routes ---
@@ -91,220 +97,113 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Regenerative Compute — Regenerative AI">
   <meta name="twitter:description" content="Fund verified ecological regeneration from your AI sessions.">
+  ${brandFonts()}
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
-      margin: 0; padding: 0;
-      color: #1a1a1a; line-height: 1.6;
-      background: #fff;
-    }
-    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
-
-    /* Hero */
-    .hero {
-      padding: 80px 0 60px;
-      text-align: center;
-    }
-    .hero-label {
-      display: inline-block;
-      font-size: 13px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
-      color: #2d6a4f; background: #f0f7f4;
-      padding: 4px 12px; border-radius: 20px; margin-bottom: 16px;
-    }
-    .hero h1 {
-      font-size: 42px; font-weight: 700; color: #1a1a1a;
-      margin: 0 0 16px; line-height: 1.15;
-    }
-    .hero h1 span { color: #2d6a4f; }
-    .hero p {
-      font-size: 18px; color: #555; max-width: 600px; margin: 0 auto 32px;
-    }
-    .cta-btn {
-      display: inline-block; padding: 14px 32px;
-      background: #2d6a4f; color: #fff;
-      font-size: 16px; font-weight: 600;
-      border-radius: 8px; text-decoration: none;
-      transition: background 0.2s;
-    }
-    .cta-btn:hover { background: #1b4332; }
+    ${betaBannerCSS()}
+    ${brandCSS()}
 
     /* How it works */
-    .how-it-works {
-      padding: 60px 0;
-      border-top: 1px solid #e8e8e8;
+    .hiw-section { padding: 64px 0; border-top: 1px solid var(--regen-gray-200); }
+    .hiw-steps {
+      display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
     }
-    .section-title {
-      text-align: center; font-size: 28px; font-weight: 700;
-      margin: 0 0 40px; color: #1a1a1a;
-    }
-    .steps {
-      display: flex; gap: 24px; flex-wrap: wrap;
-      justify-content: center;
-    }
-    .step {
+    .hiw-step {
       flex: 1 1 180px; max-width: 200px;
       text-align: center; padding: 0 8px;
     }
-    .step-num {
-      width: 40px; height: 40px; line-height: 40px;
-      border-radius: 50%; background: #2d6a4f; color: #fff;
-      font-size: 18px; font-weight: 700;
+    .hiw-num {
+      width: 44px; height: 44px; line-height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--regen-green), var(--regen-sage));
+      color: #fff; font-size: 18px; font-weight: 800;
       margin: 0 auto 12px;
     }
-    .step h3 { font-size: 16px; margin: 0 0 6px; color: #1a1a1a; }
-    .step p { font-size: 13px; color: #666; margin: 0; }
-    .step code {
-      font-size: 11px; background: #f4f4f4; padding: 2px 5px;
-      border-radius: 3px; word-break: break-all;
-    }
+    .hiw-step h3 { font-size: 16px; margin: 0 0 6px; color: var(--regen-navy); font-weight: 700; }
+    .hiw-step p { font-size: 13px; color: var(--regen-gray-500); margin: 0; }
 
-    /* Pricing */
-    .pricing {
-      padding: 60px 0;
-      background: #fafcfb;
-      border-top: 1px solid #e8e8e8;
+    /* Pricing section */
+    .pricing-section {
+      padding: 64px 0; background: var(--regen-gray-50);
+      border-top: 1px solid var(--regen-gray-200);
     }
-    .tiers {
-      display: flex; gap: 20px; flex-wrap: wrap;
-      justify-content: center;
-    }
-    .tier {
-      flex: 1 1 240px; max-width: 280px;
-      background: #fff; border: 2px solid #e0e0e0; border-radius: 12px;
-      padding: 32px 24px; text-align: center;
-      text-decoration: none; color: #1a1a1a;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      display: flex; flex-direction: column;
-    }
-    .tier:hover {
-      border-color: #2d6a4f;
-      box-shadow: 0 4px 20px rgba(45, 106, 79, 0.1);
-    }
-    .tier.featured {
-      border-color: #2d6a4f;
-      position: relative;
-    }
-    .tier-badge {
+    .tier-featured { border-color: var(--regen-green); position: relative; }
+    .tier-featured-badge {
       position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: #2d6a4f; color: #fff;
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      background: linear-gradient(135deg, var(--regen-green), var(--regen-sage));
+      color: #fff; font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.06em;
       padding: 4px 14px; border-radius: 20px; white-space: nowrap;
     }
-    .tier-name { font-size: 20px; font-weight: 700; color: #2d6a4f; margin-bottom: 4px; }
-    .tier-price { font-size: 36px; font-weight: 700; margin: 8px 0 4px; }
-    .tier-price span { font-size: 16px; font-weight: 400; color: #888; }
-    .tier-desc {
-      font-size: 14px; color: #666; margin: 12px 0 20px;
-      flex-grow: 1;
-    }
-    .tier-btn {
-      display: block; padding: 12px 0;
-      background: #2d6a4f; color: #fff;
-      font-size: 15px; font-weight: 600;
-      border-radius: 8px; text-decoration: none;
-      transition: background 0.2s;
-    }
-    .tier-btn:hover { background: #1b4332; }
 
-    /* Stats */
-    .stats {
-      padding: 48px 0;
-      border-top: 1px solid #e8e8e8;
-    }
+    /* Stats section */
+    .stats-section { padding: 52px 0; border-top: 1px solid var(--regen-gray-200); }
     .stats-bar {
-      display: flex; gap: 40px; flex-wrap: wrap;
+      display: flex; gap: 48px; flex-wrap: wrap;
       justify-content: center; text-align: center;
     }
-    .stat-item {}
-    .stat-num {
-      font-size: 36px; font-weight: 700; color: #2d6a4f;
+    .stats-bar__num {
+      font-size: 36px; font-weight: 800; color: var(--regen-green);
       line-height: 1.1;
     }
-    .stat-label { font-size: 14px; color: #888; margin-top: 4px; }
+    .stats-bar__label {
+      font-family: var(--regen-font-secondary);
+      font-size: 14px; color: var(--regen-gray-500); margin-top: 4px;
+    }
 
-    /* Trust */
-    .trust {
-      padding: 60px 0;
-      border-top: 1px solid #e8e8e8;
-    }
-    .trust-grid {
-      display: flex; gap: 32px; flex-wrap: wrap;
-      justify-content: center;
-    }
-    .trust-item {
-      flex: 1 1 220px; max-width: 260px;
-    }
-    .trust-item h3 { font-size: 16px; margin: 0 0 6px; color: #2d6a4f; }
-    .trust-item p { font-size: 14px; color: #666; margin: 0; }
+    /* Trust section */
+    .trust-section { padding: 64px 0; border-top: 1px solid var(--regen-gray-200); }
+    .trust-grid { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; }
+    .trust-item { flex: 1 1 220px; max-width: 260px; }
+    .trust-item h3 { font-size: 16px; margin: 0 0 6px; color: var(--regen-green); font-weight: 700; }
+    .trust-item p { font-size: 14px; color: var(--regen-gray-500); margin: 0; }
 
-    /* Footer */
-    .footer {
-      padding: 48px 0;
-      text-align: center;
-      border-top: 1px solid #e8e8e8;
-    }
-    .footer p { font-size: 14px; color: #888; margin: 12px 0; }
-    .footer a { color: #2d6a4f; text-decoration: none; }
-    .footer a:hover { text-decoration: underline; }
-
-    /* Referral banner */
-    .ref-banner {
-      background: linear-gradient(135deg, #2d6a4f, #52b788);
-      color: #fff; text-align: center;
-      padding: 16px 24px; font-size: 16px; font-weight: 600;
-    }
-    .ref-banner span { font-size: 22px; }
-
-    /* Mobile */
     @media (max-width: 700px) {
-      .hero { padding: 48px 0 40px; }
-      .hero h1 { font-size: 28px; }
-      .hero p { font-size: 16px; }
-      .step { flex: 1 1 140px; }
-      .tier { flex: 1 1 100%; max-width: 100%; }
+      .hiw-step { flex: 1 1 140px; }
       .stats-bar { gap: 24px; }
-      .stat-num { font-size: 28px; }
+      .stats-bar__num { font-size: 28px; }
       .trust-item { flex: 1 1 100%; max-width: 100%; }
     }
   </style>
 </head>
 <body>
+  ${betaBannerHTML()}
 
-  ${referralValid ? `<div class="ref-banner"><span>Your friend invited you</span> — first month free!</div>` : ""}
+  ${referralValid ? `<div class="regen-ref-banner"><span>Your friend invited you</span> — first month free!</div>` : ""}
+
+  ${brandHeader({ nav: [{ label: "Dashboard", href: "/dashboard/login" }] })}
 
   <!-- Hero -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-label">Regenerative AI</div>
+  <section class="regen-hero">
+    <div class="regen-container">
+      <div class="regen-hero__label">Regenerative AI</div>
       <h1>Fund <span>Ecological Regeneration</span> from Your AI Sessions</h1>
       <p>Regenerative contribution, not carbon offset. Monthly subscriptions retire verified carbon and biodiversity credits on Regen Network.</p>
-      <a class="cta-btn" href="#pricing">Choose Your Plan</a>
+      <a class="regen-btn regen-btn--solid" href="#pricing">Choose Your Plan</a>
     </div>
   </section>
 
   <!-- How it works -->
-  <section class="how-it-works">
-    <div class="container">
-      <h2 class="section-title">How It Works</h2>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
+  <section class="hiw-section">
+    <div class="regen-container">
+      <h2 class="regen-section-title" style="text-align:center;">How It Works</h2>
+      <div class="hiw-steps">
+        <div class="hiw-step">
+          <div class="hiw-num">1</div>
           <h3>Install</h3>
-          <p>One command:<br><code>claude mcp add regen-compute</code></p>
+          <p>One command:<br><span class="regen-code">claude mcp add regen-compute</span></p>
         </div>
-        <div class="step">
-          <div class="step-num">2</div>
+        <div class="hiw-step">
+          <div class="hiw-num">2</div>
           <h3>Estimate</h3>
           <p>AI estimates your session's ecological footprint</p>
         </div>
-        <div class="step">
-          <div class="step-num">3</div>
+        <div class="hiw-step">
+          <div class="hiw-num">3</div>
           <h3>Subscribe</h3>
           <p>Pick a monthly tier that funds ongoing regeneration</p>
         </div>
-        <div class="step">
-          <div class="step-num">4</div>
+        <div class="hiw-step">
+          <div class="hiw-num">4</div>
           <h3>Retire</h3>
           <p>Credits retired on-chain monthly with verifiable proof</p>
         </div>
@@ -313,64 +212,91 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
   </section>
 
   <!-- Pricing -->
-  <section class="pricing" id="pricing">
-    <div class="container">
-      <h2 class="section-title">Choose Your Plan</h2>
-      <div class="tiers">
-        <div class="tier">
-          <div class="tier-name">Seedling</div>
-          <div class="tier-price">$2.50<span>/mo</span></div>
-          <div class="tier-desc">~0.5 carbon credits retired per month. Perfect for individual developers.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
+  <section class="pricing-section" id="pricing">
+    <div class="regen-container">
+      <h2 class="regen-section-title" style="text-align:center;">Choose Your Plan</h2>
+      <div class="regen-tiers">
+        <div class="regen-tier">
+          <div class="regen-tier__name">Dabbler</div>
+          <div class="regen-tier__price">$2.50<span>/mo</span></div>
+          <div class="regen-tier__desc">I chat with AI sometimes. Covers your casual usage footprint.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
-            ? `<button class="tier-btn" onclick="subscribe('seedling')">Subscribe</button>`
-            : `<a class="tier-btn" href="${seedlingUrl}">Subscribe</a>`}
+            ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('seedling')">Subscribe</button>`
+            : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${seedlingUrl}">Subscribe</a>`}
         </div>
-        <div class="tier featured">
-          <div class="tier-badge">Most Popular</div>
-          <div class="tier-name">Grove</div>
-          <div class="tier-price">$7<span>/mo</span></div>
-          <div class="tier-desc">~1.5 carbon credits + biodiversity credits per month. The sweet spot.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
+        <div class="regen-tier tier-featured">
+          <div class="tier-featured-badge">Most Popular</div>
+          <div class="regen-tier__name">Builder</div>
+          <div class="regen-tier__price">$7<span>/mo</span></div>
+          <div class="regen-tier__desc">I regularly use AI for work and projects. Full ecological accountability.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
-            ? `<button class="tier-btn" onclick="subscribe('grove')">Subscribe</button>`
-            : `<a class="tier-btn" href="${groveUrl}">Subscribe</a>`}
+            ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('grove')">Subscribe</button>`
+            : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${groveUrl}">Subscribe</a>`}
         </div>
-        <div class="tier">
-          <div class="tier-name">Forest</div>
-          <div class="tier-price">$15<span>/mo</span></div>
-          <div class="tier-desc">~3 carbon credits + biodiversity credits per month. For teams and power users.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
+        <div class="regen-tier">
+          <div class="regen-tier__name">Maximalist</div>
+          <div class="regen-tier__price">$15<span>/mo</span></div>
+          <div class="regen-tier__desc">AI is my co-pilot at all times. Go beyond neutral — double your positive impact.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
-            ? `<button class="tier-btn" onclick="subscribe('forest')">Subscribe</button>`
-            : `<a class="tier-btn" href="${forestUrl}">Subscribe</a>`}
+            ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('forest')">Subscribe</button>`
+            : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${forestUrl}">Subscribe</a>`}
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Nerd Out: Personalized Recommendation -->
+  <section class="hiw-section" style="background:var(--regen-gray-50);">
+    <div class="regen-container" style="max-width:640px;text-align:center;">
+      <h2 class="regen-section-title">Want to personalize?</h2>
+      <p style="color:var(--regen-gray-500);margin-bottom:20px;">If you have regen-compute installed, your AI assistant can calculate your exact footprint and recommend the right amount for you.</p>
+      <div style="background:#fff;border:1px solid var(--regen-gray-200);border-radius:10px;padding:16px;position:relative;text-align:left;">
+        <code style="font-size:13px;color:var(--regen-navy);word-break:break-all;">Use the personalize_subscription prompt from regen-compute to help me figure out the right amount.</code>
+        <button onclick="navigator.clipboard.writeText('Use the personalize_subscription prompt from regen-compute to help me figure out the right amount.').then(function(){this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy'},1500)}.bind(this))" style="position:absolute;top:12px;right:12px;background:var(--regen-green);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
+      </div>
+      <p style="font-size:13px;color:var(--regen-gray-400);margin-top:12px;">Paste this into Claude Code, Cursor, or any MCP-enabled AI assistant.</p>
+    </div>
+  </section>
+
+  <!-- Custom Amount -->
+  <section class="hiw-section">
+    <div class="regen-container" style="max-width:480px;text-align:center;">
+      <h2 class="regen-section-title">Or choose your own amount</h2>
+      <p style="color:var(--regen-gray-500);margin-bottom:20px;">Fund regeneration at any level that feels right.</p>
+      <div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:15px;color:var(--regen-navy);font-weight:600;">$</label>
+        <input id="custom-amount" type="number" min="1" step="0.50" value="7" style="width:100px;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:16px;text-align:center;">
+        <button onclick="fundCustom()" class="regen-btn regen-btn--solid" style="white-space:nowrap;">Fund Regeneration</button>
+      </div>
+      <p id="custom-error" style="color:#c33;font-size:13px;margin-top:8px;display:none;"></p>
+    </div>
+  </section>
+
   <!-- Live Stats -->
-  <section class="stats">
-    <div class="container">
-      <h2 class="section-title">Live from Regen Network</h2>
+  <section class="stats-section">
+    <div class="regen-container">
+      <h2 class="regen-section-title" style="text-align:center;">Live from Regen Network</h2>
       <div class="stats-bar">
-        <div class="stat-item">
-          <div class="stat-num">${totalRetirements}</div>
-          <div class="stat-label">Total Retirements</div>
+        <div>
+          <div class="stats-bar__num">${totalRetirements}</div>
+          <div class="stats-bar__label">Total Retirements</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-num">${totalOrders}</div>
-          <div class="stat-label">Marketplace Orders</div>
+        <div>
+          <div class="stats-bar__num">${totalOrders}</div>
+          <div class="stats-bar__label">Marketplace Orders</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-num">5</div>
-          <div class="stat-label">Credit Types</div>
+        <div>
+          <div class="stats-bar__num">5</div>
+          <div class="stats-bar__label">Credit Types</div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Trust -->
-  <section class="trust">
-    <div class="container">
-      <h2 class="section-title">Why Regenerative Compute</h2>
+  <section class="trust-section">
+    <div class="regen-container">
+      <h2 class="regen-section-title" style="text-align:center;">Why Regenerative Compute</h2>
       <div class="trust-grid">
         <div class="trust-item">
           <h3>Verified On-Chain</h3>
@@ -388,14 +314,43 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
     </div>
   </section>
 
-  <!-- Footer -->
-  <section class="footer">
-    <div class="container">
-      <a class="cta-btn" href="#pricing">Choose Your Plan</a>
-      <p>Powered by <a href="https://regen.network">Regen Network</a></p>
-      <p><a href="https://github.com/regen-network/regen-compute">GitHub</a></p>
-    </div>
-  </section>
+  ${brandFooter({ showInstall: true, links: [
+    { label: "Regen Network", href: "https://regen.network" },
+    { label: "Marketplace", href: "https://app.regen.network" },
+    { label: "GitHub", href: "https://github.com/regen-network/regen-compute" },
+  ] })}
+
+  <script>
+    function fundCustom() {
+      var input = document.getElementById('custom-amount');
+      var errEl = document.getElementById('custom-error');
+      var amount = parseFloat(input.value);
+      errEl.style.display = 'none';
+      if (!amount || amount < 1) {
+        errEl.textContent = 'Minimum amount is $1.00';
+        errEl.style.display = 'block';
+        return;
+      }
+      var cents = Math.round(amount * 100);
+      fetch('/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount_cents: cents })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) window.location.href = data.url;
+        else {
+          errEl.textContent = data.error || 'Something went wrong. Is Stripe configured?';
+          errEl.style.display = 'block';
+        }
+      })
+      .catch(function(e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+      });
+    }
+  </script>
 
   ${hasPriceIds ? `<script>
     function subscribe(tier) {
@@ -415,9 +370,13 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
     }
   </script>` : ""}
 
+${betaBannerJS()}
 </body>
 </html>`);
   });
+
+  // --- Stripe-dependent routes (only registered when Stripe is configured) ---
+  if (stripe) {
 
   /**
    * POST /subscribe
@@ -663,97 +622,76 @@ export function createRoutes(stripe: Stripe, db: Database.Database, baseUrl: str
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Regenerative Compute — Thank You!</title>
+  ${brandFonts()}
   <style>
-    body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.7; }
-    .hero-box { background: linear-gradient(135deg, #2d6a4f, #40916c, #52b788); color: #fff; border-radius: 16px; padding: 40px 32px; text-align: center; margin: 24px 0; }
-    .hero-box h1 { margin: 0 0 12px; font-size: 28px; font-weight: 700; }
-    .hero-box p { margin: 0; opacity: 0.92; font-size: 17px; }
-    .impact-box { background: #f0f7f4; border-radius: 12px; padding: 28px; margin: 28px 0; }
-    .impact-box h2 { color: #2d6a4f; margin: 0 0 12px; font-size: 20px; }
-    .impact-box p { margin: 0 0 10px; color: #333; }
-    .impact-box ul { margin: 12px 0 0; padding-left: 20px; color: #444; }
-    .impact-box ul li { margin-bottom: 6px; }
-    .learn-link { display: inline-block; margin-top: 16px; color: #2d6a4f; font-weight: 600; text-decoration: none; border-bottom: 2px solid #b7e4c7; padding-bottom: 1px; }
-    .learn-link:hover { border-color: #2d6a4f; }
-    .setup-section { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 12px; padding: 24px 28px; margin: 28px 0; }
-    .setup-section h2 { color: #2d6a4f; margin: 0 0 8px; font-size: 18px; }
-    .setup-section .subtitle { color: #666; font-size: 14px; margin: 0 0 16px; }
-    .setup-section p { margin: 8px 0; }
-    .api-key { font-family: monospace; font-size: 13px; background: #fff; border: 1px solid #d4d4d4; padding: 8px 12px; border-radius: 6px; word-break: break-all; display: block; margin: 8px 0; user-select: all; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-    pre { background: #1a1a1a; color: #e0e0e0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; margin: 8px 0 16px; }
-    .toggle-btn { background: none; border: none; color: #2d6a4f; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
-    .toggle-btn:hover { color: #1b4332; }
+    ${betaBannerCSS()}
+    ${brandCSS()}
+    .setup-toggle { background: none; border: none; color: var(--regen-green); font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+    .setup-toggle:hover { color: var(--regen-teal); }
     .setup-details { display: none; margin-top: 16px; }
-    .referral-box { background: #faf5ff; border: 2px solid #c4b5fd; border-radius: 12px; padding: 28px; margin: 28px 0; text-align: center; }
-    .referral-box h2 { color: #7c3aed; margin: 0 0 8px; font-size: 20px; }
-    .referral-box p { color: #555; margin: 4px 0 16px; }
-    .ref-link { font-family: monospace; font-size: 14px; background: #fff; border: 1px solid #d8b4fe; padding: 10px 14px; border-radius: 8px; display: block; margin: 12px 0; word-break: break-all; cursor: pointer; user-select: all; }
-    .share-btns { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
-    .share-btn { display: inline-block; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 8px; text-decoration: none; color: #fff; transition: opacity 0.15s; }
-    .share-btn:hover { opacity: 0.88; }
-    .share-x { background: #1a1a1a; }
-    .share-linkedin { background: #0a66c2; }
-    .share-copy { background: #6b7280; cursor: pointer; border: none; color: #fff; font-size: 14px; font-weight: 600; border-radius: 8px; padding: 10px 20px; }
-    .footer-links { text-align: center; color: #999; font-size: 13px; margin: 32px 0 16px; }
-    .footer-links a { color: #2d6a4f; text-decoration: none; }
-    .footer-links a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <div class="hero-box">
-    <h1>Thank you for being part of this.</h1>
-    <p>While you use AI for your life and your work, you're now also rewarding the people and projects creating real ecological impact around the world.</p>
-  </div>
+  ${betaBannerHTML()}
+  ${brandHeader({ nav: [{ label: "Dashboard", href: "/dashboard" }] })}
 
-  <div class="impact-box">
-    <h2>What your subscription does</h2>
-    <p>Every month, we pool contributions from subscribers like you and retire verified ecological credits on <strong>Regen Network</strong> — a public blockchain purpose-built for climate and biodiversity action.</p>
-    <ul>
-      <li><strong>Real impact</strong> — your money goes directly to projects restoring forests, protecting biodiversity, and regenerating land</li>
-      <li><strong>Permanently recorded</strong> — every retirement is on-chain, immutable, and verifiable by anyone</li>
-      <li><strong>You'll get a monthly email</strong> with a certificate showing exactly what was retired on your behalf</li>
-    </ul>
-    <p>This isn't a carbon offset. It's a direct contribution to ecological regeneration.</p>
-    <a class="learn-link" href="https://app.regen.network" target="_blank" rel="noopener">Learn more about Regen Network and ecocredits &rarr;</a>
-  </div>
+  <div class="regen-container--narrow" style="padding-top:32px;">
+    <div class="regen-card">
+      <div class="regen-card__header">
+        <h1 style="margin:0 0 12px;font-size:28px;font-weight:800;">Thank you for being part of this.</h1>
+        <p style="margin:0;opacity:0.92;font-size:17px;">While you use AI for your life and your work, you're now also rewarding the people and projects creating real ecological impact around the world.</p>
+      </div>
+      <div class="regen-card__body">
+        <h2 style="color:var(--regen-green);margin:0 0 12px;font-size:20px;font-weight:700;">What your subscription does</h2>
+        <p style="margin:0 0 10px;color:var(--regen-gray-700);">Every month, we pool contributions from subscribers like you and retire verified ecological credits on <strong>Regen Network</strong> — a public blockchain purpose-built for climate and biodiversity action.</p>
+        <ul style="margin:12px 0 0;padding-left:20px;color:var(--regen-gray-700);">
+          <li style="margin-bottom:6px;"><strong>Real impact</strong> — your money goes directly to projects restoring forests, protecting biodiversity, and regenerating land</li>
+          <li style="margin-bottom:6px;"><strong>Permanently recorded</strong> — every retirement is on-chain, immutable, and verifiable by anyone</li>
+          <li style="margin-bottom:6px;"><strong>You'll get a monthly email</strong> with a certificate showing exactly what was retired on your behalf</li>
+        </ul>
+        <p style="margin:12px 0 0;color:var(--regen-gray-700);">This isn't a carbon offset. It's a direct contribution to ecological regeneration.</p>
+        <a style="display:inline-block;margin-top:16px;color:var(--regen-green);font-weight:600;" href="https://app.regen.network" target="_blank" rel="noopener">Learn more about Regen Network and ecocredits &rarr;</a>
+      </div>
+    </div>
 
-  <div class="setup-section">
-    <h2>Connect to your AI assistant (optional)</h2>
-    <p class="subtitle">If you use Claude Code, Cursor, or another AI tool that supports MCP, you can connect your subscription so your assistant can check your impact and retire credits on your behalf. <em>Skip this if you'd rather just let your monthly subscription do the work.</em></p>
-    <button class="toggle-btn" onclick="toggleSetup()">Show setup instructions</button>
-    <div class="setup-details" id="setupDetails">
-      <p><strong>Your API Key</strong></p>
-      <span class="api-key">${user.api_key}</span>
-      <p style="font-size: 13px; color: #666; margin-bottom: 16px;">This key links your AI assistant to your subscription. Copy it somewhere safe.</p>
-      <p><strong>Step 1.</strong> Install the MCP server:</p>
-      <pre>claude mcp add -s user regen-compute -- npx regen-compute</pre>
-      <p><strong>Step 2.</strong> Set your API key (add to your shell profile or <code>.env</code>):</p>
-      <pre>export REGEN_API_KEY=${user.api_key}
+    <div class="regen-card" style="margin-top:24px;">
+      <div class="regen-card__body">
+        <h2 style="color:var(--regen-navy);margin:0 0 8px;font-size:18px;font-weight:700;">Connect to your AI assistant (optional)</h2>
+        <p style="color:var(--regen-gray-500);font-size:14px;margin:0 0 16px;">If you use Claude Code, Cursor, or another AI tool that supports MCP, you can connect your subscription so your assistant can check your impact and retire credits on your behalf. <em>Skip this if you'd rather just let your monthly subscription do the work.</em></p>
+        <button class="setup-toggle" onclick="toggleSetup()">Show setup instructions</button>
+        <div class="setup-details" id="setupDetails">
+          <p style="margin:8px 0;"><strong>Your API Key</strong></p>
+          <span class="regen-api-key">${user.api_key}</span>
+          <p style="font-size:13px;color:var(--regen-gray-500);margin-bottom:16px;">This key links your AI assistant to your subscription. Copy it somewhere safe.</p>
+          <p style="margin:8px 0;"><strong>Step 1.</strong> Install the MCP server:</p>
+          <pre class="regen-pre">claude mcp add -s user regen-compute -- npx regen-compute</pre>
+          <p style="margin:8px 0;"><strong>Step 2.</strong> Set your API key (add to your shell profile or <span class="regen-code">.env</span>):</p>
+          <pre class="regen-pre">export REGEN_API_KEY=${user.api_key}
 export REGEN_BALANCE_URL=${baseUrl}</pre>
-      <p><strong>That's it.</strong> Your assistant can now show your subscription status and ecological impact. Try asking: <em>"What's my regenerative compute impact?"</em></p>
+          <p style="margin:8px 0;"><strong>That's it.</strong> Your assistant can now show your subscription status and ecological impact. Try asking: <em>"What's my regenerative compute impact?"</em></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="regen-referral-box">
+      <h2>Give a Friend Their First Month Free</h2>
+      <p>Share your link and your friend gets 30 days free. You earn bonus credit retirements.</p>
+      <span class="regen-ref-link" onclick="copyLink()" id="refLink">${referralLink}</span>
+      <div class="regen-share-btns">
+        <a class="regen-share-btn regen-share-btn--x" href="${twitterUrl}" target="_blank" rel="noopener">Post on X</a>
+        <a class="regen-share-btn regen-share-btn--linkedin" href="${linkedinUrl}" target="_blank" rel="noopener">Share on LinkedIn</a>
+        <button class="regen-share-btn regen-share-btn--copy" onclick="copyLink()">Copy Link</button>
+      </div>
     </div>
   </div>
 
-  <div class="referral-box">
-    <h2>Give a Friend Their First Month Free</h2>
-    <p>Share your link and your friend gets 30 days free. You earn bonus credit retirements.</p>
-    <span class="ref-link" onclick="copyLink()" id="refLink">${referralLink}</span>
-    <div class="share-btns">
-      <a class="share-btn share-x" href="${twitterUrl}" target="_blank" rel="noopener">Post on X</a>
-      <a class="share-btn share-linkedin" href="${linkedinUrl}" target="_blank" rel="noopener">Share on LinkedIn</a>
-      <button class="share-copy" onclick="copyLink()">Copy Link</button>
-    </div>
-  </div>
-
-  <div class="footer-links">
-    <a href="${baseUrl}/manage?email=${encodeURIComponent(email)}">Manage subscription</a>
-    &middot;
-    <a href="${baseUrl}/dashboard">Dashboard</a>
-    &middot;
-    <a href="https://app.regen.network" target="_blank" rel="noopener">Regen Marketplace</a>
-  </div>
+  ${brandFooter({ links: [
+    { label: "Manage subscription", href: baseUrl + "/manage?email=" + encodeURIComponent(email) },
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Regen Marketplace", href: "https://app.regen.network" },
+  ] })}
 
   <script>
     function copyLink() {
@@ -775,6 +713,7 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
       }
     }
   </script>
+${betaBannerJS()}
 </body>
 </html>`);
       } else {
@@ -785,47 +724,50 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Regenerative Compute — Payment Successful</title>
+  ${brandFonts()}
   <style>
-    body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.6; }
-    h1 { color: #2d6a4f; }
-    .key-box { background: #f0f7f4; border: 2px solid #2d6a4f; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .api-key { font-family: monospace; font-size: 14px; background: #fff; border: 1px solid #ccc; padding: 8px 12px; border-radius: 4px; word-break: break-all; display: block; margin: 8px 0; }
-    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
-    pre { background: #1a1a1a; color: #e0e0e0; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
-    .balance { font-size: 24px; font-weight: bold; color: #2d6a4f; }
+    ${betaBannerCSS()}
+    ${brandCSS()}
   </style>
 </head>
 <body>
-  <h1>Payment Successful</h1>
-  <p>You've added <strong>$${amountDollars.toFixed(2)}</strong> to your Regenerative Compute balance.</p>
-  <p>Current balance: <span class="balance">$${(user.balance_cents / 100).toFixed(2)}</span></p>
+  ${betaBannerHTML()}
+  ${brandHeader()}
 
-  <div class="key-box">
-    <strong>Your API Key</strong>
-    <span class="api-key">${user.api_key}</span>
-    <p><strong>Save this key!</strong> You'll need it to connect your AI assistant.</p>
+  <div class="regen-container--narrow" style="padding-top:40px;padding-bottom:40px;">
+    <h1 style="color:var(--regen-navy);font-size:28px;font-weight:800;margin:0 0 8px;">Payment Successful</h1>
+    <p>You've added <strong>$${amountDollars.toFixed(2)}</strong> to your Regenerative Compute balance.</p>
+    <p>Current balance: <span style="font-size:24px;font-weight:800;color:var(--regen-green);">$${(user.balance_cents / 100).toFixed(2)}</span></p>
+
+    <div class="regen-card" style="margin:24px 0;">
+      <div class="regen-card__body">
+        <strong style="color:var(--regen-navy);">Your API Key</strong>
+        <span class="regen-api-key">${user.api_key}</span>
+        <p style="font-size:14px;color:var(--regen-gray-500);"><strong>Save this key!</strong> You'll need it to connect your AI assistant.</p>
+      </div>
+    </div>
+
+    <h2 style="color:var(--regen-navy);font-size:20px;font-weight:700;">Setup (30 seconds)</h2>
+    <p><strong>1. Install the MCP server</strong> (if you haven't already):</p>
+    <pre class="regen-pre">claude mcp add -s user regen-compute -- npx regen-compute</pre>
+    <p><strong>2. Set your API key</strong> — add to your shell profile or <span class="regen-code">.env</span>:</p>
+    <pre class="regen-pre">export REGEN_API_KEY=${user.api_key}
+export REGEN_BALANCE_URL=${baseUrl}</pre>
+    <p><strong>3. Done!</strong> In Claude Code, just say "retire 1 carbon credit" and it'll happen automatically from your prepaid balance.</p>
+
+    <h2 style="color:var(--regen-navy);font-size:20px;font-weight:700;margin-top:28px;">What happens next</h2>
+    <ul style="color:var(--regen-gray-700);">
+      <li>Your AI assistant checks your balance before each retirement</li>
+      <li>Credits are retired on-chain on Regen Network with verifiable proof</li>
+      <li>When your balance gets low, you'll be prompted to top up</li>
+    </ul>
+    <p style="margin-top:20px;"><a class="regen-btn regen-btn--outline regen-btn--sm" href="${baseUrl}/checkout-page">Top up again</a></p>
   </div>
 
-  <h2>Setup (30 seconds)</h2>
-
-  <p><strong>1. Install the MCP server</strong> (if you haven't already):</p>
-  <pre>claude mcp add -s user regen-compute -- npx regen-compute</pre>
-
-  <p><strong>2. Set your API key</strong> — add to your shell profile or <code>.env</code>:</p>
-  <pre>export REGEN_API_KEY=${user.api_key}
-export REGEN_BALANCE_URL=${baseUrl}</pre>
-
-  <p><strong>3. Done!</strong> In Claude Code, just say "retire 1 carbon credit" and it'll happen automatically from your prepaid balance.</p>
-
-  <h2>What happens next</h2>
-  <ul>
-    <li>Your AI assistant checks your balance before each retirement</li>
-    <li>Credits are retired on-chain on Regen Network with verifiable proof</li>
-    <li>When your balance gets low, you'll be prompted to top up</li>
-  </ul>
-
-  <p><a href="${baseUrl}/checkout-page">Top up again</a></p>
+  ${brandFooter({ showInstall: true })}
+${betaBannerJS()}
 </body>
 </html>`);
       }
@@ -835,6 +777,8 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
       res.status(500).send("Error loading success page. Your payment was received — check back shortly.");
     }
   });
+
+  } // end if (stripe)
 
   /**
    * GET /cancel
@@ -846,15 +790,24 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Regenerative Compute — Checkout Cancelled</title>
+  ${brandFonts()}
   <style>
-    body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; }
-    h1 { color: #666; }
+    ${betaBannerCSS()}
+    ${brandCSS()}
   </style>
 </head>
 <body>
-  <h1>Checkout Cancelled</h1>
-  <p>No payment was processed. <a href="/checkout-page">Try again</a> when you're ready.</p>
+  ${betaBannerHTML()}
+  ${brandHeader()}
+  <div class="regen-container--narrow" style="padding:80px 24px;text-align:center;">
+    <h1 style="color:var(--regen-gray-500);font-size:24px;font-weight:700;margin:0 0 12px;">Checkout Cancelled</h1>
+    <p style="color:var(--regen-gray-500);font-size:15px;">No payment was processed. <a href="/checkout-page">Try again</a> when you're ready.</p>
+    <p style="margin-top:24px;"><a class="regen-btn regen-btn--outline regen-btn--sm" href="/">Back to home</a></p>
+  </div>
+  ${brandFooter()}
+${betaBannerJS()}
 </body>
 </html>`);
   });
@@ -874,59 +827,60 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Regenerative Compute — Fund Ecological Regeneration</title>
+  ${brandFonts()}
   <style>
-    body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.6; }
-    h1 { color: #2d6a4f; }
-    .tiers { display: flex; gap: 16px; margin: 24px 0; }
-    .tier { flex: 1; border: 2px solid #ddd; border-radius: 12px; padding: 20px; text-align: center; text-decoration: none; color: #1a1a1a; transition: border-color 0.2s, background 0.2s; display: block; }
-    .tier:hover { border-color: #2d6a4f; background: #f0f7f4; }
-    .tier-name { font-weight: bold; font-size: 18px; color: #2d6a4f; }
-    .tier-price { font-size: 28px; font-weight: bold; margin: 8px 0; }
-    .tier-desc { font-size: 13px; color: #666; }
-    .info { background: #f0f7f4; border-left: 4px solid #2d6a4f; padding: 12px 16px; margin: 20px 0; }
-    .steps { margin: 24px 0; }
-    .steps li { margin-bottom: 8px; }
-    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    ${betaBannerCSS()}
+    ${brandCSS()}
   </style>
 </head>
 <body>
-  <h1>Regenerative Compute</h1>
-  <p>Fund verified ecological regeneration from your AI sessions. Pay once, retire credits seamlessly from Claude Code.</p>
+  ${betaBannerHTML()}
+  ${brandHeader()}
 
-  <div class="info">
-    <strong>How it works:</strong> Pick a tier below, pay with your card, and you'll get an API key. Your AI assistant will use your prepaid balance to retire ecocredits on-chain — no need to leave your coding session.
+  <div class="regen-container--narrow" style="padding-top:40px;padding-bottom:40px;">
+    <h1 style="color:var(--regen-navy);font-size:28px;font-weight:800;margin:0 0 8px;">Regenerative Compute</h1>
+    <p style="color:var(--regen-gray-500);">Fund verified ecological regeneration from your AI sessions. Pay once, retire credits seamlessly from Claude Code.</p>
+
+    <div class="regen-info-box">
+      <strong>How it works:</strong> Pick a tier below, pay with your card, and you'll get an API key. Your AI assistant will use your prepaid balance to retire ecocredits on-chain — no need to leave your coding session.
+    </div>
+
+    <div class="regen-tiers">
+      <a class="regen-tier regen-card--interactive" href="${seedlingUrl}">
+        <div class="regen-tier__name">Dabbler</div>
+        <div class="regen-tier__price">$5</div>
+        <div class="regen-tier__desc">Casual AI user<br>~125 sessions</div>
+      </a>
+      <a class="regen-tier regen-card--interactive" href="${groveUrl}">
+        <div class="regen-tier__name">Builder</div>
+        <div class="regen-tier__price">$10</div>
+        <div class="regen-tier__desc">Regular AI user<br>~250 sessions</div>
+      </a>
+      <a class="regen-tier regen-card--interactive" href="${forestUrl}">
+        <div class="regen-tier__name">Maximalist</div>
+        <div class="regen-tier__price">$25</div>
+        <div class="regen-tier__desc">AI power user<br>~625 sessions</div>
+      </a>
+    </div>
+
+    <h2 style="color:var(--regen-navy);font-size:20px;font-weight:700;margin-top:32px;">After payment</h2>
+    <ol style="color:var(--regen-gray-700);margin:16px 0;padding-left:20px;">
+      <li style="margin-bottom:8px;">You'll receive an API key on the confirmation page</li>
+      <li style="margin-bottom:8px;">Install the MCP: <span class="regen-code">claude mcp add -s user regen-compute -- npx regen-compute</span></li>
+      <li style="margin-bottom:8px;">Set your key: <span class="regen-code">export REGEN_API_KEY=your_key</span> and <span class="regen-code">export REGEN_BALANCE_URL=${baseUrl}</span></li>
+      <li style="margin-bottom:8px;">In Claude, say "retire 1 carbon credit" — it happens automatically from your balance</li>
+    </ol>
   </div>
 
-  <div class="tiers">
-    <a class="tier" href="${seedlingUrl}">
-      <div class="tier-name">Seedling</div>
-      <div class="tier-price">$5</div>
-      <div class="tier-desc">~1 carbon credit<br>~125 sessions</div>
-    </a>
-    <a class="tier" href="${groveUrl}">
-      <div class="tier-name">Grove</div>
-      <div class="tier-price">$10</div>
-      <div class="tier-desc">~2.5 carbon credits<br>~250 sessions</div>
-    </a>
-    <a class="tier" href="${forestUrl}">
-      <div class="tier-name">Forest</div>
-      <div class="tier-price">$25</div>
-      <div class="tier-desc">~6 carbon credits<br>~625 sessions</div>
-    </a>
-  </div>
-
-  <h2>After payment</h2>
-  <ol class="steps">
-    <li>You'll receive an API key on the confirmation page</li>
-    <li>Install the MCP: <code>claude mcp add -s user regen-compute -- npx regen-compute</code></li>
-    <li>Set your key: <code>export REGEN_API_KEY=your_key</code> and <code>export REGEN_BALANCE_URL=${baseUrl}</code></li>
-    <li>In Claude, say "retire 1 carbon credit" — it happens automatically from your balance</li>
-  </ol>
+  ${brandFooter({ showInstall: true })}
+${betaBannerJS()}
 </body>
 </html>`);
   });
 
+  if (stripe) {
   /**
    * GET /manage?email=user@example.com
    * Creates a Stripe Billing Portal session for subscription self-management
@@ -961,6 +915,7 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
       res.status(500).send("Error creating subscription management session. Please try again.");
     }
   });
+  } // end if (stripe) — /manage
 
   // --- Authenticated routes (API key in header) ---
 
@@ -1041,6 +996,43 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
         amount_dollars: (t.amount_cents / 100).toFixed(2),
       })),
     });
+  });
+
+  // --- Beta feedback endpoints ---
+
+  router.post("/feedback", (req: Request, res: Response) => {
+    const { name, message, category, page } = req.body ?? {};
+    if (!message || typeof message !== "string" || !message.trim()) {
+      res.status(400).json({ error: "message is required" });
+      return;
+    }
+    const cat = ["bug", "suggestion", "comment"].includes(category) ? category : "comment";
+    db.prepare(
+      "INSERT INTO beta_feedback (name, message, category, page) VALUES (?, ?, ?, ?)"
+    ).run(
+      typeof name === "string" && name.trim() ? name.trim() : null,
+      message.trim(),
+      cat,
+      typeof page === "string" ? page : null
+    );
+    res.json({ ok: true });
+  });
+
+  router.get("/feedback", (_req: Request, res: Response) => {
+    const rows = db.prepare(
+      "SELECT * FROM beta_feedback ORDER BY created_at DESC"
+    ).all() as Array<{ id: number; name: string | null; message: string; category: string; page: string | null; created_at: string }>;
+
+    const tableRows = rows.map(r =>
+      `<tr><td>${r.id}</td><td>${r.created_at}</td><td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.name ?? "")}</td><td>${escapeHtml(r.message)}</td><td>${escapeHtml(r.page ?? "")}</td></tr>`
+    ).join("");
+
+    res.setHeader("Content-Type", "text/html");
+    res.send(`<!DOCTYPE html><html><head><title>Beta Feedback</title>
+<style>body{font-family:sans-serif;margin:24px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:14px;} th{background:#f9fafb;} tr:hover{background:#f0f7f4;}</style>
+</head><body><h1>Beta Feedback (${rows.length})</h1>
+<table><thead><tr><th>ID</th><th>Date</th><th>Category</th><th>Name</th><th>Message</th><th>Page</th></tr></thead>
+<tbody>${tableRows || "<tr><td colspan=6>No feedback yet</td></tr>"}</tbody></table></body></html>`);
   });
 
   return router;

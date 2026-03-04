@@ -15,6 +15,8 @@
 import { Router, Request, Response } from "express";
 import type Database from "better-sqlite3";
 import type { Config } from "../config.js";
+import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 import {
   getUserByEmail,
   getSubscriberByUserId,
@@ -142,72 +144,53 @@ function renderLoginPage(error?: string, success?: string): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Login - Regenerative Compute</title>
+  ${brandFonts()}
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
+    ${betaBannerCSS()}
+    ${brandCSS()}
     body {
-      font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
-      margin: 0; padding: 0;
-      color: #1a1a1a; line-height: 1.6;
-      background: #fafcfb;
+      background: var(--regen-gray-50);
       min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column;
     }
-    .card {
+    .login-wrapper {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+    }
+    .login-card {
       max-width: 420px; width: 100%; margin: 24px;
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 16px; padding: 40px 32px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: var(--regen-radius-lg); padding: 40px 32px;
+      box-shadow: var(--regen-shadow-card);
     }
-    .brand {
-      font-size: 13px; font-weight: 600; letter-spacing: 0.05em;
-      text-transform: uppercase; color: #2d6a4f;
-      text-align: center; margin-bottom: 8px;
+    .login-card h1 {
+      font-size: 24px; font-weight: 800; text-align: center;
+      margin: 0 0 8px; color: var(--regen-navy);
     }
-    h1 {
-      font-size: 24px; font-weight: 700; text-align: center;
-      margin: 0 0 8px; color: #1a1a1a;
+    .login-subtitle {
+      font-size: 14px; color: var(--regen-gray-500); text-align: center; margin: 0 0 28px;
     }
-    .subtitle {
-      font-size: 14px; color: #6b7280; text-align: center; margin: 0 0 28px;
-    }
-    label { font-size: 14px; font-weight: 600; color: #374151; display: block; margin-bottom: 6px; }
-    input[type="email"] {
-      width: 100%; padding: 12px 14px;
-      border: 1px solid #d1d5db; border-radius: 8px;
-      font-size: 15px; color: #1a1a1a;
-      outline: none; transition: border-color 0.2s;
-    }
-    input[type="email"]:focus { border-color: #2d6a4f; }
-    .btn {
-      display: block; width: 100%; padding: 14px;
-      background: #2d6a4f; color: #fff;
-      font-size: 16px; font-weight: 600;
-      border: none; border-radius: 8px; cursor: pointer;
-      margin-top: 16px; transition: background 0.2s;
-    }
-    .btn:hover { background: #1b4332; }
-    .error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px; font-size: 14px; margin-bottom: 16px; }
-    .success { background: #f0f7f4; border: 1px solid #d1e7dd; color: #2d6a4f; border-radius: 8px; padding: 12px; font-size: 14px; margin-bottom: 16px; }
-    .footer { text-align: center; margin-top: 24px; font-size: 13px; color: #9ca3af; }
-    .footer a { color: #2d6a4f; text-decoration: none; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand">Regenerative Compute</div>
-    <h1>Dashboard Login</h1>
-    <p class="subtitle">Enter your subscriber email to receive a login link.</p>
-    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
-    ${success ? `<div class="success">${escapeHtml(success)}</div>` : ""}
-    <form method="POST" action="/dashboard/login">
-      <label for="email">Email address</label>
-      <input type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email">
-      <button type="submit" class="btn">Send Login Link</button>
-    </form>
-    <div class="footer">
-      <a href="/">Back to Regenerative Compute</a>
+  ${betaBannerHTML()}
+  ${brandHeader()}
+  <div class="login-wrapper">
+    <div class="login-card">
+      <h1>Dashboard Login</h1>
+      <p class="login-subtitle">Enter your subscriber email to receive a login link.</p>
+      ${error ? `<div class="regen-alert regen-alert--error">${escapeHtml(error)}</div>` : ""}
+      ${success ? `<div class="regen-alert regen-alert--success">${escapeHtml(success)}</div>` : ""}
+      <form method="POST" action="/dashboard/login">
+        <label class="regen-label" for="email">Email address</label>
+        <input class="regen-input" type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email">
+        <button type="submit" class="regen-btn regen-btn--solid regen-btn--block" style="margin-top:16px;">Send Login Link</button>
+      </form>
+      <div style="text-align:center;margin-top:24px;font-size:13px;">
+        <a href="/">Back to Regenerative Compute</a>
+      </div>
     </div>
   </div>
+${betaBannerJS()}
 </body>
 </html>`;
 }
@@ -264,10 +247,10 @@ function renderDashboardPage(
     const svgColor = badge.earned ? badge.color : "#9ca3af";
     const statusText = badge.earned ? badge.description : "Keep going!";
     badgeHtml += `
-      <div class="badge" style="opacity: ${opacity}; background: ${bgColor}; border-color: ${borderColor};">
+      <div class="regen-badge" style="opacity: ${opacity}; background: ${bgColor}; border-color: ${borderColor};">
         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" style="color: ${svgColor};">${badge.icon}</svg>
-        <div class="badge-name">${escapeHtml(badge.name)}</div>
-        <div class="badge-desc">${escapeHtml(statusText)}</div>
+        <div class="regen-badge__name">${escapeHtml(badge.name)}</div>
+        <div class="regen-badge__desc">${escapeHtml(statusText)}</div>
       </div>`;
   }
 
@@ -277,261 +260,133 @@ function renderDashboardPage(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Impact Dashboard - Regenerative Compute</title>
+  ${brandFonts()}
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
-      margin: 0; padding: 0;
-      color: #1a1a1a; line-height: 1.6;
-      background: #fafcfb;
-    }
-    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
-
-    /* Header */
-    .header {
-      padding: 24px 0;
-      border-bottom: 1px solid #e8e8e8;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px;
-    }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-brand {
-      font-size: 14px; font-weight: 700; letter-spacing: 0.05em;
-      text-transform: uppercase; color: #2d6a4f;
-    }
-    .plan-badge {
-      font-size: 12px; font-weight: 600; color: #2d6a4f;
-      background: #f0f7f4; padding: 4px 10px; border-radius: 12px;
-    }
-    .header-right a {
-      font-size: 13px; color: #6b7280; text-decoration: none;
-    }
-    .header-right a:hover { color: #2d6a4f; text-decoration: underline; }
-
-    /* Hero */
-    .hero {
-      padding: 32px 0 24px;
-      text-align: center;
-    }
-    .hero h1 {
-      font-size: 28px; font-weight: 700; margin: 0 0 4px; color: #1a1a1a;
-    }
-    .hero p { font-size: 14px; color: #6b7280; margin: 0; }
-
-    /* Stat cards */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 16px; margin-bottom: 32px;
-    }
-    .stat-card {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 12px; padding: 20px; text-align: center;
-    }
-    .stat-card.carbon { border-left: 4px solid #2d6a4f; }
-    .stat-card.biodiversity { border-left: 4px solid #1e5fa8; }
-    .stat-card.uss { border-left: 4px solid #b5651d; }
-    .stat-card.total { border-left: 4px solid #374151; }
-    .stat-card.contributed { border-left: 4px solid #6b7280; }
-    .stat-card.months { border-left: 4px solid #9ca3af; }
-    .stat-value {
-      font-size: 28px; font-weight: 800; color: #1a1a1a;
-      letter-spacing: -0.02em;
-    }
-    .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-
-    /* Section titles */
-    .section-title {
-      font-size: 20px; font-weight: 700; color: #1a1a1a;
-      margin: 0 0 16px; padding-top: 8px;
-    }
+    ${betaBannerCSS()}
+    ${brandCSS()}
+    body { background: var(--regen-gray-50); }
 
     /* Chart */
-    .chart-section { margin-bottom: 32px; }
-    .chart-container {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 12px; padding: 24px;
+    .dash-chart-section { margin-bottom: 32px; }
+    .dash-chart-container {
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: var(--regen-radius); padding: 24px;
     }
     canvas { max-height: 300px; }
-    .chart-empty {
-      text-align: center; padding: 48px 0; color: #9ca3af; font-size: 15px;
+    .dash-empty {
+      text-align: center; padding: 48px 0; color: var(--regen-gray-500); font-size: 15px;
     }
 
     /* Table */
-    .table-section { margin-bottom: 32px; }
-    .table-wrapper {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 12px; overflow-x: auto;
+    .dash-table-section { margin-bottom: 32px; }
+    .dash-table-wrapper {
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: var(--regen-radius); overflow-x: auto;
     }
-    table { width: 100%; border-collapse: collapse; }
-    th {
-      font-size: 11px; font-weight: 700; color: #6b7280;
-      text-transform: uppercase; letter-spacing: 0.05em;
-      text-align: left; padding: 12px 16px;
-      border-bottom: 1px solid #e5e7eb;
-      background: #f9fafb;
-    }
-    td {
-      font-size: 14px; padding: 12px 16px;
-      border-bottom: 1px solid #f3f4f6;
-    }
-    tr:last-child td { border-bottom: none; }
-    td a { color: #2d6a4f; text-decoration: none; font-weight: 600; }
-    td a:hover { text-decoration: underline; }
 
-    /* Badges */
-    .badges-section { margin-bottom: 32px; }
-    .badges-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px;
-    }
-    .badge {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 12px; padding: 16px; text-align: center;
-      transition: transform 0.2s;
-    }
-    .badge:hover { transform: translateY(-2px); }
-    .badge svg { margin-bottom: 8px; }
-    .badge-name { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
-    .badge-desc { font-size: 11px; color: #6b7280; }
-
-    /* Export placeholder */
-    .export-section {
+    /* Export */
+    .dash-export {
       margin-bottom: 32px;
-      background: #f9fafb; border: 1px dashed #d1d5db;
-      border-radius: 12px; padding: 24px; text-align: center;
+      background: var(--regen-gray-50); border: 1px dashed var(--regen-gray-300);
+      border-radius: var(--regen-radius); padding: 24px; text-align: center;
     }
-    .export-section p { margin: 0; color: #9ca3af; font-size: 14px; }
-    .coming-soon {
-      display: inline-block; font-size: 11px; font-weight: 600;
-      color: #9ca3af; background: #f3f4f6;
+    .dash-export p { margin: 0; color: var(--regen-gray-500); font-size: 14px; }
+    .dash-coming-soon {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      color: var(--regen-gray-500); background: var(--regen-gray-100);
       padding: 3px 8px; border-radius: 4px; margin-left: 6px;
       text-transform: uppercase; letter-spacing: 0.05em;
-    }
-
-    /* Footer */
-    .footer {
-      padding: 32px 0; text-align: center;
-      border-top: 1px solid #e8e8e8;
-    }
-    .footer a { color: #2d6a4f; text-decoration: none; font-size: 14px; }
-    .footer a:hover { text-decoration: underline; }
-    .footer p { font-size: 13px; color: #9ca3af; margin: 8px 0 0; }
-
-    /* Mobile */
-    @media (max-width: 640px) {
-      .hero h1 { font-size: 22px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .stat-value { font-size: 22px; }
-      .badges-grid { grid-template-columns: repeat(2, 1fr); }
-      th, td { padding: 10px 12px; font-size: 13px; }
     }
   </style>
 </head>
 <body>
+  ${betaBannerHTML()}
 
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <div class="header-left">
-        <span class="header-brand">Regenerative Compute</span>
-        <span class="plan-badge">${escapeHtml(planName)} Plan</span>
-      </div>
-      <div class="header-right">
-        <a href="/dashboard/logout">Log out</a>
-      </div>
-    </div>
+  ${brandHeader({
+    badge: planName + " Plan",
+    nav: [{ label: "Log out", href: "/dashboard/logout" }],
+  })}
 
+  <div class="regen-container">
     <!-- Hero -->
-    <div class="hero">
-      <h1>Your Ecological Impact</h1>
-      <p>Member since ${escapeHtml(memberSince)}</p>
+    <div style="padding:32px 0 24px;text-align:center;">
+      <h1 style="font-size:28px;font-weight:800;margin:0 0 4px;color:var(--regen-navy);">Your Ecological Impact</h1>
+      <p style="font-size:14px;color:var(--regen-gray-500);margin:0;">Member since ${escapeHtml(memberSince)}</p>
     </div>
 
     <!-- Cumulative stats -->
-    <div class="stats-grid">
-      <div class="stat-card carbon">
-        <div class="stat-value">${escapeHtml(formatCredits(cumulative.total_carbon))}</div>
-        <div class="stat-label">Carbon Credits</div>
+    <div class="regen-stats-grid">
+      <div class="regen-stat-card regen-stat-card--green">
+        <div class="regen-stat-value">${escapeHtml(formatCredits(cumulative.total_carbon))}</div>
+        <div class="regen-stat-label">Carbon Credits</div>
       </div>
-      <div class="stat-card biodiversity">
-        <div class="stat-value">${escapeHtml(formatCredits(cumulative.total_biodiversity))}</div>
-        <div class="stat-label">Biodiversity Credits</div>
+      <div class="regen-stat-card regen-stat-card--teal">
+        <div class="regen-stat-value">${escapeHtml(formatCredits(cumulative.total_biodiversity))}</div>
+        <div class="regen-stat-label">Biodiversity Credits</div>
       </div>
-      <div class="stat-card uss">
-        <div class="stat-value">${escapeHtml(formatCredits(cumulative.total_uss))}</div>
-        <div class="stat-label">USS/Marine Credits</div>
+      <div class="regen-stat-card regen-stat-card--sage">
+        <div class="regen-stat-value">${escapeHtml(formatCredits(cumulative.total_uss))}</div>
+        <div class="regen-stat-label">USS/Marine Credits</div>
       </div>
-      <div class="stat-card total">
-        <div class="stat-value">${escapeHtml(formatCredits(totalCredits))}</div>
-        <div class="stat-label">Total Credits</div>
+      <div class="regen-stat-card regen-stat-card--navy">
+        <div class="regen-stat-value">${escapeHtml(formatCredits(totalCredits))}</div>
+        <div class="regen-stat-label">Total Credits</div>
       </div>
-      <div class="stat-card contributed">
-        <div class="stat-value">$${escapeHtml((cumulative.total_contribution_cents / 100).toFixed(2))}</div>
-        <div class="stat-label">Contributed</div>
+      <div class="regen-stat-card regen-stat-card--muted">
+        <div class="regen-stat-value">$${escapeHtml((cumulative.total_contribution_cents / 100).toFixed(2))}</div>
+        <div class="regen-stat-label">Contributed</div>
       </div>
-      <div class="stat-card months">
-        <div class="stat-value">${cumulative.months_active}</div>
-        <div class="stat-label">Months Active</div>
+      <div class="regen-stat-card regen-stat-card--muted">
+        <div class="regen-stat-value">${cumulative.months_active}</div>
+        <div class="regen-stat-label">Months Active</div>
       </div>
     </div>
 
     <!-- Monthly chart -->
-    <div class="chart-section">
-      <h2 class="section-title">Monthly Breakdown</h2>
-      <div class="chart-container">
+    <div class="dash-chart-section">
+      <h2 class="regen-section-title" style="font-size:20px;">Monthly Breakdown</h2>
+      <div class="dash-chart-container">
         ${monthly.length > 0
           ? `<canvas id="impactChart"></canvas>
              <script type="application/json" id="chart-data">${chartData}</script>`
-          : `<div class="chart-empty">No retirements yet. Your first monthly report will appear here.</div>`
+          : `<div class="dash-empty">No retirements yet. Your first monthly report will appear here.</div>`
         }
       </div>
     </div>
 
     <!-- Monthly history table -->
-    <div class="table-section">
-      <h2 class="section-title">History</h2>
-      <div class="table-wrapper">
+    <div class="dash-table-section">
+      <h2 class="regen-section-title" style="font-size:20px;">History</h2>
+      <div class="dash-table-wrapper">
         ${monthly.length > 0 ? `
-        <table>
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th>Carbon</th>
-              <th>Biodiversity</th>
-              <th>USS</th>
-              <th>Total</th>
-              <th>Proof</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${monthlyRows}
-          </tbody>
+        <table class="regen-table">
+          <thead><tr>
+            <th>Month</th><th>Carbon</th><th>Biodiversity</th><th>USS</th><th>Total</th><th>Proof</th>
+          </tr></thead>
+          <tbody>${monthlyRows}</tbody>
         </table>
-        ` : `<div class="chart-empty">No history yet.</div>`}
+        ` : `<div class="dash-empty">No history yet.</div>`}
       </div>
     </div>
 
     <!-- Badges -->
-    <div class="badges-section">
-      <h2 class="section-title">Achievements</h2>
-      <div class="badges-grid">
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;">Achievements</h2>
+      <div class="regen-badges-grid">
         ${badgeHtml}
       </div>
     </div>
 
     <!-- Export placeholder -->
-    <div class="export-section">
-      <p>Export Impact Report (PDF) <span class="coming-soon">Coming Soon</span></p>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-      <a href="${escapeHtml(manageUrl)}">Manage Subscription</a>
-      <p>Powered by <a href="https://regen.network" target="_blank" rel="noopener">Regen Network</a></p>
+    <div class="dash-export">
+      <p>Export Impact Report (PDF) <span class="dash-coming-soon">Coming Soon</span></p>
     </div>
   </div>
+
+  ${brandFooter({ links: [
+    { label: "Manage Subscription", href: manageUrl },
+    { label: "Regen Network", href: "https://regen.network" },
+  ] })}
 
   ${monthly.length > 0 ? `
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -544,32 +399,15 @@ function renderDashboardPage(
         data: {
           labels: raw.labels,
           datasets: [
-            {
-              label: 'Carbon',
-              data: raw.carbon,
-              backgroundColor: '#2d6a4f',
-              borderRadius: 4,
-            },
-            {
-              label: 'Biodiversity',
-              data: raw.biodiversity,
-              backgroundColor: '#1e5fa8',
-              borderRadius: 4,
-            },
-            {
-              label: 'USS/Marine',
-              data: raw.uss,
-              backgroundColor: '#b5651d',
-              borderRadius: 4,
-            }
+            { label: 'Carbon', data: raw.carbon, backgroundColor: '#4FB573', borderRadius: 4 },
+            { label: 'Biodiversity', data: raw.biodiversity, backgroundColor: '#527984', borderRadius: 4 },
+            { label: 'USS/Marine', data: raw.uss, backgroundColor: '#79C6AA', borderRadius: 4 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: true,
-          plugins: {
-            legend: { position: 'bottom' }
-          },
+          plugins: { legend: { position: 'bottom' } },
           scales: {
             x: { stacked: true, grid: { display: false } },
             y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Credits Retired' } }
@@ -580,6 +418,7 @@ function renderDashboardPage(
   </script>
   ` : ""}
 
+${betaBannerJS()}
 </body>
 </html>`;
 }

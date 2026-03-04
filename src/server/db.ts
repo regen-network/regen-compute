@@ -149,6 +149,15 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
 
     CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links(token);
 
+    CREATE TABLE IF NOT EXISTS beta_feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      message TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'comment' CHECK(category IN ('bug', 'suggestion', 'comment')),
+      page TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS referral_rewards (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       referrer_user_id INTEGER NOT NULL REFERENCES users(id),
