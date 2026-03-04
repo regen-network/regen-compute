@@ -397,7 +397,7 @@ export async function sendMonthlyEmails(
     return { sent: 0, failed: 0, errors: ["POSTMARK_SERVER_TOKEN not configured"] };
   }
 
-  const serverUrl = baseUrl ?? config.balanceUrl ?? "https://regen-compute.com";
+  const serverUrl = baseUrl ?? config.balanceUrl ?? "https://compute.regen.network";
 
   // Get attributions for this pool run
   const attributions = getAttributionsByRun(db, poolRunId);

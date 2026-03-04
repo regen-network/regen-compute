@@ -56,7 +56,7 @@ export async function estimateMonthlyFootprintTool(
     ``,
     `> ${estimate.methodology_note}`,
     ``,
-    `Subscribe at your recommended level: https://regen-compute.com`,
+    `Subscribe at your recommended level: https://compute.regen.network`,
   ].join("\n");
 
   return { content: [{ type: "text" as const, text }] };

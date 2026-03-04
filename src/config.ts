@@ -114,7 +114,7 @@ export function loadConfig(): Config {
     stripePortalReturnUrl: process.env.STRIPE_PORTAL_RETURN_URL || undefined,
 
     postmarkServerToken: process.env.POSTMARK_SERVER_TOKEN || undefined,
-    emailFromAddress: process.env.EMAIL_FROM_ADDRESS || "impact@regen-compute.com",
+    emailFromAddress: process.env.EMAIL_FROM_ADDRESS || "impact@compute.regen.network",
     emailEnabled: process.env.EMAIL_ENABLED !== "false",
 
     gasPrice: process.env.REGEN_GAS_PRICE || "0.025uregen",
