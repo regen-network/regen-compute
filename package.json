@@ -1,6 +1,6 @@
 {
   "name": "regen-compute",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Regenerative AI — fund verified ecological regeneration from your AI sessions via Regen Network. Estimate your footprint, browse carbon and biodiversity credits, and retire them on-chain via credit card.",
   "type": "module",
   "main": "dist/index.js",
