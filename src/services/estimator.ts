@@ -129,9 +129,9 @@ export function estimateMonthlyFootprint(params: {
 
   // Cost at $40/tonne, with 50%, 100%, 200% coverage
   const baseCost = monthlyCo2Tonnes * USD_PER_TONNE_CO2;
-  const dabbler = Math.max(2.5, round(baseCost * 0.5, 2));
+  const dabbler = Math.max(1.25, round(baseCost * 0.5, 2));
   const builder = Math.max(2.5, round(baseCost * 1.0, 2));
-  const maximalist = Math.max(2.5, round(baseCost * 2.0, 2));
+  const maximalist = Math.max(5, round(baseCost * 2.0, 2));
 
   return {
     hours_per_day: hoursPerDay,

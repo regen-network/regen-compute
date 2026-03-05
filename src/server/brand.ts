@@ -520,6 +520,6 @@ export function brandFooter(opts?: FooterOptions): string {
       <div class="regen-footer__logo">${regenLogoSVG}</div>
       <div class="regen-footer__links">${linkHtml}</div>
       ${opts?.showInstall ? `<div class="regen-footer__install">claude mcp add -s user regen-compute -- npx regen-compute</div>` : ""}
-      <div class="regen-footer__note">Powered by Regen Network. Credits are permanently retired on-chain.</div>
+      <div class="regen-footer__note">Credits are permanently retired on a public ledger. Powered by Regen Network.</div>
     </footer>`;
 }

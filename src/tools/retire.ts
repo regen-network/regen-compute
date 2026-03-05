@@ -100,7 +100,7 @@ function marketplaceFallback(
       ``,
       `**[Subscribe to Regenerative Compute](${subscribeUrl})**`,
       ``,
-      `Plans from $2.50/mo — credits retired on-chain monthly with verifiable proof. No crypto wallet needed.`,
+      `Plans from $1.25/mo — credits retired on-chain monthly with verifiable proof. No crypto wallet needed.`,
       ``,
       `Use \`check_subscription_status\` to see your current plan and impact.`,
       ``,

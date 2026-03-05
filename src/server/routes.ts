@@ -88,15 +88,15 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regenerative Compute — Regenerative AI</title>
-  <meta name="description" content="Fund verified ecological regeneration from your AI sessions. Monthly subscriptions retire real carbon and biodiversity credits on Regen Network.">
-  <meta property="og:title" content="Regenerative Compute — Regenerative AI">
-  <meta property="og:description" content="Fund verified ecological regeneration from your AI sessions. Monthly subscriptions retire real carbon and biodiversity credits on Regen Network.">
+  <title>Regenerative Compute — Fund Real Ecology from Your AI Sessions</title>
+  <meta name="description" content="Your AI has an ecological footprint. Regenerative Compute channels a small monthly amount into verified forests, soil, and biodiversity projects — with permanent, auditable proof.">
+  <meta property="og:title" content="Regenerative Compute — Fund Real Ecology from Your AI Sessions">
+  <meta property="og:description" content="Your AI has an ecological footprint. Regenerative Compute channels a small monthly amount into verified forests, soil, and biodiversity projects — with permanent, auditable proof.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Regenerative Compute — Regenerative AI">
-  <meta name="twitter:description" content="Fund verified ecological regeneration from your AI sessions.">
+  <meta name="twitter:title" content="Regenerative Compute — Fund Real Ecology from Your AI Sessions">
+  <meta name="twitter:description" content="Your AI has an ecological footprint. Fund verified forests, soil, and biodiversity projects with permanent proof.">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -108,7 +108,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
     }
     .hiw-step {
-      flex: 1 1 180px; max-width: 200px;
+      flex: 1 1 220px; max-width: 260px;
       text-align: center; padding: 0 8px;
     }
     .hiw-num {
@@ -175,10 +175,17 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- Hero -->
   <section class="regen-hero">
     <div class="regen-container">
-      <div class="regen-hero__label">Regenerative AI</div>
-      <h1>Fund <span>Ecological Regeneration</span> from Your AI Sessions</h1>
-      <p>Regenerative contribution, not carbon offset. Monthly subscriptions retire verified carbon and biodiversity credits on Regen Network.</p>
+      <div class="regen-hero__label">For Claude, Cursor &amp; ChatGPT Users</div>
+      <h1>Your AI Has a Footprint. <span>Fund Real Ecology</span> to Balance It.</h1>
+      <p>Every AI session uses energy. Regenerative Compute channels a small monthly amount into verified ecological projects — forests, soil, biodiversity — with permanent, auditable proof.</p>
       <a class="regen-btn regen-btn--solid" href="#pricing">Choose Your Plan</a>
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section style="padding:40px 0 0;text-align:center;">
+    <div class="regen-container--narrow">
+      <p style="font-size:16px;color:var(--regen-gray-700);line-height:1.7;margin:0;">Regenerative Compute is a plugin for AI coding assistants like Claude and Cursor. It estimates the ecological footprint of your AI sessions and channels your subscription into verified regeneration projects. Think of it as a utility bill for the planet — small, automatic, and real.</p>
     </div>
   </section>
 
@@ -189,23 +196,18 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       <div class="hiw-steps">
         <div class="hiw-step">
           <div class="hiw-num">1</div>
-          <h3>Install</h3>
-          <p>One command:<br><span class="regen-code">claude mcp add regen-compute</span></p>
+          <h3>Subscribe</h3>
+          <p>Pick a monthly plan. Your payment funds verified ecological projects around the world.</p>
         </div>
         <div class="hiw-step">
           <div class="hiw-num">2</div>
-          <h3>Estimate</h3>
-          <p>AI estimates your session's ecological footprint</p>
+          <h3>Connect</h3>
+          <p>Add Regenerative Compute to your AI assistant with one command. Works with Claude Code, Cursor, and more.</p>
         </div>
         <div class="hiw-step">
           <div class="hiw-num">3</div>
-          <h3>Subscribe</h3>
-          <p>Pick a monthly tier that funds ongoing regeneration</p>
-        </div>
-        <div class="hiw-step">
-          <div class="hiw-num">4</div>
-          <h3>Retire</h3>
-          <p>Credits retired on-chain monthly with verifiable proof</p>
+          <h3>Track Your Impact</h3>
+          <p>See exactly which projects you support. Every credit retirement is publicly recorded and verifiable.</p>
         </div>
       </div>
     </div>
@@ -218,8 +220,8 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       <div class="regen-tiers">
         <div class="regen-tier">
           <div class="regen-tier__name">Dabbler</div>
-          <div class="regen-tier__price">$2.50<span>/mo</span></div>
-          <div class="regen-tier__desc">I chat with AI sometimes. Covers your casual usage footprint.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
+          <div class="regen-tier__price">$1.25<span>/mo</span></div>
+          <div class="regen-tier__desc">You use AI a few times a week. This covers your share and funds real ecological projects.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('seedling')">Subscribe</button>`
             : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${seedlingUrl}">Subscribe</a>`}
@@ -227,16 +229,16 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
         <div class="regen-tier tier-featured">
           <div class="tier-featured-badge">Most Popular</div>
           <div class="regen-tier__name">Builder</div>
-          <div class="regen-tier__price">$7<span>/mo</span></div>
-          <div class="regen-tier__desc">I regularly use AI for work and projects. Full ecological accountability.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
+          <div class="regen-tier__price">$2.50<span>/mo</span></div>
+          <div class="regen-tier__desc">AI is part of your daily workflow. Full ecological accountability for regular use.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('grove')">Subscribe</button>`
             : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${groveUrl}">Subscribe</a>`}
         </div>
         <div class="regen-tier">
           <div class="regen-tier__name">Maximalist</div>
-          <div class="regen-tier__price">$15<span>/mo</span></div>
-          <div class="regen-tier__desc">AI is my co-pilot at all times. Go beyond neutral — double your positive impact.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
+          <div class="regen-tier__price">$5<span>/mo</span></div>
+          <div class="regen-tier__desc">AI is your co-pilot all day. Go beyond balancing — make your AI use a net positive.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('forest')">Subscribe</button>`
             : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${forestUrl}">Subscribe</a>`}
@@ -259,16 +261,20 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
     </div>
   </section>
 
-  <!-- Nerd Out: Personalized Recommendation -->
+  <!-- Let Your AI Help You Choose -->
   <section class="hiw-section">
     <div class="regen-container" style="max-width:640px;text-align:center;">
-      <h2 class="regen-section-title">Not sure which tier?</h2>
-      <p style="color:var(--regen-gray-500);margin-bottom:20px;">If you have regen-compute installed, just ask your AI assistant to help you figure it out.</p>
+      <h2 class="regen-section-title">Let Your AI Assistant Help You Choose</h2>
+      <p style="color:var(--regen-gray-500);margin-bottom:20px;">Copy and paste this into Claude Code or Cursor. It will install the tool if needed and help you pick the right plan.</p>
       <div style="background:#fff;border:1px solid var(--regen-gray-200);border-radius:10px;padding:16px;position:relative;text-align:left;">
-        <code style="font-size:13px;color:var(--regen-navy);word-break:break-all;">I want to figure out the right monthly amount for my Regenerative Compute subscription based on how much I actually use AI. What do you need to know from me to calculate it?</code>
-        <button onclick="navigator.clipboard.writeText('I want to figure out the right monthly amount for my Regenerative Compute subscription based on how much I actually use AI. What do you need to know from me to calculate it?').then(function(){this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy'},1500)}.bind(this))" style="position:absolute;top:12px;right:12px;background:var(--regen-green);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
+        <code id="ai-prompt" style="font-size:13px;color:var(--regen-navy);white-space:pre-wrap;display:block;">I want to figure out the right Regenerative Compute plan for me.
+
+First, if you don't already have regen-compute connected, run this:
+  claude mcp add -s user regen-compute -- npx regen-compute
+
+Then estimate my AI usage footprint and recommend a tier ($1.25, $2.50, or $5/mo) based on how much I use you. What do you need to know?</code>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('ai-prompt').textContent).then(function(){this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy'},1500)}.bind(this))" style="position:absolute;top:12px;right:12px;background:var(--regen-green);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
       </div>
-      <p style="font-size:13px;color:var(--regen-gray-400);margin-top:12px;">Paste this into Claude Code, Cursor, or any MCP-enabled AI assistant.</p>
     </div>
   </section>
 
@@ -284,7 +290,8 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- Live Stats -->
   <section class="stats-section">
     <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">Live from Regen Network</h2>
+      <h2 class="regen-section-title" style="text-align:center;">Real Impact, Publicly Verified</h2>
+      <p class="regen-section-subtitle" style="text-align:center;">All credit retirements happen on Regen Network, a public ecological ledger. These numbers update in real time.</p>
       <div class="stats-bar">
         <div>
           <div class="stats-bar__num">${totalRetirements}</div>
@@ -308,22 +315,22 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       <h2 class="regen-section-title" style="text-align:center;">Why Regenerative Compute</h2>
       <div class="trust-grid">
         <div class="trust-item">
-          <h3>Verified On-Chain</h3>
-          <p>Every retirement is recorded immutably on Regen Ledger. No double-counting, no greenwashing.</p>
+          <h3>Publicly Auditable</h3>
+          <p>Every credit retirement is recorded on a public ledger. Anyone can verify. No double-counting, no greenwashing.</p>
         </div>
         <div class="trust-item">
-          <h3>Not Carbon Offset</h3>
-          <p>Regenerative contribution funds real ecological projects — carbon, biodiversity, and beyond.</p>
+          <h3>Beyond Carbon Offsets</h3>
+          <p>Regenerative contribution funds real ecological projects — carbon removal, biodiversity protection, and soil health.</p>
         </div>
         <div class="trust-item">
-          <h3>Open Source</h3>
-          <p>Full transparency. Inspect the MCP server, verify the retirements, audit the code yourself.</p>
+          <h3>Open Source &amp; Transparent</h3>
+          <p>The code is public. The retirements are public. The projects are public. Inspect anything, anytime.</p>
         </div>
       </div>
     </div>
   </section>
 
-  ${brandFooter({ showInstall: true, links: [
+  ${brandFooter({ showInstall: false, links: [
     { label: "Regen Network", href: "https://regen.network" },
     { label: "Marketplace", href: "https://app.regen.network" },
     { label: "GitHub", href: "https://github.com/regen-network/regen-compute" },
@@ -772,7 +779,7 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
       <li>Credits are retired on-chain on Regen Network with verifiable proof</li>
       <li>When your balance gets low, you'll be prompted to top up</li>
     </ul>
-    <p style="margin-top:20px;"><a class="regen-btn regen-btn--outline regen-btn--sm" href="${baseUrl}/checkout-page">Top up again</a></p>
+    <p style="margin-top:20px;"><a class="regen-btn regen-btn--outline regen-btn--sm" href="${baseUrl}/#pricing">Top up again</a></p>
   </div>
 
   ${brandFooter({ showInstall: true })}
@@ -810,10 +817,18 @@ ${betaBannerJS()}
 <body>
   ${betaBannerHTML()}
   ${brandHeader()}
-  <div class="regen-container--narrow" style="padding:80px 24px;text-align:center;">
-    <h1 style="color:var(--regen-gray-500);font-size:24px;font-weight:700;margin:0 0 12px;">Checkout Cancelled</h1>
-    <p style="color:var(--regen-gray-500);font-size:15px;">No payment was processed. <a href="/checkout-page">Try again</a> when you're ready.</p>
-    <p style="margin-top:24px;"><a class="regen-btn regen-btn--outline regen-btn--sm" href="/">Back to home</a></p>
+  <div class="regen-container--narrow" style="padding:60px 24px;text-align:center;max-width:540px;margin:0 auto;">
+    <h1 style="color:var(--regen-navy);font-size:24px;font-weight:700;margin:0 0 16px;">No worries!</h1>
+    <p style="color:var(--regen-gray-600);font-size:15px;line-height:1.6;margin:0 0 24px;">
+      No payment was processed. A subscription isn't for everyone, and that's totally okay.
+    </p>
+    <p style="color:var(--regen-gray-600);font-size:15px;line-height:1.6;margin:0 0 32px;">
+      If you're curious about ecological credits — carbon, biodiversity, marine stewardship, and more — you can explore what's available and retire credits directly on the Regen Marketplace.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+      <a class="regen-btn regen-btn--primary regen-btn--sm" href="/#pricing">Back to subscription plans</a>
+      <a class="regen-btn regen-btn--outline regen-btn--sm" href="https://app.regen.network" target="_blank" rel="noopener">Explore ecocredits on Regen Marketplace &rarr;</a>
+    </div>
   </div>
   ${brandFooter()}
 ${betaBannerJS()}
@@ -823,70 +838,10 @@ ${betaBannerJS()}
 
   /**
    * GET /checkout-page
-   * Landing page with Payment Link tiers.
-   * Payment Links are configured via STRIPE_PAYMENT_LINK_* env vars.
+   * Legacy route — redirects to landing page pricing section.
    */
   router.get("/checkout-page", (_req: Request, res: Response) => {
-    const seedlingUrl = config?.stripePaymentLinkSeedling ?? process.env.STRIPE_PAYMENT_LINK_SEEDLING ?? "#";
-    const groveUrl = config?.stripePaymentLinkGrove ?? process.env.STRIPE_PAYMENT_LINK_GROVE ?? "#";
-    const forestUrl = config?.stripePaymentLinkForest ?? process.env.STRIPE_PAYMENT_LINK_FOREST ?? "#";
-
-    res.setHeader("Content-Type", "text/html");
-    res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regenerative Compute — Fund Ecological Regeneration</title>
-  ${brandFonts()}
-  <style>
-    ${betaBannerCSS()}
-    ${brandCSS()}
-  </style>
-</head>
-<body>
-  ${betaBannerHTML()}
-  ${brandHeader()}
-
-  <div class="regen-container--narrow" style="padding-top:40px;padding-bottom:40px;">
-    <h1 style="color:var(--regen-navy);font-size:28px;font-weight:800;margin:0 0 8px;">Regenerative Compute</h1>
-    <p style="color:var(--regen-gray-500);">Fund verified ecological regeneration from your AI sessions. Pay once, retire credits seamlessly from Claude Code.</p>
-
-    <div class="regen-info-box">
-      <strong>How it works:</strong> Pick a tier below, pay with your card, and you'll get an API key. Your AI assistant will use your prepaid balance to retire ecocredits on-chain — no need to leave your coding session.
-    </div>
-
-    <div class="regen-tiers">
-      <a class="regen-tier regen-card--interactive" href="${seedlingUrl}">
-        <div class="regen-tier__name">Dabbler</div>
-        <div class="regen-tier__price">$2.50/mo</div>
-        <div class="regen-tier__desc">I chat with AI sometimes</div>
-      </a>
-      <a class="regen-tier regen-card--interactive" href="${groveUrl}">
-        <div class="regen-tier__name">Builder</div>
-        <div class="regen-tier__price">$7/mo</div>
-        <div class="regen-tier__desc">I regularly use AI for work</div>
-      </a>
-      <a class="regen-tier regen-card--interactive" href="${forestUrl}">
-        <div class="regen-tier__name">Maximalist</div>
-        <div class="regen-tier__price">$15/mo</div>
-        <div class="regen-tier__desc">AI is my co-pilot at all times</div>
-      </a>
-    </div>
-
-    <h2 style="color:var(--regen-navy);font-size:20px;font-weight:700;margin-top:32px;">After payment</h2>
-    <ol style="color:var(--regen-gray-700);margin:16px 0;padding-left:20px;">
-      <li style="margin-bottom:8px;">You'll receive an API key on the confirmation page</li>
-      <li style="margin-bottom:8px;">Install the MCP: <span class="regen-code">claude mcp add -s user regen-compute -- npx regen-compute</span></li>
-      <li style="margin-bottom:8px;">Set your key: <span class="regen-code">export REGEN_API_KEY=your_key</span> and <span class="regen-code">export REGEN_BALANCE_URL=${baseUrl}</span></li>
-      <li style="margin-bottom:8px;">In Claude, say "retire 1 carbon credit" — it happens automatically from your balance</li>
-    </ol>
-  </div>
-
-  ${brandFooter({ showInstall: true })}
-${betaBannerJS()}
-</body>
-</html>`);
+    res.redirect(301, "/#pricing");
   });
 
   if (stripe) {
@@ -941,7 +896,7 @@ ${betaBannerJS()}
       balance_cents: user.balance_cents,
       balance_dollars: (user.balance_cents / 100).toFixed(2),
       email: user.email,
-      topup_url: `${baseUrl}/checkout-page`,
+      topup_url: `${baseUrl}/#pricing`,
     });
   });
 
@@ -977,7 +932,7 @@ ${betaBannerJS()}
         error: "Insufficient balance",
         balance_cents: result.balance_cents,
         balance_dollars: (result.balance_cents / 100).toFixed(2),
-        topup_url: `${baseUrl}/checkout-page`,
+        topup_url: `${baseUrl}/#pricing`,
       });
       return;
     }
@@ -1067,8 +1022,8 @@ function authenticateRequest(req: Request, res: Response, db: Database.Database)
 
 /** Map Stripe subscription amount to plan name */
 function amountToPlan(amountCents: number): "seedling" | "grove" | "forest" {
-  if (amountCents <= 200) return "seedling";
-  if (amountCents <= 500) return "grove";
+  if (amountCents <= 150) return "seedling";
+  if (amountCents <= 300) return "grove";
   return "forest";
 }
 

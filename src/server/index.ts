@@ -82,7 +82,6 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     console.log(`Regenerative Compute server running on ${baseUrl}`);
     console.log(`  Certificates: ${baseUrl}/impact/:nodeId`);
     if (stripeKey) {
-      console.log(`  Checkout page: ${baseUrl}/checkout-page`);
       console.log(`  Landing page: ${baseUrl}/`);
       console.log(`  Developer API: ${baseUrl}/api/v1/`);
       console.log(`  OpenAPI spec: ${baseUrl}/api/v1/openapi.json`);

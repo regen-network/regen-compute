@@ -150,9 +150,9 @@ export async function checkSubscriptionStatus(): Promise<{
         }
       } else {
         lines.push(
-          `| Dabbler | $2.50/mo | I chat with AI sometimes |`,
-          `| Builder | $7/mo | I regularly use AI for work |`,
-          `| Maximalist | $15/mo | AI is my co-pilot at all times |`
+          `| Dabbler | $1.25/mo | I chat with AI sometimes |`,
+          `| Builder | $2.50/mo | I regularly use AI for work |`,
+          `| Maximalist | $5/mo | AI is my co-pilot at all times |`
         );
       }
 

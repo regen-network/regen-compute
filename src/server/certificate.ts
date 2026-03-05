@@ -310,7 +310,7 @@ function renderCertificatePage(
 
     <div class="cert-cta">
       <div style="font-size:16px;font-weight:800;color:var(--regen-green);margin-bottom:8px;">Fund regeneration for your AI sessions</div>
-      <div style="font-size:14px;color:var(--regen-gray-500);margin-bottom:16px;">Monthly subscriptions from $2.50/mo retire verified ecological credits on Regen Network.</div>
+      <div style="font-size:14px;color:var(--regen-gray-500);margin-bottom:16px;">Monthly subscriptions from $1.25/mo retire verified ecological credits on Regen Network.</div>
       <a class="regen-btn regen-btn--solid" href="${escapeHtml(baseUrl)}/#pricing">Subscribe</a>
     </div>
   </div>

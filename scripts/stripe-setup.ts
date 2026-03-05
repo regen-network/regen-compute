@@ -3,7 +3,7 @@
  * Stripe Product + Price Setup Script
  *
  * Creates the "Regenerative Compute" product and three monthly subscription
- * prices (Seedling $2.50, Grove $7, Forest $15) in your Stripe account.
+ * prices (Seedling $1.25, Grove $2.50, Forest $5) in your Stripe account.
  *
  * Prerequisites:
  *   1. Create a Stripe account at https://stripe.com (free)
@@ -21,9 +21,9 @@ import Stripe from "stripe";
 
 const PRODUCT_NAME = "Regenerative Compute";
 const TIERS = [
-  { name: "Seedling", amount: 250, envVar: "STRIPE_PRICE_ID_SEEDLING" },
-  { name: "Grove", amount: 700, envVar: "STRIPE_PRICE_ID_GROVE" },
-  { name: "Forest", amount: 1500, envVar: "STRIPE_PRICE_ID_FOREST" },
+  { name: "Seedling", amount: 125, envVar: "STRIPE_PRICE_ID_SEEDLING" },
+  { name: "Grove", amount: 250, envVar: "STRIPE_PRICE_ID_GROVE" },
+  { name: "Forest", amount: 500, envVar: "STRIPE_PRICE_ID_FOREST" },
 ] as const;
 
 async function main() {

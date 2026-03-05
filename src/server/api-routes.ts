@@ -431,9 +431,9 @@ export function createApiRoutes(
         referral_link: referralLink,
         referral_count: referralCount,
         plans: [
-          { name: "Dabbler", price: "$2.50/mo", description: "I chat with AI sometimes" },
-          { name: "Builder", price: "$7/mo", description: "I regularly use AI for work" },
-          { name: "Maximalist", price: "$15/mo", description: "AI is my co-pilot at all times" },
+          { name: "Dabbler", price: "$1.25/mo", description: "I chat with AI sometimes" },
+          { name: "Builder", price: "$2.50/mo", description: "I regularly use AI for work" },
+          { name: "Maximalist", price: "$5/mo", description: "AI is my co-pilot at all times" },
         ],
       });
       return;
