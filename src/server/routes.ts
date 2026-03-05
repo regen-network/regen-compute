@@ -32,6 +32,7 @@ import {
   getReferralCount,
 } from "./db.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
+import { sendWelcomeEmail } from "../services/email.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 
 // 5-minute in-memory cache for network stats
@@ -572,7 +573,7 @@ ${betaBannerJS()}
       );
     } else if (event.type === "customer.subscription.created") {
       const sub = event.data.object as Stripe.Subscription;
-      handleSubscriptionCreated(db, sub, stripe);
+      handleSubscriptionCreated(db, sub, stripe, baseUrl);
     } else if (event.type === "customer.subscription.updated") {
       const sub = event.data.object as Stripe.Subscription;
       handleSubscriptionUpdated(db, sub);
@@ -1026,7 +1027,7 @@ function stripeStatusToLocal(status: string): "active" | "paused" | "cancelled" 
   return "cancelled";
 }
 
-async function handleSubscriptionCreated(db: Database.Database, sub: Stripe.Subscription, stripe: Stripe) {
+async function handleSubscriptionCreated(db: Database.Database, sub: Stripe.Subscription, stripe: Stripe, baseUrl: string) {
   try {
     const stripeSubId = sub.id;
     const existing = getSubscriberByStripeId(db, stripeSubId);
@@ -1061,6 +1062,14 @@ async function handleSubscriptionCreated(db: Database.Database, sub: Stripe.Subs
 
     createSubscriber(db, user.id, stripeSubId, plan, amountCents, periodStart, periodEnd);
     console.log(`Subscription created: ${stripeSubId} plan=${plan} amount=$${(amountCents / 100).toFixed(2)}`);
+
+    // Send welcome email (fire-and-forget, don't block webhook response)
+    if (email) {
+      const dashboardUrl = `${baseUrl}/dashboard/login`;
+      sendWelcomeEmail(email, plan, dashboardUrl).catch(err => {
+        console.error("Failed to send welcome email:", err instanceof Error ? err.message : err);
+      });
+    }
 
     // Handle referral tracking from subscription metadata
     const referrerId = sub.metadata?.referrer_id;
