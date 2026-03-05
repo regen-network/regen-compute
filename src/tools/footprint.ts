@@ -36,7 +36,7 @@ export async function estimateMonthlyFootprintTool(
 
   // Recommend a tier based on estimated monthly cost
   const baseCost = estimate.monthly_co2_kg / 1000 * 40; // tonnes * $/tonne
-  const recommended = baseCost <= 1.5 ? "Dabbler" : baseCost <= 4 ? "Builder" : "Maximalist";
+  const recommended = baseCost <= 1.5 ? "Dabbler" : baseCost <= 4 ? "Builder" : "Agent";
 
   const text = [
     `## Personalized Monthly Footprint Estimate`,
@@ -56,7 +56,7 @@ export async function estimateMonthlyFootprintTool(
     `|------|-------|----------|`,
     `| **Dabbler** | $1.25/mo | I chat with AI sometimes${recommended === "Dabbler" ? " ← recommended for you" : ""} |`,
     `| **Builder** | $2.50/mo | I regularly use AI for work${recommended === "Builder" ? " ← recommended for you" : ""} |`,
-    `| **Maximalist** | $5/mo | AI is my co-pilot at all times${recommended === "Maximalist" ? " ← recommended for you" : ""} |`,
+    `| **Agent** | $5/mo | For autonomous agents and power users${recommended === "Agent" ? " ← recommended for you" : ""} |`,
     ``,
     `> ${estimate.methodology_note}`,
     ``,

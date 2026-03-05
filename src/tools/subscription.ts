@@ -152,7 +152,7 @@ export async function checkSubscriptionStatus(): Promise<{
         lines.push(
           `| Dabbler | $1.25/mo | I chat with AI sometimes |`,
           `| Builder | $2.50/mo | I regularly use AI for work |`,
-          `| Maximalist | $5/mo | AI is my co-pilot at all times |`
+          `| Agent | $5/mo | For autonomous agents and power users |`
         );
       }
 

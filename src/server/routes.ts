@@ -236,9 +236,9 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
             : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${groveUrl}">Subscribe</a>`}
         </div>
         <div class="regen-tier">
-          <div class="regen-tier__name">Maximalist</div>
+          <div class="regen-tier__name">Agent</div>
           <div class="regen-tier__price">$5<span>/mo</span></div>
-          <div class="regen-tier__desc">AI is your co-pilot all day. Go beyond balancing — make your AI use a net positive.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
+          <div class="regen-tier__desc">For autonomous agents and power users — maximum autonomy, maximum impact.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('forest')">Subscribe</button>`
             : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${forestUrl}">Subscribe</a>`}

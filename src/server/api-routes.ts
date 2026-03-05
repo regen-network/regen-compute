@@ -433,7 +433,7 @@ export function createApiRoutes(
         plans: [
           { name: "Dabbler", price: "$1.25/mo", description: "I chat with AI sometimes" },
           { name: "Builder", price: "$2.50/mo", description: "I regularly use AI for work" },
-          { name: "Maximalist", price: "$5/mo", description: "AI is my co-pilot at all times" },
+          { name: "Agent", price: "$5/mo", description: "For autonomous agents and power users" },
         ],
       });
       return;

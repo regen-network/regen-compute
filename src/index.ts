@@ -708,7 +708,7 @@ server.prompt(
               `5. **Present** the three recommendation levels:`,
               `   - **Dabbler** — "I chat with AI sometimes" (~casual usage coverage)`,
               `   - **Builder** — "I regularly use AI for work" (~full usage coverage)`,
-              `   - **Maximalist** — "AI is my co-pilot at all times" (~double impact, go beyond neutral)`,
+              `   - **Agent** — "For autonomous agents and power users" (~maximum autonomy, maximum impact)`,
               `6. **Share** the link to subscribe: the Regenerative Compute landing page`,
               ``,
               `Keep the tone encouraging and informative — this is about empowering the user, not guilt-tripping them.`,
