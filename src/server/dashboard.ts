@@ -196,6 +196,16 @@ ${betaBannerJS()}
 </html>`;
 }
 
+/** Map internal plan IDs to display names */
+function displayPlanName(plan: string): string {
+  const names: Record<string, string> = {
+    seedling: "Dabbler",
+    grove: "Builder",
+    forest: "Agent",
+  };
+  return names[plan] ?? plan.charAt(0).toUpperCase() + plan.slice(1);
+}
+
 function renderDashboardPage(
   email: string,
   plan: string,
@@ -204,9 +214,19 @@ function renderDashboardPage(
   monthly: MonthlyAttribution[],
   badges: Badge[],
   manageUrl: string,
+  amountCents: number,
+  baseUrl: string,
 ): string {
-  const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
+  const planName = displayPlanName(plan);
   const totalCredits = cumulative.total_carbon + cumulative.total_biodiversity + cumulative.total_uss;
+  // Show subscription amount if no pool runs have happened yet
+  const contributedCents = cumulative.total_contribution_cents > 0
+    ? cumulative.total_contribution_cents
+    : amountCents;
+  const shareText = encodeURIComponent(
+    `I'm funding ecological regeneration through my AI usage with @RegenNetwork's Regenerative Compute. ${formatCredits(totalCredits)} credits retired so far.`
+  );
+  const shareUrl = encodeURIComponent(baseUrl);
 
   // Prepare chart data as JSON
   const chartData = JSON.stringify({
@@ -304,8 +324,8 @@ function renderDashboardPage(
   ${betaBannerHTML()}
 
   ${brandHeader({
-    badge: planName + " Plan",
-    nav: [{ label: "Log out", href: "/dashboard/logout" }],
+    badge: planName,
+    nav: [{ label: "Home", href: "/" }, { label: "Log out", href: "/dashboard/logout" }],
   })}
 
   <div class="regen-container">
@@ -334,7 +354,7 @@ function renderDashboardPage(
         <div class="regen-stat-label">Total Credits</div>
       </div>
       <div class="regen-stat-card regen-stat-card--muted">
-        <div class="regen-stat-value">$${escapeHtml((cumulative.total_contribution_cents / 100).toFixed(2))}</div>
+        <div class="regen-stat-value">$${escapeHtml((contributedCents / 100).toFixed(2))}</div>
         <div class="regen-stat-label">Contributed</div>
       </div>
       <div class="regen-stat-card regen-stat-card--muted">
@@ -378,24 +398,43 @@ function renderDashboardPage(
       </div>
     </div>
 
+    <!-- Share your impact -->
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;">Share Your Impact</h2>
+      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;text-align:center;">
+        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 16px;">Spread the word about regenerative AI and invite others to join.</p>
+        <div class="regen-share-btns">
+          <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}" target="_blank" rel="noopener">Post on X</a>
+          <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}" target="_blank" rel="noopener">Share on LinkedIn</a>
+          <button class="regen-share-btn regen-share-btn--copy" onclick="navigator.clipboard.writeText('${escapeHtml(baseUrl)}').then(function(){this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Link'},1500)}.bind(this))">Copy Link</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boost your impact -->
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;">Boost Your Impact</h2>
+      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+        <span style="font-size:14px;color:var(--regen-gray-500);">Make a one-time contribution to retire more credits:</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:15px;color:var(--regen-navy);font-weight:600;">$</label>
+          <input id="boost-amount" type="number" min="1" step="0.50" value="5" style="width:80px;padding:8px 12px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:16px;text-align:center;">
+        </div>
+        <button onclick="boostImpact()" class="regen-btn regen-btn--solid regen-btn--sm">Boost</button>
+        <p id="boost-error" style="color:#c33;font-size:13px;margin:0;display:none;width:100%;text-align:center;"></p>
+      </div>
+    </div>
+
     <!-- Subscription management -->
     <div style="margin-bottom:32px;">
       <h2 class="regen-section-title" style="font-size:20px;">Subscription</h2>
       <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
         <div>
-          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);">${escapeHtml(planName)} Plan</div>
+          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);">${escapeHtml(planName)} Plan <span style="font-size:13px;font-weight:500;color:var(--regen-gray-500);">($${(amountCents / 100).toFixed(2)}/mo)</span></div>
           <div style="font-size:13px;color:var(--regen-gray-500);margin-top:4px;">Member since ${escapeHtml(memberSince)}</div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <a class="regen-btn regen-btn--outline regen-btn--sm" href="${escapeHtml(manageUrl)}">Manage Subscription</a>
-          <a class="regen-btn regen-btn--sm" href="${escapeHtml(manageUrl)}" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;">Cancel Subscription</a>
-        </div>
+        <a class="regen-btn regen-btn--outline regen-btn--sm" href="${escapeHtml(manageUrl)}">Manage Subscription</a>
       </div>
-    </div>
-
-    <!-- Export placeholder -->
-    <div class="dash-export">
-      <p>Export Impact Report (PDF) <span class="dash-coming-soon">Coming Soon</span></p>
     </div>
   </div>
 
@@ -433,6 +472,38 @@ function renderDashboardPage(
     })();
   </script>
   ` : ""}
+
+  <script>
+    function boostImpact() {
+      var input = document.getElementById('boost-amount');
+      var errEl = document.getElementById('boost-error');
+      var amount = parseFloat(input.value);
+      errEl.style.display = 'none';
+      if (!amount || amount < 1) {
+        errEl.textContent = 'Minimum amount is $1.00';
+        errEl.style.display = 'block';
+        return;
+      }
+      var cents = Math.round(amount * 100);
+      fetch('/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount_cents: cents })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) window.location.href = data.url;
+        else {
+          errEl.textContent = data.error || 'Something went wrong.';
+          errEl.style.display = 'block';
+        }
+      })
+      .catch(function(e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+      });
+    }
+  </script>
 
 ${betaBannerJS()}
 </body>
@@ -574,6 +645,8 @@ export function createDashboardRoutes(
       monthly,
       badges,
       manageUrl,
+      subscriber.amount_cents,
+      baseUrl,
     ));
   });
 
