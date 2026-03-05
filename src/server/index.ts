@@ -25,6 +25,7 @@ import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
 import { loadConfig } from "../config.js";
+import { regenLogoSVG } from "./brand.js";
 
 export function startServer(options: { port?: number; dbPath?: string } = {}) {
   const port = options.port ?? parseInt(process.env.REGEN_SERVER_PORT ?? "3141", 10);
@@ -41,6 +42,13 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // Health check
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", version: "0.3.0" });
+  });
+
+  // Static logo for emails (SVG)
+  app.get("/logo.svg", (_req, res) => {
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.send(regenLogoSVG);
   });
 
   // Always init DB and config — display-only pages need them

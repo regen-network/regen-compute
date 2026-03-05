@@ -24,8 +24,8 @@ import type { PoolRunResult, CreditTypeResult } from "./pool.js";
 
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email";
 
-// Regen Network logo as inline SVG for emails (simplified wordmark, works in most email clients as fallback text)
-const REGEN_LOGO_URL = "https://app.regen.network/svg/regen-network-logo.svg";
+// Regen Network logo served from our own server (email clients need a real image URL)
+const REGEN_LOGO_URL = "https://compute.regen.network/logo.svg";
 
 /** Shared email header: REGENERATIVE COMPUTE title + Powered by Regen Network */
 function emailHeader(): string {
@@ -50,7 +50,7 @@ function emailFooter(manageUrl?: string): string {
                       Powered by <a href="https://regen.network" style="color: #4FB573; text-decoration: none; font-weight: 600;">Regen Network</a>
                     </p>
                     <p style="margin: 0 0 8px; font-family: Arial, sans-serif; font-size: 12px; color: #9ca3af;">
-                      Regenerative contribution, not carbon offset.
+                      Every credit funds real ecological regeneration.
                     </p>
                     ${manageUrl ? `
                     <p style="margin: 0 0 8px; font-family: Arial, sans-serif; font-size: 12px; color: #9ca3af;">
