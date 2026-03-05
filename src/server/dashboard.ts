@@ -137,7 +137,7 @@ function computeBadges(cumulative: CumulativeAttribution): Badge[] {
 
 // --- HTML rendering ---
 
-function renderLoginPage(error?: string, success?: string): string {
+function renderLoginPage(error?: string, success?: string, info?: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -180,6 +180,7 @@ function renderLoginPage(error?: string, success?: string): string {
       <p class="login-subtitle">Enter your subscriber email to receive a login link.</p>
       ${error ? `<div class="regen-alert regen-alert--error">${escapeHtml(error)}</div>` : ""}
       ${success ? `<div class="regen-alert regen-alert--success">${escapeHtml(success)}</div>` : ""}
+      ${info ? `<div class="regen-alert regen-alert--info">${info}</div>` : ""}
       <form method="POST" action="/dashboard/login">
         <label class="regen-label" for="email">Email address</label>
         <input class="regen-input" type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email">
@@ -473,16 +474,23 @@ export function createDashboardRoutes(
     // Check that this email has a subscriber account
     const user = getUserByEmail(db, email);
     if (!user) {
-      // Show same success message to prevent email enumeration
       res.setHeader("Content-Type", "text/html");
-      res.send(renderLoginPage(undefined, "If an account exists for that email, a login link has been sent. Check your inbox."));
+      res.send(renderLoginPage(
+        undefined,
+        undefined,
+        `No subscription found for <strong>${escapeHtml(email)}</strong>. <a href="/#pricing">Subscribe</a> to get started, or try another email you may have used at checkout.`,
+      ));
       return;
     }
 
     const subscriber = getSubscriberByUserId(db, user.id);
     if (!subscriber) {
       res.setHeader("Content-Type", "text/html");
-      res.send(renderLoginPage(undefined, "If an account exists for that email, a login link has been sent. Check your inbox."));
+      res.send(renderLoginPage(
+        undefined,
+        undefined,
+        `No active subscription found for <strong>${escapeHtml(email)}</strong>. <a href="/#pricing">Subscribe</a> to get started, or try another email you may have used at checkout.`,
+      ));
       return;
     }
 
