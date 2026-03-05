@@ -27,10 +27,11 @@ export function betaBannerCSS(): string {
     /* Feedback widget */
     .beta-fb-btn {
       position: fixed; bottom: 24px; right: 24px; z-index: 9998;
-      width: 48px; height: 48px; border-radius: 50%;
+      padding: 10px 20px; border-radius: 24px;
       background: #2d6a4f; color: #fff; border: 2px dashed #1b4332;
-      font-size: 22px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      font-family: -apple-system, system-ui, sans-serif;
+      display: flex; align-items: center; gap: 6px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.15);
       animation: beta-pulse 2s ease-in-out infinite;
     }
@@ -75,7 +76,7 @@ export function betaBannerHTML(): string {
       BETA — Thank you for testing! Your feedback shapes this product.
       <button class="beta-dismiss" onclick="document.getElementById('betaBanner').remove();document.body.classList.remove('beta-active');" aria-label="Dismiss">&times;</button>
     </div>
-    <button class="beta-fb-btn" id="betaFbBtn" title="Send feedback" aria-label="Send feedback">&#9993;</button>
+    <button class="beta-fb-btn" id="betaFbBtn" title="Submit feedback" aria-label="Submit feedback">&#9993; Submit Feedback</button>
     <div class="beta-fb-card" id="betaFbCard">
       <h3>Send Feedback</h3>
       <form id="betaFbForm">
