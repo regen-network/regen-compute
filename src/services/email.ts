@@ -360,6 +360,7 @@ async function sendViaPostmark(
   htmlBody: string,
   manageUrl: string,
 ): Promise<void> {
+  const config = loadConfig();
   const response = await fetch(POSTMARK_API_URL, {
     method: "POST",
     headers: {
@@ -370,6 +371,7 @@ async function sendViaPostmark(
     body: JSON.stringify({
       From: from,
       To: to,
+      ...(config.emailReplyToAddress ? { ReplyTo: config.emailReplyToAddress } : {}),
       Subject: subject,
       HtmlBody: htmlBody,
       MessageStream: "outbound",
@@ -570,6 +572,7 @@ export async function sendMagicLinkEmail(
     body: JSON.stringify({
       From: config.emailFromAddress,
       To: email,
+      ...(config.emailReplyToAddress ? { ReplyTo: config.emailReplyToAddress } : {}),
       Subject: "Log in to your Regenerative Compute Dashboard",
       HtmlBody: html,
       MessageStream: "outbound",
@@ -702,6 +705,7 @@ export async function sendWelcomeEmail(
     body: JSON.stringify({
       From: config.emailFromAddress,
       To: email,
+      ...(config.emailReplyToAddress ? { ReplyTo: config.emailReplyToAddress } : {}),
       Subject: "Welcome to Regenerative Compute",
       HtmlBody: html,
       MessageStream: "outbound",
