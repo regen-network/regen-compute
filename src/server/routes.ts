@@ -341,15 +341,39 @@ Then estimate my AI usage footprint and recommend a tier ($1.25, $2.50, or $5/mo
       <div class="stats-bar">
         <div>
           <div class="stats-bar__num">${totalRetirements}</div>
-          <div class="stats-bar__label">Total Retirements</div>
+          <div class="stats-bar__label">Credits Retired On-Chain</div>
         </div>
         <div>
-          <div class="stats-bar__num">${totalOrders}</div>
-          <div class="stats-bar__label">Marketplace Orders</div>
+          <div class="stats-bar__num">9+</div>
+          <div class="stats-bar__label">Countries</div>
         </div>
         <div>
           <div class="stats-bar__num">5</div>
-          <div class="stats-bar__label">Credit Types</div>
+          <div class="stats-bar__label">Ecological Credit Types</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What You Fund -->
+  <section class="hiw-section">
+    <div class="regen-container">
+      <h2 class="regen-section-title" style="text-align:center;">What Your Subscription Funds</h2>
+      <div class="hiw-steps" style="gap:20px;">
+        <div style="flex:1 1 200px;max-width:280px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px;text-align:left;">
+          <div style="font-size:12px;font-weight:700;color:var(--regen-green);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Jaguar Habitat</div>
+          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:6px;">Terrasos Biodiversity Credits</div>
+          <p style="font-size:13px;color:var(--regen-gray-500);margin:0;line-height:1.5;">Preserving threatened tropical forest ecosystems in Colombia. 30-year crediting periods protect habitat for jaguars and hundreds of species.</p>
+        </div>
+        <div style="flex:1 1 200px;max-width:280px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px;text-align:left;">
+          <div style="font-size:12px;font-weight:700;color:var(--regen-green);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Coral &amp; Kelp Forests</div>
+          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:6px;">SeaTrees Marine Restoration</div>
+          <p style="font-size:13px;color:var(--regen-gray-500);margin:0;line-height:1.5;">Restoring coral reefs, mangrove forests, and kelp forests. Community-led marine restoration funded through biodiversity credits.</p>
+        </div>
+        <div style="flex:1 1 200px;max-width:280px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px;text-align:left;">
+          <div style="font-size:12px;font-weight:700;color:var(--regen-green);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Umbrella Species</div>
+          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:6px;">Community Conservation</div>
+          <p style="font-size:13px;color:var(--regen-gray-500);margin:0;line-height:1.5;">Protecting keystone species whose conservation shelters entire ecosystems. Verified with remote sensing and traditional ecological knowledge.</p>
         </div>
       </div>
     </div>
