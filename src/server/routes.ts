@@ -259,8 +259,6 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
           <div class="regen-tier__price price-monthly">$1.25<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$12.50<span>/yr</span></div>
           <div class="regen-tier__effective price-yearly" style="display:none;">$1.04/mo — 2 months free</div>
-          <div class="regen-tier__split price-monthly">75% funds ecology</div>
-          <div class="regen-tier__split price-yearly" style="display:none;">85% funds ecology</div>
           <div class="regen-tier__desc">You use AI a few times a week. This covers your share and funds real ecological projects.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('seedling')">Subscribe</button>`
@@ -272,8 +270,6 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
           <div class="regen-tier__price price-monthly">$2.50<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$25<span>/yr</span></div>
           <div class="regen-tier__effective price-yearly" style="display:none;">$2.08/mo — 2 months free</div>
-          <div class="regen-tier__split price-monthly">75% funds ecology</div>
-          <div class="regen-tier__split price-yearly" style="display:none;">85% funds ecology</div>
           <div class="regen-tier__desc">AI is part of your daily workflow. Full ecological accountability for regular use.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('grove')">Subscribe</button>`
@@ -284,8 +280,6 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
           <div class="regen-tier__price price-monthly">$5<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$50<span>/yr</span></div>
           <div class="regen-tier__effective price-yearly" style="display:none;">$4.17/mo — 2 months free</div>
-          <div class="regen-tier__split price-monthly">75% funds ecology</div>
-          <div class="regen-tier__split price-yearly" style="display:none;">85% funds ecology</div>
           <div class="regen-tier__desc">For autonomous agents and power users — maximum autonomy, maximum impact.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('forest')">Subscribe</button>`
