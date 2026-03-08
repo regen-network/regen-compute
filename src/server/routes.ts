@@ -160,13 +160,25 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       0%, 100% { box-shadow: 0 0 0 0 rgba(79, 181, 115, 0); }
       50% { box-shadow: 0 0 0 6px rgba(79, 181, 115, 0.25); }
     }
+    .regen-tier--clickable {
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .regen-tier--clickable:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(79, 181, 115, 0.2);
+    }
+    .regen-tier--clickable:active {
+      transform: translateY(0);
+    }
+    .regen-tier__cta {
+      margin-top: auto; padding-top: 12px;
+      font-size: 14px; font-weight: 700; color: var(--regen-green);
+      text-align: center; letter-spacing: 0.02em;
+    }
     .regen-tier__effective {
       font-size: 13px; color: var(--regen-green); font-weight: 600;
       margin: -4px 0 8px;
-    }
-    .regen-tier__split {
-      font-size: 12px; color: var(--regen-gray-500); font-weight: 600;
-      margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;
     }
 
     /* Stats section */
@@ -254,36 +266,30 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       </div>
 
       <div class="regen-tiers">
-        <div class="regen-tier">
+        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('seedling')" : `window.location.href='${seedlingUrl}'`}">
           <div class="regen-tier__name">Dabbler</div>
           <div class="regen-tier__price price-monthly">$1.25<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$12.50<span>/yr</span></div>
           <div class="regen-tier__effective price-yearly" style="display:none;">$1.04/mo — 2 months free</div>
           <div class="regen-tier__desc">You use AI a few times a week. This covers your share and funds real ecological projects.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
-          ${hasPriceIds
-            ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('seedling')">Subscribe</button>`
-            : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${seedlingUrl}">Subscribe</a>`}
+          <div class="regen-tier__cta">Subscribe</div>
         </div>
-        <div class="regen-tier tier-featured">
+        <div class="regen-tier tier-featured regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('grove')" : `window.location.href='${groveUrl}'`}">
           <div class="tier-featured-badge">Most Popular</div>
           <div class="regen-tier__name">Builder</div>
           <div class="regen-tier__price price-monthly">$2.50<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$25<span>/yr</span></div>
           <div class="regen-tier__effective price-yearly" style="display:none;">$2.08/mo — 2 months free</div>
           <div class="regen-tier__desc">AI is part of your daily workflow. Full ecological accountability for regular use.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
-          ${hasPriceIds
-            ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('grove')">Subscribe</button>`
-            : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${groveUrl}">Subscribe</a>`}
+          <div class="regen-tier__cta">Subscribe</div>
         </div>
-        <div class="regen-tier">
+        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('forest')" : `window.location.href='${forestUrl}'`}">
           <div class="regen-tier__name">Agent</div>
           <div class="regen-tier__price price-monthly">$5<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$50<span>/yr</span></div>
           <div class="regen-tier__effective price-yearly" style="display:none;">$4.17/mo — 2 months free</div>
           <div class="regen-tier__desc">For autonomous agents and power users — maximum autonomy, maximum impact.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
-          ${hasPriceIds
-            ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('forest')">Subscribe</button>`
-            : `<a class="regen-btn regen-btn--solid regen-btn--block" href="${forestUrl}">Subscribe</a>`}
+          <div class="regen-tier__cta">Subscribe</div>
         </div>
       </div>
 
