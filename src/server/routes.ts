@@ -138,7 +138,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       padding: 4px 14px; border-radius: 20px; white-space: nowrap;
     }
     .interval-btn {
-      padding: 8px 20px; border: none; border-radius: 8px;
+      padding: 8px 20px; border: 1px solid transparent; border-radius: 8px;
       font-size: 14px; font-weight: 600; cursor: pointer;
       background: transparent; color: var(--regen-gray-500);
       transition: all 0.15s;
@@ -146,6 +146,19 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
     .interval-btn--active {
       background: var(--regen-white); color: var(--regen-navy);
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-color: transparent;
+    }
+    .interval-btn--yearly {
+      border: 1px solid var(--regen-green);
+      animation: yearly-pulse 2.5s ease-in-out infinite;
+    }
+    .interval-btn--yearly.interval-btn--active {
+      border-color: var(--regen-green);
+      animation: none;
+    }
+    @keyframes yearly-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(79, 181, 115, 0); }
+      50% { box-shadow: 0 0 0 6px rgba(79, 181, 115, 0.25); }
     }
     .regen-tier__effective {
       font-size: 13px; color: var(--regen-green); font-weight: 600;
@@ -236,7 +249,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       <div style="display:flex;justify-content:center;margin-bottom:28px;">
         <div id="interval-toggle" style="display:inline-flex;background:var(--regen-gray-100);border-radius:10px;padding:4px;">
           <button id="toggle-monthly" onclick="setInterval('monthly')" class="interval-btn interval-btn--active">Monthly</button>
-          <button id="toggle-yearly" onclick="setInterval('yearly')" class="interval-btn">Yearly <span style="font-size:11px;font-weight:700;color:var(--regen-green);">Save 17%</span></button>
+          <button id="toggle-yearly" onclick="setInterval('yearly')" class="interval-btn interval-btn--yearly">Yearly <span style="font-size:11px;font-weight:700;color:var(--regen-green);">Save 17%</span></button>
         </div>
       </div>
 
@@ -411,7 +424,7 @@ Then estimate my AI usage footprint and recommend a tier ($1.25, $2.50, or $5/mo
       for (var i = 0; i < monthlyEls.length; i++) monthlyEls[i].style.display = interval === 'monthly' ? '' : 'none';
       for (var i = 0; i < yearlyEls.length; i++) yearlyEls[i].style.display = interval === 'yearly' ? '' : 'none';
       document.getElementById('toggle-monthly').className = 'interval-btn' + (interval === 'monthly' ? ' interval-btn--active' : '');
-      document.getElementById('toggle-yearly').className = 'interval-btn' + (interval === 'yearly' ? ' interval-btn--active' : '');
+      document.getElementById('toggle-yearly').className = 'interval-btn interval-btn--yearly' + (interval === 'yearly' ? ' interval-btn--active' : '');
     }
   </script>
 
