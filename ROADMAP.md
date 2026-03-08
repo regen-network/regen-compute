@@ -17,6 +17,18 @@ The website and the plugin are the same product. They share the same backend, th
 
 This is NOT "carbon offsetting." It's **regenerative contribution** — funding verified ecological regeneration with immutable on-chain proof. No neutrality claims, no greenwashing. Just contribution.
 
+## Simple Example Workflow
+
+Here is how a developer might use Regenerative Compute:
+
+1. Use an AI coding assistant like Claude Code or Cursor
+2. Estimate the environmental footprint of the AI session
+3. Browse available ecological credits from Regen Network
+4. Retire credits that fund ecological regeneration
+5. Receive a verifiable on-chain certificate showing the contribution
+
+This workflow helps developers understand and reduce the ecological impact of their AI usage while supporting real-world regeneration projects.
+
 ## What Already Works (Phase 1.5 — Shipped)
 
 | Tool | What it does |
