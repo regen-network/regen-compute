@@ -7,7 +7,13 @@
 
 ## What This Is
 
-An MCP (Model Context Protocol) server that lets AI coding assistants (Claude Code, Cursor, etc.) estimate their ecological footprint and retire verified ecocredits on Regen Network. Users never touch crypto — the MCP handles everything from footprint estimation to on-chain retirement.
+Regenerative Compute is the first ecological accountability platform built for AI users. It has two channels:
+
+1. **Website** ([compute.regen.network](https://compute.regen.network)) — Subscribe for $1.25–$5/month. Your payment funds verified ecological credit retirement on Regen Network. Dashboard tracks cumulative impact with on-chain proof. No wallet, no crypto, no complexity. **This is the primary conversion target.**
+
+2. **AI Plugin** (MCP server) — One-command install for Claude Code, Cursor, and any MCP client. Gives your AI assistant ecological awareness: footprint estimation, live credit browsing, on-chain retirement, certificates. **This is the distribution engine.**
+
+The website and the plugin are the same product. They share the same backend, the same credits, the same on-chain retirements. Each promotes the other. Subscribers get impact tracked regardless of which channel they use.
 
 This is NOT "carbon offsetting." It's **regenerative contribution** — funding verified ecological regeneration with immutable on-chain proof. No neutrality claims, no greenwashing. Just contribution.
 
@@ -82,30 +88,33 @@ Supply runway: comfortable to ~50K subscribers. Credit supply recruitment is cri
 
 ## Three-Track Rollout
 
-### Track A: Developer Community & Narrative (Weeks 1–6)
+### Track A: Community Launch & Dual-Channel Distribution (Weeks 1–6)
 
-**Goal**: Establish the "Regenerative AI" category, build early adopters, generate proof of demand.
+**Goal**: Establish the "Regenerative AI" category. Drive subscriptions at compute.regen.network AND MCP installs. Each channel feeds the other.
 
-**Target**: 500 MCP installs, 50 retirements, media/social proof.
-
-Key deliverables:
-- Polished MCP with one-command install (`npx regen-compute`)
-- Shareable certificate page (`regen.network/impact/[hash]`) — the viral mechanic
-- Launch blog post + demo video
-- Community seeding across Claude Discord, Twitter, HN, r/MachineLearning
-
-### Track B: Subscription Pool Service (Weeks 4–12)
-
-**Goal**: Recurring revenue engine. Aggregated monthly retirements.
-
-**Target**: 1,000 subscribers, $5K MRR, 3 months retention data.
+**Target**: 200 subscribers, 500 MCP installs, 50 retirements, media/social proof.
 
 Key deliverables:
-- Stripe subscription (Seedling $2.50, Grove $7, Forest $15)
-- Pool accounting: 85% credits / 5% REGEN burn / 10% ops
+- **Website** live at compute.regen.network with subscription plans, dashboard, and referral system
+- **AI plugin** polished with one-command install (`npx regen-compute`)
+- Shareable certificate page (`compute.regen.network/impact/[hash]`) — the viral mechanic
+- Launch blog post announcing both channels + demo video
+- Community seeding: website-first messaging for general AI users (r/ClaudeAI, Twitter, HN), MCP-first messaging for developers (Claude Discord, Cursor forums, Dev.to)
+- /ai-plugin page on website as MCP landing page; website footer/header links to plugin and vice versa
+
+### Track B: Subscription Growth & Retention (Weeks 4–12)
+
+**Goal**: Grow recurring revenue. The website is the financial engine — every marketing action should ultimately drive subscriptions.
+
+**Target**: 1,000 subscribers, $3K MRR, 3 months retention data.
+
+Key deliverables:
+- Subscription tiers live (Dabbler $1.25, Builder $2.50, Agent $5 — monthly or yearly)
+- Pool accounting: monthly 75/20/5, yearly 85/10/5 (credits/ops/burn)
 - Monthly batch retirement with per-subscriber attribution
+- Subscriber dashboard with cumulative impact and referral tracking
+- MCP plugin awareness prompts that surface subscription when user retires ad-hoc credits
 - Developer REST API (`POST /retire` with API key)
-- Subscriber dashboard with cumulative impact
 
 ### Track C: Enterprise & Platform Partnerships (Ongoing)
 
@@ -126,13 +135,16 @@ Key deliverables:
 
 1. **On-chain verification** — Retirements on immutable public ledger, not a private database
 2. **Multi-credit portfolio** — Carbon + biodiversity + marine + umbrella species + grazing
-3. **MCP-native** — Lives inside the AI tool, not a separate website
-4. **Fiat rails** — Credit card purchases work today, no wallet needed
-5. **REGEN flywheel** — Retirements → REGEN burns → token appreciation → more supply → more retirements
+3. **Two-channel distribution** — Website captures general AI users; MCP plugin captures developers. Each feeds the other.
+4. **Fiat rails** — Credit card subscriptions work today, no wallet needed
+5. **MCP-native** — Lives inside the AI tool for developers who want in-workflow integration
+6. **REGEN flywheel** — Retirements → REGEN burns → token appreciation → more supply → more retirements
 
 ## Key Design Principles
 
 - **"Regenerative contribution" not "carbon offset"** — Legally defensible, narratively powerful
+- **Website is the conversion target** — Every touchpoint (MCP, social, blog, certificates) should drive toward compute.regen.network subscriptions
+- **MCP is the distribution engine** — Developer installs create organic awareness and surface the subscription
 - **Heuristic footprint, not precise metering** — Honest about uncertainty, clearly labeled
 - **Graceful degradation** — No wallet? Get marketplace links. Wallet configured? On-chain retirement. Error? Fallback to links.
 - **Certificates are the viral artifact** — Everything funnels to the shareable proof page
@@ -193,20 +205,28 @@ If you're an AI reading this repo: the CLAUDE.md file has full technical context
 
 ## Revenue Model
 
-| Tier | Price | Credits/mo | Sessions covered |
-|------|-------|-----------|-----------------|
-| Seedling | $2.50/mo | ~0.5 carbon | ~30–50 |
-| Grove | $7/mo | ~1.5 carbon | ~80–125 |
-| Forest | $15/mo | ~3 carbon | ~160–250 |
+| Tier | Price | Target User |
+|------|-------|-------------|
+| Dabbler | $1.25/mo | Occasional AI users (few times weekly) |
+| Builder | $2.50/mo | Daily AI workflow users |
+| Agent | $5/mo | Power users and autonomous agents |
+| Custom | Variable | One-time or custom amounts |
 
-**Revenue split**: 85% credit purchases / 5% REGEN buy-and-burn / 10% operations
+**Revenue split**:
+- Monthly: 75% credit purchases / 20% operations / 5% REGEN buy-and-burn
+- Yearly: 85% credit purchases / 10% operations / 5% REGEN buy-and-burn
+
+Yearly subscribers pay for 10 months and get 12 (17% discount). More of their money goes to ecology (85% vs 75%) — the incentive for committing annually. The higher ops margin on monthly subscriptions funds the business.
+
+**Conversion funnel**: Social/blog/word-of-mouth → compute.regen.network → subscribe. MCP install → in-workflow prompts → compute.regen.network → subscribe. Certificate shares → compute.regen.network → subscribe.
 
 ## Risks
 
 | Risk | Severity | Mitigation |
 |------|----------|-----------|
 | Credit supply exhaustion at scale | High | Start supply recruitment now. Target high-frequency issuance projects. |
-| MCP distribution ceiling | Medium | Multi-channel: MCP + web + API + browser extension |
-| Energy accounting methodology challenge | Medium | Never claim precision. "Approximate" + "contribution" framing. |
+| Low subscription conversion | High | Two funnels (website direct + MCP-to-subscribe). Low price floor ($1.25). Referral incentives. |
+| MCP distribution ceiling | Medium | Website is independent channel. MCP drives developer awareness, website captures everyone else. |
+| Energy accounting methodology challenge | Medium | Never claim precision. "Approximate" + "contribution" framing. Research page with citations. |
 | Anthropic builds it themselves | Medium | Be the incumbent. Make partnership obvious and easy. |
 | Regulatory risk on ecological claims | Low | On-chain proof. "Funds regeneration" not "carbon neutral". |

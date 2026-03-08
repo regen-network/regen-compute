@@ -102,8 +102,9 @@ beforeEach(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
       stripe_subscription_id TEXT UNIQUE NOT NULL,
-      plan TEXT NOT NULL CHECK(plan IN ('seedling', 'grove', 'forest')),
+      plan TEXT NOT NULL CHECK(plan IN ('seedling', 'grove', 'forest', 'dabbler', 'builder', 'agent')),
       amount_cents INTEGER NOT NULL,
+      billing_interval TEXT NOT NULL DEFAULT 'monthly' CHECK(billing_interval IN ('monthly', 'yearly')),
       status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'paused', 'cancelled')),
       current_period_start TEXT,
       current_period_end TEXT,
@@ -177,7 +178,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function addTestSubscribers(count: number, amountCents = 500): number[] {
+function addTestSubscribers(count: number, amountCents = 500, billingInterval = "monthly"): number[] {
   const ids: number[] = [];
   for (let i = 0; i < count; i++) {
     const userResult = db.prepare(
@@ -185,8 +186,8 @@ function addTestSubscribers(count: number, amountCents = 500): number[] {
     ).run(`rfa_test_${i}`, `user${i}@test.com`);
 
     const subResult = db.prepare(
-      "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, status) VALUES (?, ?, ?, ?, 'active')"
-    ).run(userResult.lastInsertRowid, `sub_test_${i}`, "grove", amountCents);
+      "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, status) VALUES (?, ?, ?, ?, ?, 'active')"
+    ).run(userResult.lastInsertRowid, `sub_test_${i}`, "builder", amountCents, billingInterval);
 
     ids.push(Number(subResult.lastInsertRowid));
   }
@@ -202,21 +203,21 @@ describe("Pool Service", () => {
       expect(result.errors).toContain("No active subscribers found");
     });
 
-    it("applies 85/5/10 revenue split before credit type allocation", async () => {
-      addTestSubscribers(10, 1000); // 10 subs x $10 = $100 total
+    it("applies 75/20/5 revenue split for monthly subscribers", async () => {
+      addTestSubscribers(10, 1000); // 10 subs x $10 = $100 total (all monthly)
 
       const result = await executePoolRun({ dryRun: true });
 
       expect(result.totalRevenueCents).toBe(10000);
 
-      // 85% to credits = 8500
-      expect(result.creditsBudgetCents).toBe(8500);
+      // 75% to credits = 7500
+      expect(result.creditsBudgetCents).toBe(7500);
 
       // 5% to burn = 500
       expect(result.burn.allocationCents).toBe(500);
 
-      // 10% to operations = 1000
-      expect(result.opsAllocationCents).toBe(1000);
+      // 20% to operations = 2000
+      expect(result.opsAllocationCents).toBe(2000);
 
       // Revenue split accounts for all cents
       expect(result.creditsBudgetCents + result.burn.allocationCents + result.opsAllocationCents)
@@ -224,16 +225,16 @@ describe("Pool Service", () => {
     });
 
     it("calculates correct 50/30/20 credit type allocation within credits budget", async () => {
-      addTestSubscribers(10, 1000); // $100 total, 85% = $85 credits budget
+      addTestSubscribers(10, 1000); // $100 total, 75% = $75 credits budget (monthly)
 
       const result = await executePoolRun({ dryRun: true });
 
-      // 50% of 8500 = 4250
-      expect(result.carbon.budgetCents).toBe(4250);
-      // 30% of 8500 = 2550
-      expect(result.biodiversity.budgetCents).toBe(2550);
-      // Remainder = 8500 - 4250 - 2550 = 1700
-      expect(result.uss.budgetCents).toBe(1700);
+      // 50% of 7500 = 3750
+      expect(result.carbon.budgetCents).toBe(3750);
+      // 30% of 7500 = 2250
+      expect(result.biodiversity.budgetCents).toBe(2250);
+      // Remainder = 7500 - 3750 - 2250 = 1500
+      expect(result.uss.budgetCents).toBe(1500);
 
       // Credit type budgets sum to credits budget
       expect(result.carbon.budgetCents + result.biodiversity.budgetCents + result.uss.budgetCents)
@@ -271,12 +272,12 @@ describe("Pool Service", () => {
       const user2 = db.prepare("INSERT INTO users (api_key, email) VALUES (?, ?)").run("rfa_b", "b@test.com");
 
       db.prepare(
-        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, status) VALUES (?, ?, ?, ?, 'active')"
-      ).run(user1.lastInsertRowid, "sub_a", "seedling", 200); // $2
+        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, status) VALUES (?, ?, ?, ?, 'monthly', 'active')"
+      ).run(user1.lastInsertRowid, "sub_a", "dabbler", 200); // $2
 
       db.prepare(
-        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, status) VALUES (?, ?, ?, ?, 'active')"
-      ).run(user2.lastInsertRowid, "sub_b", "forest", 1000); // $10
+        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, status) VALUES (?, ?, ?, ?, 'monthly', 'active')"
+      ).run(user2.lastInsertRowid, "sub_b", "agent", 1000); // $10
 
       const result = await executePoolRun({ dryRun: true });
 
@@ -329,19 +330,59 @@ describe("Pool Service", () => {
       expect(result.errors.length).toBeGreaterThan(0);
     });
 
+    it("applies 85/10/5 revenue split for yearly subscribers", async () => {
+      addTestSubscribers(10, 1000, "yearly"); // 10 subs x $10 = $100 total (all yearly)
+
+      const result = await executePoolRun({ dryRun: true });
+
+      expect(result.totalRevenueCents).toBe(10000);
+
+      // 85% to credits = 8500
+      expect(result.creditsBudgetCents).toBe(8500);
+
+      // 5% to burn = 500
+      expect(result.burn.allocationCents).toBe(500);
+
+      // 10% to operations = 1000
+      expect(result.opsAllocationCents).toBe(1000);
+    });
+
+    it("applies blended split for mixed monthly and yearly subscribers", async () => {
+      // 1 monthly sub at $10 + 1 yearly sub at $10 = $20 total
+      const user1 = db.prepare("INSERT INTO users (api_key, email) VALUES (?, ?)").run("rfa_m", "m@test.com");
+      db.prepare(
+        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, status) VALUES (?, ?, ?, ?, ?, 'active')"
+      ).run(user1.lastInsertRowid, "sub_m", "builder", 1000, "monthly");
+
+      const user2 = db.prepare("INSERT INTO users (api_key, email) VALUES (?, ?)").run("rfa_y", "y@test.com");
+      db.prepare(
+        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, status) VALUES (?, ?, ?, ?, ?, 'active')"
+      ).run(user2.lastInsertRowid, "sub_y", "builder", 1000, "yearly");
+
+      const result = await executePoolRun({ dryRun: true });
+
+      expect(result.totalRevenueCents).toBe(2000);
+
+      // Monthly: floor(1000 * 0.75) = 750 credits, floor(1000 * 0.05) = 50 burn
+      // Yearly:  floor(1000 * 0.85) = 850 credits, floor(1000 * 0.05) = 50 burn
+      expect(result.creditsBudgetCents).toBe(1600); // 750 + 850
+      expect(result.burn.allocationCents).toBe(100); // 50 + 50
+      expect(result.opsAllocationCents).toBe(300); // remainder: 2000 - 1600 - 100
+    });
+
     it("excludes paused and cancelled subscribers", async () => {
       // Add 3 active, 1 paused, 1 cancelled
       addTestSubscribers(3, 500); // 3 active
 
       const user4 = db.prepare("INSERT INTO users (api_key, email) VALUES (?, ?)").run("rfa_paused", "paused@test.com");
       db.prepare(
-        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, status) VALUES (?, ?, ?, ?, 'paused')"
-      ).run(user4.lastInsertRowid, "sub_paused", "grove", 500);
+        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, status) VALUES (?, ?, ?, ?, 'monthly', 'paused')"
+      ).run(user4.lastInsertRowid, "sub_paused", "builder", 500);
 
       const user5 = db.prepare("INSERT INTO users (api_key, email) VALUES (?, ?)").run("rfa_cancelled", "cancel@test.com");
       db.prepare(
-        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, status) VALUES (?, ?, ?, ?, 'cancelled')"
-      ).run(user5.lastInsertRowid, "sub_cancelled", "grove", 500);
+        "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, status) VALUES (?, ?, ?, ?, 'monthly', 'cancelled')"
+      ).run(user5.lastInsertRowid, "sub_cancelled", "builder", 500);
 
       const result = await executePoolRun({ dryRun: true });
 
@@ -356,13 +397,13 @@ describe("Pool Service", () => {
 
       const result = await executePoolRun({ dryRun: true });
 
-      // Revenue split: 85/5/10
+      // Revenue split: 75/20/5 (monthly)
       const splitTotal = result.creditsBudgetCents + result.burn.allocationCents + result.opsAllocationCents;
       expect(splitTotal).toBe(333); // No cents lost
     });
 
     it("handles odd amounts without losing cents in credit type allocation", async () => {
-      addTestSubscribers(1, 1000); // $10 total, 85% = $8.50 credits budget
+      addTestSubscribers(1, 1000); // $10 total, 75% = $7.50 credits budget (monthly)
 
       const result = await executePoolRun({ dryRun: true });
 
@@ -375,7 +416,7 @@ describe("Pool Service", () => {
 
       const result = await executePoolRun({ dryRun: true });
 
-      // floor(1 * 0.85) = 0, floor(1 * 0.05) = 0, remainder = 1
+      // floor(1 * 0.75) = 0, floor(1 * 0.05) = 0, remainder = 1
       expect(result.creditsBudgetCents).toBe(0);
       expect(result.burn.allocationCents).toBe(0);
       expect(result.opsAllocationCents).toBe(1);
@@ -384,7 +425,7 @@ describe("Pool Service", () => {
 
   describe("REGEN burn integration", () => {
     it("records burn as skipped when burn is disabled", async () => {
-      addTestSubscribers(2, 1000); // 2 subs x $10 = $20 total = 2000 cents
+      addTestSubscribers(2, 1000); // 2 subs x $10 = $20 total = 2000 cents (monthly)
 
       const result = await executePoolRun({ dryRun: true });
 
@@ -400,24 +441,24 @@ describe("Pool Service", () => {
     });
 
     it("records burn allocation in pool_runs table", async () => {
-      addTestSubscribers(2, 1000); // 2 subs x $10 = $20 total = 2000 cents
+      addTestSubscribers(2, 1000); // 2 subs x $10 = $20 total = 2000 cents (monthly: 75/20/5)
 
       const result = await executePoolRun({ dryRun: true });
 
       const poolRun = db.prepare("SELECT * FROM pool_runs WHERE id = ?").get(result.poolRunId) as any;
       expect(poolRun.burn_allocation_cents).toBe(100);  // 5% of 2000
-      expect(poolRun.ops_allocation_cents).toBe(200);    // 10% of 2000
+      expect(poolRun.ops_allocation_cents).toBe(400);    // 20% of 2000
     });
 
     it("includes burn result in pool run result", async () => {
-      addTestSubscribers(1, 500); // $5 total
+      addTestSubscribers(1, 500); // $5 total (monthly: 75/20/5)
 
       const result = await executePoolRun({ dryRun: true });
 
       expect(result.burn).toBeDefined();
       expect(result.burn.allocationCents).toBe(25); // 5% of 500
-      expect(result.opsAllocationCents).toBe(50); // 10% of 500
-      expect(result.creditsBudgetCents).toBe(425); // 85% of 500
+      expect(result.opsAllocationCents).toBe(100); // 20% of 500
+      expect(result.creditsBudgetCents).toBe(375); // 75% of 500
     });
   });
 });

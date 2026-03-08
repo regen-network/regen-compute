@@ -39,10 +39,15 @@ export interface Config {
   stripePaymentLinkGrove: string;
   stripePaymentLinkForest: string;
 
-  // Stripe Price IDs (for programmatic Checkout Sessions)
+  // Stripe Price IDs — Monthly (for programmatic Checkout Sessions)
   stripePriceIdSeedling: string | undefined;
   stripePriceIdGrove: string | undefined;
   stripePriceIdForest: string | undefined;
+
+  // Stripe Price IDs — Yearly
+  stripePriceIdSeedlingYearly: string | undefined;
+  stripePriceIdGroveYearly: string | undefined;
+  stripePriceIdForestYearly: string | undefined;
 
   // Email (Postmark)
   postmarkServerToken: string | undefined;
@@ -111,6 +116,10 @@ export function loadConfig(): Config {
     stripePriceIdSeedling: process.env.STRIPE_PRICE_ID_SEEDLING || undefined,
     stripePriceIdGrove: process.env.STRIPE_PRICE_ID_GROVE || undefined,
     stripePriceIdForest: process.env.STRIPE_PRICE_ID_FOREST || undefined,
+
+    stripePriceIdSeedlingYearly: process.env.STRIPE_PRICE_ID_SEEDLING_YEARLY || undefined,
+    stripePriceIdGroveYearly: process.env.STRIPE_PRICE_ID_GROVE_YEARLY || undefined,
+    stripePriceIdForestYearly: process.env.STRIPE_PRICE_ID_FOREST_YEARLY || undefined,
 
     stripePortalReturnUrl: process.env.STRIPE_PORTAL_RETURN_URL || undefined,
 

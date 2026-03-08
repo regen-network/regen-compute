@@ -59,8 +59,9 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
       stripe_subscription_id TEXT UNIQUE NOT NULL,
-      plan TEXT NOT NULL CHECK(plan IN ('seedling', 'grove', 'forest')),
+      plan TEXT NOT NULL CHECK(plan IN ('seedling', 'grove', 'forest', 'dabbler', 'builder', 'agent')),
       amount_cents INTEGER NOT NULL,
+      billing_interval TEXT NOT NULL DEFAULT 'monthly' CHECK(billing_interval IN ('monthly', 'yearly')),
       status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'paused', 'cancelled')),
       current_period_start TEXT,
       current_period_end TEXT,
@@ -172,6 +173,13 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_referral_rewards_referrer ON referral_rewards(referrer_user_id);
     CREATE INDEX IF NOT EXISTS idx_referral_rewards_status ON referral_rewards(status);
   `);
+
+  // Migrations for existing DBs — add billing_interval to subscribers table
+  const subCols = (_db.pragma("table_info(subscribers)") as Array<{ name: string }>).map((c) => c.name);
+  if (!subCols.includes("billing_interval")) {
+    _db.exec(`ALTER TABLE subscribers ADD COLUMN billing_interval TEXT NOT NULL DEFAULT 'monthly'`);
+    console.log("Migration: added billing_interval column to subscribers");
+  }
 
   // Migrations for existing DBs — add referral columns to users table
   const existingCols = (_db.pragma("table_info(users)") as Array<{ name: string }>).map((c) => c.name);
@@ -326,8 +334,9 @@ export interface Subscriber {
   id: number;
   user_id: number;
   stripe_subscription_id: string;
-  plan: "seedling" | "grove" | "forest";
+  plan: "seedling" | "grove" | "forest" | "dabbler" | "builder" | "agent";
   amount_cents: number;
+  billing_interval: "monthly" | "yearly";
   status: "active" | "paused" | "cancelled";
   current_period_start: string | null;
   current_period_end: string | null;
@@ -350,11 +359,12 @@ export function createSubscriber(
   plan: string,
   amountCents: number,
   periodStart?: string,
-  periodEnd?: string
+  periodEnd?: string,
+  billingInterval: "monthly" | "yearly" = "monthly"
 ): Subscriber {
   db.prepare(
-    "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, current_period_start, current_period_end) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(userId, stripeSubId, plan, amountCents, periodStart ?? null, periodEnd ?? null);
+    "INSERT INTO subscribers (user_id, stripe_subscription_id, plan, amount_cents, billing_interval, current_period_start, current_period_end) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).run(userId, stripeSubId, plan, amountCents, billingInterval, periodStart ?? null, periodEnd ?? null);
   return db.prepare("SELECT * FROM subscribers WHERE stripe_subscription_id = ?").get(stripeSubId) as Subscriber;
 }
 
@@ -367,12 +377,13 @@ export function updateSubscriberStatus(db: Database.Database, stripeSubId: strin
 export function updateSubscriber(
   db: Database.Database,
   stripeSubId: string,
-  updates: { plan?: string; amount_cents?: number; status?: string; current_period_start?: string; current_period_end?: string }
+  updates: { plan?: string; amount_cents?: number; billing_interval?: string; status?: string; current_period_start?: string; current_period_end?: string }
 ): void {
   const sets: string[] = [];
   const values: unknown[] = [];
   if (updates.plan !== undefined) { sets.push("plan = ?"); values.push(updates.plan); }
   if (updates.amount_cents !== undefined) { sets.push("amount_cents = ?"); values.push(updates.amount_cents); }
+  if (updates.billing_interval !== undefined) { sets.push("billing_interval = ?"); values.push(updates.billing_interval); }
   if (updates.status !== undefined) { sets.push("status = ?"); values.push(updates.status); }
   if (updates.current_period_start !== undefined) { sets.push("current_period_start = ?"); values.push(updates.current_period_start); }
   if (updates.current_period_end !== undefined) { sets.push("current_period_end = ?"); values.push(updates.current_period_end); }

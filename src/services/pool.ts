@@ -1,8 +1,8 @@
 /**
  * Monthly pool retirement service.
  *
- * Aggregates subscription revenue, applies 85/5/10 revenue split
- * (credits/REGEN burn/operations), allocates credit budget across
+ * Aggregates subscription revenue, applies per-subscriber revenue split
+ * (monthly: 75/20/5, yearly: 85/10/5 — credits/ops/burn), allocates credit budget across
  * credit types (50/30/20), executes on-chain retirements via MsgBuyDirect,
  * burns REGEN tokens, and records per-subscriber fractional attributions.
  */
@@ -49,8 +49,18 @@ export interface CreditTypeResult {
   error: string | null;
 }
 
-/** Revenue split: 85% credit purchases / 5% REGEN burn / 10% operations */
-const REVENUE_SPLIT = {
+/**
+ * Revenue splits differ by billing interval:
+ * - Monthly: 75/20/5 (credits/ops/burn) — higher ops margin funds the business
+ * - Yearly:  85/10/5 (credits/ops/burn) — more goes to ecology as reward for commitment
+ */
+const REVENUE_SPLIT_MONTHLY = {
+  credits: 0.75,
+  burn: 0.05,
+  operations: 0.20,
+} as const;
+
+const REVENUE_SPLIT_YEARLY = {
   credits: 0.85,
   burn: 0.05,
   operations: 0.10,
@@ -98,8 +108,18 @@ export async function executePoolRun(options: {
     };
   }
 
-  // 2. Sum contributions
+  // 2. Sum contributions (applying per-subscriber revenue split by billing interval)
   const totalRevenueCents = subscribers.reduce((sum, s) => sum + s.amount_cents, 0);
+
+  // Compute blended split: each subscriber's contribution is split according to their billing interval
+  let creditsBudgetCents = 0;
+  let burnBudgetCents = 0;
+  for (const s of subscribers) {
+    const split = s.billing_interval === "yearly" ? REVENUE_SPLIT_YEARLY : REVENUE_SPLIT_MONTHLY;
+    creditsBudgetCents += Math.floor(s.amount_cents * split.credits);
+    burnBudgetCents += Math.floor(s.amount_cents * split.burn);
+  }
+  const opsAllocationCents = totalRevenueCents - creditsBudgetCents - burnBudgetCents;
 
   // 3. Create pool_run record
   const poolRun = createPoolRun(db, options.dryRun);
@@ -140,11 +160,6 @@ export async function executePoolRun(options: {
       };
     }
   }
-
-  // 5. Apply 85/5/10 revenue split
-  const creditsBudgetCents = Math.floor(totalRevenueCents * REVENUE_SPLIT.credits);
-  const burnBudgetCents = Math.floor(totalRevenueCents * REVENUE_SPLIT.burn);
-  const opsAllocationCents = totalRevenueCents - creditsBudgetCents - burnBudgetCents;
 
   // 5b. Calculate budgets per credit type (within credits budget)
   const carbonBudget = Math.floor(creditsBudgetCents * ALLOCATIONS.carbon);
@@ -427,9 +442,9 @@ export function formatPoolRunResult(result: PoolRunResult): string {
     `Status: ${result.status}${result.dryRun ? " (DRY RUN)" : ""}`,
     `Subscribers: ${result.subscriberCount}`,
     `Total Revenue: $${(result.totalRevenueCents / 100).toFixed(2)}`,
-    `  Credits (85%): $${(result.creditsBudgetCents / 100).toFixed(2)}`,
-    `  Burn (5%): $${(result.burn.allocationCents / 100).toFixed(2)}`,
-    `  Operations (10%): $${(result.opsAllocationCents / 100).toFixed(2)}`,
+    `  Credits: $${(result.creditsBudgetCents / 100).toFixed(2)} (${result.totalRevenueCents ? Math.round(result.creditsBudgetCents / result.totalRevenueCents * 100) : 0}%)`,
+    `  Burn: $${(result.burn.allocationCents / 100).toFixed(2)} (5%)`,
+    `  Operations: $${(result.opsAllocationCents / 100).toFixed(2)} (${result.totalRevenueCents ? Math.round(result.opsAllocationCents / result.totalRevenueCents * 100) : 0}%)`,
     `Credits Spent: $${(result.totalSpentCents / 100).toFixed(2)}`,
     `Carry Forward: $${(result.carryForwardCents / 100).toFixed(2)}`,
     ``,

@@ -137,6 +137,24 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       text-transform: uppercase; letter-spacing: 0.06em;
       padding: 4px 14px; border-radius: 20px; white-space: nowrap;
     }
+    .interval-btn {
+      padding: 8px 20px; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      background: transparent; color: var(--regen-gray-500);
+      transition: all 0.15s;
+    }
+    .interval-btn--active {
+      background: var(--regen-white); color: var(--regen-navy);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .regen-tier__effective {
+      font-size: 13px; color: var(--regen-green); font-weight: 600;
+      margin: -4px 0 8px;
+    }
+    .regen-tier__split {
+      font-size: 12px; color: var(--regen-gray-500); font-weight: 600;
+      margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
 
     /* Stats section */
     .stats-section { padding: 52px 0; border-top: 1px solid var(--regen-gray-200); }
@@ -193,7 +211,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
         <div class="hiw-step">
           <div class="hiw-num">1</div>
           <h3>Subscribe</h3>
-          <p>Pick a monthly plan. Your payment funds verified ecological projects around the world.</p>
+          <p>Pick a plan — monthly or yearly. Your payment funds verified ecological projects around the world.</p>
         </div>
         <div class="hiw-step">
           <div class="hiw-num">2</div>
@@ -213,10 +231,23 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <section class="pricing-section" id="pricing">
     <div class="regen-container">
       <h2 class="regen-section-title" style="text-align:center;">Choose Your Plan</h2>
+
+      <!-- Monthly / Yearly toggle -->
+      <div style="display:flex;justify-content:center;margin-bottom:28px;">
+        <div id="interval-toggle" style="display:inline-flex;background:var(--regen-gray-100);border-radius:10px;padding:4px;">
+          <button id="toggle-monthly" onclick="setInterval('monthly')" class="interval-btn interval-btn--active">Monthly</button>
+          <button id="toggle-yearly" onclick="setInterval('yearly')" class="interval-btn">Yearly <span style="font-size:11px;font-weight:700;color:var(--regen-green);">Save 17%</span></button>
+        </div>
+      </div>
+
       <div class="regen-tiers">
         <div class="regen-tier">
           <div class="regen-tier__name">Dabbler</div>
-          <div class="regen-tier__price">$1.25<span>/mo</span></div>
+          <div class="regen-tier__price price-monthly">$1.25<span>/mo</span></div>
+          <div class="regen-tier__price price-yearly" style="display:none;">$12.50<span>/yr</span></div>
+          <div class="regen-tier__effective price-yearly" style="display:none;">$1.04/mo — 2 months free</div>
+          <div class="regen-tier__split price-monthly">75% funds ecology</div>
+          <div class="regen-tier__split price-yearly" style="display:none;">85% funds ecology</div>
           <div class="regen-tier__desc">You use AI a few times a week. This covers your share and funds real ecological projects.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('seedling')">Subscribe</button>`
@@ -225,7 +256,11 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
         <div class="regen-tier tier-featured">
           <div class="tier-featured-badge">Most Popular</div>
           <div class="regen-tier__name">Builder</div>
-          <div class="regen-tier__price">$2.50<span>/mo</span></div>
+          <div class="regen-tier__price price-monthly">$2.50<span>/mo</span></div>
+          <div class="regen-tier__price price-yearly" style="display:none;">$25<span>/yr</span></div>
+          <div class="regen-tier__effective price-yearly" style="display:none;">$2.08/mo — 2 months free</div>
+          <div class="regen-tier__split price-monthly">75% funds ecology</div>
+          <div class="regen-tier__split price-yearly" style="display:none;">85% funds ecology</div>
           <div class="regen-tier__desc">AI is part of your daily workflow. Full ecological accountability for regular use.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('grove')">Subscribe</button>`
@@ -233,7 +268,11 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
         </div>
         <div class="regen-tier">
           <div class="regen-tier__name">Agent</div>
-          <div class="regen-tier__price">$5<span>/mo</span></div>
+          <div class="regen-tier__price price-monthly">$5<span>/mo</span></div>
+          <div class="regen-tier__price price-yearly" style="display:none;">$50<span>/yr</span></div>
+          <div class="regen-tier__effective price-yearly" style="display:none;">$4.17/mo — 2 months free</div>
+          <div class="regen-tier__split price-monthly">75% funds ecology</div>
+          <div class="regen-tier__split price-yearly" style="display:none;">85% funds ecology</div>
           <div class="regen-tier__desc">For autonomous agents and power users — maximum autonomy, maximum impact.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           ${hasPriceIds
             ? `<button class="regen-btn regen-btn--solid regen-btn--block" onclick="subscribe('forest')">Subscribe</button>`
@@ -363,9 +402,22 @@ Then estimate my AI usage footprint and recommend a tier ($1.25, $2.50, or $5/mo
     }
   </script>
 
+  <script>
+    var currentInterval = 'monthly';
+    function setInterval(interval) {
+      currentInterval = interval;
+      var monthlyEls = document.querySelectorAll('.price-monthly');
+      var yearlyEls = document.querySelectorAll('.price-yearly');
+      for (var i = 0; i < monthlyEls.length; i++) monthlyEls[i].style.display = interval === 'monthly' ? '' : 'none';
+      for (var i = 0; i < yearlyEls.length; i++) yearlyEls[i].style.display = interval === 'yearly' ? '' : 'none';
+      document.getElementById('toggle-monthly').className = 'interval-btn' + (interval === 'monthly' ? ' interval-btn--active' : '');
+      document.getElementById('toggle-yearly').className = 'interval-btn' + (interval === 'yearly' ? ' interval-btn--active' : '');
+    }
+  </script>
+
   ${hasPriceIds ? `<script>
     function subscribe(tier) {
-      var body = { tier: tier };
+      var body = { tier: tier, interval: currentInterval };
       ${refCode ? `body.referral_code = ${JSON.stringify(refCode)};` : ""}
       fetch('/subscribe', {
         method: 'POST',
@@ -391,7 +443,7 @@ ${betaBannerJS()}
 
   /**
    * POST /subscribe
-   * Body: { tier: "seedling"|"grove"|"forest", email?: string, referral_code?: string }
+   * Body: { tier: "seedling"|"grove"|"forest", interval?: "monthly"|"yearly", email?: string, referral_code?: string }
    * Returns: { url: "https://checkout.stripe.com/..." }
    *
    * Creates a Stripe Checkout Session in subscription mode.
@@ -400,23 +452,30 @@ ${betaBannerJS()}
   router.post("/subscribe", async (req: Request, res: Response) => {
     try {
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-      const { tier, email, referral_code } = body ?? {};
+      const { tier, interval, email, referral_code } = body ?? {};
 
       if (!tier || !["seedling", "grove", "forest"].includes(tier)) {
         res.status(400).json({ error: 'tier must be "seedling", "grove", or "forest"' });
         return;
       }
 
-      // Resolve price ID for the tier
-      const priceIdMap: Record<string, string | undefined> = {
+      const isYearly = interval === "yearly";
+
+      // Resolve price ID for the tier + interval
+      const monthlyPriceIdMap: Record<string, string | undefined> = {
         seedling: config?.stripePriceIdSeedling,
         grove: config?.stripePriceIdGrove,
         forest: config?.stripePriceIdForest,
       };
+      const yearlyPriceIdMap: Record<string, string | undefined> = {
+        seedling: config?.stripePriceIdSeedlingYearly,
+        grove: config?.stripePriceIdGroveYearly,
+        forest: config?.stripePriceIdForestYearly,
+      };
 
-      const priceId = priceIdMap[tier];
+      const priceId = isYearly ? yearlyPriceIdMap[tier] : monthlyPriceIdMap[tier];
       if (!priceId) {
-        // Fall back to Payment Links
+        // Fall back to Payment Links (monthly only)
         const linkMap: Record<string, string> = {
           seedling: config?.stripePaymentLinkSeedling ?? "#",
           grove: config?.stripePaymentLinkGrove ?? "#",
@@ -1016,10 +1075,17 @@ function authenticateRequest(req: Request, res: Response, db: Database.Database)
 }
 
 /** Map Stripe subscription amount to plan name */
-function amountToPlan(amountCents: number): "seedling" | "grove" | "forest" {
-  if (amountCents <= 150) return "seedling";
-  if (amountCents <= 300) return "grove";
-  return "forest";
+function amountToPlan(amountCents: number, interval: "monthly" | "yearly" = "monthly"): "dabbler" | "builder" | "agent" {
+  if (interval === "yearly") {
+    // Yearly amounts: $12.50 (1250), $25 (2500), $50 (5000)
+    if (amountCents <= 1500) return "dabbler";
+    if (amountCents <= 3000) return "builder";
+    return "agent";
+  }
+  // Monthly amounts: $1.25 (125), $2.50 (250), $5 (500)
+  if (amountCents <= 150) return "dabbler";
+  if (amountCents <= 300) return "builder";
+  return "agent";
 }
 
 /** Map Stripe subscription status to our subscriber status */
@@ -1053,8 +1119,11 @@ async function handleSubscriptionCreated(db: Database.Database, sub: Stripe.Subs
       console.log(`New user created for subscription: ${user.api_key} (${email})`);
     }
 
-    const amountCents = sub.items?.data?.[0]?.price?.unit_amount ?? 0;
-    const plan = amountToPlan(amountCents);
+    const priceItem = sub.items?.data?.[0]?.price;
+    const amountCents = priceItem?.unit_amount ?? 0;
+    const stripeInterval = priceItem?.recurring?.interval;
+    const billingInterval: "monthly" | "yearly" = stripeInterval === "year" ? "yearly" : "monthly";
+    const plan = amountToPlan(amountCents, billingInterval);
     const periodStart = (sub as unknown as Record<string, unknown>).current_period_start
       ? new Date(((sub as unknown as Record<string, unknown>).current_period_start as number) * 1000).toISOString()
       : undefined;
@@ -1062,8 +1131,8 @@ async function handleSubscriptionCreated(db: Database.Database, sub: Stripe.Subs
       ? new Date(((sub as unknown as Record<string, unknown>).current_period_end as number) * 1000).toISOString()
       : undefined;
 
-    createSubscriber(db, user.id, stripeSubId, plan, amountCents, periodStart, periodEnd);
-    console.log(`Subscription created: ${stripeSubId} plan=${plan} amount=$${(amountCents / 100).toFixed(2)}`);
+    createSubscriber(db, user.id, stripeSubId, plan, amountCents, periodStart, periodEnd, billingInterval);
+    console.log(`Subscription created: ${stripeSubId} plan=${plan} interval=${billingInterval} amount=$${(amountCents / 100).toFixed(2)}`);
 
     // Send welcome email (fire-and-forget, don't block webhook response)
     if (email) {
@@ -1094,8 +1163,11 @@ function handleSubscriptionUpdated(db: Database.Database, sub: Stripe.Subscripti
     const existing = getSubscriberByStripeId(db, stripeSubId);
     if (!existing) return; // Not tracked
 
-    const amountCents = sub.items?.data?.[0]?.price?.unit_amount ?? existing.amount_cents;
-    const plan = amountToPlan(amountCents);
+    const priceItem = sub.items?.data?.[0]?.price;
+    const amountCents = priceItem?.unit_amount ?? existing.amount_cents;
+    const stripeInterval = priceItem?.recurring?.interval;
+    const billingInterval: "monthly" | "yearly" = stripeInterval === "year" ? "yearly" : "monthly";
+    const plan = amountToPlan(amountCents, billingInterval);
     const status = stripeStatusToLocal(sub.status);
     const periodStart = (sub as unknown as Record<string, unknown>).current_period_start
       ? new Date(((sub as unknown as Record<string, unknown>).current_period_start as number) * 1000).toISOString()
@@ -1107,11 +1179,12 @@ function handleSubscriptionUpdated(db: Database.Database, sub: Stripe.Subscripti
     updateSubscriber(db, stripeSubId, {
       plan,
       amount_cents: amountCents,
+      billing_interval: billingInterval,
       status,
       current_period_start: periodStart,
       current_period_end: periodEnd,
     });
-    console.log(`Subscription updated: ${stripeSubId} plan=${plan} status=${status}`);
+    console.log(`Subscription updated: ${stripeSubId} plan=${plan} interval=${billingInterval} status=${status}`);
   } catch (err) {
     console.error("Error handling subscription.updated:", err instanceof Error ? err.message : err);
   }

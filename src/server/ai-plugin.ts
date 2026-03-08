@@ -443,8 +443,8 @@ export function createAiPluginRoutes(baseUrl: string): Router {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
         <div class="install-block" style="margin:0;">
-          <div class="install-block__label">Monthly Subscription</div>
-          <p style="font-size:14px;color:var(--regen-gray-700);margin:0 0 8px;">From $1.25/month. Automatic monthly credit retirements with attribution. Impact dashboard and referral link included.</p>
+          <div class="install-block__label">Subscription</div>
+          <p style="font-size:14px;color:var(--regen-gray-700);margin:0 0 8px;">From $1.25/month or $12.50/year (save 17%). Automatic credit retirements with attribution. Yearly subscribers get 85% of their payment funding ecology (vs 75% monthly).</p>
           <a class="regen-btn regen-btn--solid regen-btn--sm" href="/#pricing">See Plans</a>
         </div>
         <div class="install-block" style="margin:0;">

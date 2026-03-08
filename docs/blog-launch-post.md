@@ -1,42 +1,59 @@
-# We Built the First Verified Ecological Accountability Tool for AI
+# Your AI Has a Footprint. Now You Can Do Something About It.
 
-Every AI session consumes energy. Data centers are projected to consume over 1,000 TWh annually by 2026 — roughly the electricity demand of Japan. If you use Claude Code, Cursor, or any AI coding assistant daily, your work has an ecological footprint. Most developers know this. Almost none can do anything about it from inside their workflow.
+Every AI session consumes energy. Data centers are projected to consume over 1,000 TWh annually by 2026 — roughly the electricity demand of Japan. If you use Claude, Cursor, ChatGPT, or any AI tool daily, your work has an ecological footprint. Most people know this. Almost none can do anything about it.
 
-The "green AI" solutions that exist today fall into two categories: corporate marketing claims with no verifiable proof, and traditional Renewable Energy Certificate (REC) markets that operate in private databases where retirement claims are impossible to independently audit. There is no tool that lives inside your AI assistant, connects to a verifiable on-chain registry, and lets you fund real ecological regeneration with proof you can share.
+The "green AI" solutions that exist today fall into two categories: corporate marketing claims with no verifiable proof, and traditional carbon markets that operate in private databases where retirement claims are impossible to independently audit. There is no simple way for an individual AI user to fund verified ecological regeneration and get permanent, public proof they did it.
 
 We built one.
 
 ## Introducing Regenerative Compute
 
-[Regenerative Compute](https://github.com/regen-network/regen-compute) is an MCP (Model Context Protocol) server that connects your AI coding assistant to verified ecological credit retirement on [Regen Network](https://regen.network). Install it with one command:
+[Regenerative Compute](https://compute.regen.network) is the first ecological accountability platform built for AI users. It connects your AI usage to verified ecological credit retirement on [Regen Network](https://regen.network) — with permanent, publicly auditable proof of every contribution.
+
+There are two ways in:
+
+### 1. Subscribe at compute.regen.network
+
+The fastest path. Pick a plan, and your contribution automatically funds verified ecological projects around the world — forests, soil, biodiversity, marine ecosystems. You get:
+
+- A personal impact dashboard tracking your cumulative contributions
+- Monthly retirement certificates with on-chain proof
+- A referral link (friends get their first month free)
+
+Plans start at $1.25/month or $12.50/year (save 17%). Yearly subscribers get a bonus: 85% of their payment goes directly to ecological credits, compared to 75% for monthly. Commit for a year, and more of your money funds real regeneration. No wallet, no crypto, no complexity.
+
+**[Subscribe now at compute.regen.network](https://compute.regen.network)**
+
+### 2. Install the AI Plugin
+
+For developers using Claude Code, Cursor, or any MCP-compatible AI assistant, there's a deeper integration. The Regenerative Compute MCP plugin gives your AI ecological awareness — it can estimate session footprint, browse live credit inventory, and retire credits, all without leaving your workflow.
+
+One command:
 
 ```bash
 claude mcp add -s user regen-compute -- npx regen-compute
 ```
 
-That's it. No API keys. No wallet. No configuration. It works immediately.
+For Cursor, Windsurf, or any MCP client, add to your settings:
 
-Once connected, your AI assistant gains the ability to estimate session footprint, browse live ecological credit inventory, retire credits on-chain, and retrieve verifiable retirement certificates. Every retirement is recorded on the Regen Ledger — an immutable public blockchain. Not a private database. Not a marketing dashboard. A public, auditable, permanent record.
+```json
+{
+  "mcpServers": {
+    "regen-compute": {
+      "command": "npx",
+      "args": ["regen-compute"]
+    }
+  }
+}
+```
 
-One important distinction: this is **regenerative contribution**, not carbon offsetting. We do not claim your AI session becomes "carbon neutral." We do not pretend to know the exact kilowatt-hours your session consumed. What we do is fund verified ecological regeneration and give you on-chain proof that you did it. The framing matters — "your AI session funded the retirement of 0.03 verified ecological credits on Regen Network" is factual, verifiable, and immune to greenwashing criticism.
+No API keys. No wallet. No configuration. It works immediately.
 
-## How It Works
-
-The workflow has four steps. Here is what each one does inside your AI assistant:
-
-**Step 1 — Estimate your footprint.** Call `estimate_session_footprint` with your session duration. The tool returns an energy estimate (kWh), CO2 equivalent (kg), and a suggested credit retirement quantity. This is explicitly labeled as a heuristic — we are honest about the uncertainty because that honesty is what separates this from greenwashing.
-
-**Step 2 — Browse available credits.** Call `browse_available_credits` to see what is currently for sale on Regen Marketplace. This pulls live sell order data from the Regen Ledger — not cached data, not a static list. You see real inventory with real prices from real projects.
-
-**Step 3 — Retire credits.** Call `retire_credits`. If you have no wallet configured, you get a direct marketplace link to purchase via credit card. If you have a Regen wallet configured, it executes the retirement on-chain in a single transaction. If the on-chain path fails for any reason, it falls back to a marketplace link. You are never stuck.
-
-**Step 4 — Get your certificate.** Call `get_retirement_certificate` with your transaction hash. You get back the project funded, credits retired, beneficiary name, jurisdiction, and an on-chain transaction proof. This is your shareable, permanent, auditable artifact.
-
-<!-- TODO: Add screenshot/GIF of the full workflow running in Claude Code -->
+The plugin and the website are the same product. Subscribers get their impact tracked whether they contribute via the website or through the AI plugin. The plugin links to your subscription dashboard. The dashboard shows your AI plugin activity. They reinforce each other.
 
 ## What Makes This Different
 
-**On-chain verification.** Retirements happen on the Regen Ledger, a public blockchain purpose-built for ecological credits. Every retirement is independently verifiable by anyone. This is fundamentally different from traditional offset registries where retirement claims live in private databases.
+**On-chain verification.** Every retirement happens on the Regen Ledger, a public blockchain purpose-built for ecological credits. Not a private database. Not a marketing dashboard. A permanent, auditable record anyone can verify.
 
 **Beyond carbon.** Regen Network hosts five types of ecological credits:
 
@@ -50,123 +67,56 @@ The workflow has four steps. Here is what each one does inside your AI assistant
 
 This is ecological regeneration, not just carbon accounting.
 
-**MCP-native.** The tool lives inside your AI assistant. You do not visit a separate website, switch contexts, or leave your workflow. Your AI knows when to suggest it and how to use it.
+**"Regenerative contribution," not carbon offsetting.** We do not claim your AI session becomes "carbon neutral." We do not pretend to know the exact kilowatt-hours your session consumed. What we do is fund verified ecological regeneration and give you on-chain proof that you did it. "Your AI usage funded the retirement of verified ecological credits on Regen Network" is factual, verifiable, and immune to greenwashing criticism.
 
-**Three payment modes.** Pick what works for you:
-1. **Credit card** (default, no setup) — get a Regen Marketplace purchase link
-2. **Direct on-chain** — set `REGEN_WALLET_MNEMONIC` and retire in a single transaction
-3. **Any token, any chain** — send USDC on Base, ETH on Arbitrum, or 50+ other tokens across 10+ blockchains via [ecoBridge](https://bridge.eco)
+**Two paths, one impact.** Whether you subscribe on the website or install the AI plugin (or both), your contributions flow to the same verified projects and your impact accumulates in one place.
 
-**Graceful degradation.** No wallet? Marketplace links. Wallet configured? On-chain retirement. Error in the on-chain path? Fallback to links. Every failure mode has a recovery path.
+## How It Works
+
+**For subscribers (compute.regen.network):**
+
+1. **Subscribe** — Pick a plan ($1.25, $2.50, $5/month — or save 17% with yearly)
+2. **We retire credits** — Your payment funds verified ecological projects, retired on-chain monthly
+3. **Track your impact** — Dashboard shows your cumulative retirements with on-chain proof
+4. **Share** — Every retirement generates a certificate you can share as proof
+
+**For developers (AI plugin):**
+
+1. **Estimate your footprint** — The plugin estimates your session's energy and CO2
+2. **Browse credits** — See what's available on Regen Marketplace in real time
+3. **Retire credits** — Via credit card, on-chain with a wallet, or with any token via ecoBridge
+4. **Get your certificate** — On-chain proof you can share
 
 ## The Numbers
 
-The Regen Marketplace currently has live inventory:
+The Regen Marketplace currently has:
 
-- **318** carbon credits available across multiple vintages and project types
+- **318** carbon credits available across multiple project types
 - **7,397** biodiversity credits from Terrasos projects in Colombia
 - **73,830** umbrella species stewardship credits
 - **13** credit classes spanning **5** credit types
 - Projects in **9+ countries**: US, Kenya, Peru, Indonesia, Congo, Cambodia, UK, Australia, Colombia
 
-That is roughly **$2M+** in purchasable ecological credits on a public, verifiable marketplace — enough inventory to serve tens of thousands of users.
-
-## Why "Regenerative Contribution" and Not "Carbon Offset"
-
-Carbon offset claims are legally fraught and scientifically imprecise. The relationship between AI energy consumption and ecological damage is not 1:1. Different models, different data centers, different energy mixes — the variables make precise accounting impossible at the individual session level.
-
-We chose a different path. Our footprint estimation is clearly labeled as a heuristic approximation. We never claim your session is "carbon neutral." Instead, we make a positive, factual claim: *your AI session funded the retirement of X verified ecological credits on Regen Network.* This claim is:
-
-- **Factual** — the retirement happened, on-chain, with a transaction hash
-- **Verifiable** — anyone can look it up on the Regen Ledger
-- **Permanent** — retirements are non-reversible
-- **Auditable** — the certificate page shows the project, the credits, and the proof
-
-This is not about guilt. It is about building accountability into the tools we already use.
-
-## Technical Architecture
-
-For developers who want to understand what is under the hood:
-
-```
-Your AI Assistant (Claude Code / Cursor / etc.)
-    |
-    | MCP Protocol (stdio)
-    v
-Regenerative Compute MCP Server (TypeScript, Node.js 20+)
-    |
-    |-- Footprint estimation (heuristic, labeled as approximate)
-    |-- Credit browsing (live sell order data from Regen Ledger REST)
-    |-- Retirement execution (MsgBuyDirect with auto-retire via @cosmjs)
-    |-- Certificate retrieval (Regen Indexer GraphQL)
-    |-- Cross-chain payment (ecoBridge API + ethers v6)
-    |
-    v
-Regen Network Ledger (immutable, verifiable, non-reversible)
-```
-
-The server is built with TypeScript on the `@modelcontextprotocol/sdk`. On-chain signing uses `@cosmjs/proto-signing` and `@cosmjs/stargate` with the `@regen-network/api` proto registry. Cross-chain payments go through the [ecoBridge API](https://bridge.eco) with `ethers` v6 for EVM transaction signing.
-
-All marketplace data is live — credit browsing queries the Regen Ledger REST API for current sell orders, and certificate retrieval queries the Regen Indexer GraphQL endpoint. Nothing is hardcoded.
-
-The project is open source under the Apache-2.0 license.
-
-## Getting Started
-
-### Claude Code (one command)
-
-```bash
-claude mcp add -s user regen-compute -- npx regen-compute
-```
-
-### Cursor, Windsurf, or any MCP client
-
-Add to your MCP configuration:
-
-```json
-{
-  "mcpServers": {
-    "regen-compute": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["regen-compute"]
-    }
-  }
-}
-```
-
-Then try asking your AI assistant:
-
-> "What's the ecological footprint of this session?"
-
-Or:
-
-> "Show me what ecological credits are available on Regen Network."
-
-Three levels of engagement:
-1. **Just browse** — install and explore credits and impact stats (zero config)
-2. **Retire via credit card** — use the marketplace link to purchase and retire
-3. **Go on-chain** — configure a wallet for direct retirement, or use ecoBridge to pay with any token
+That is roughly **$2M+** in purchasable ecological credits on a public, verifiable marketplace.
 
 ## What's Next
 
-Regenerative Compute v0.3.0 is live on [npm](https://www.npmjs.com/package/regen-compute) today. Here is what is coming:
+- **Platform partnerships** — Native "Regenerative AI" integration in AI assistants
+- **Credit supply expansion** — Onboarding new project developers for soil carbon, biochar, mangrove, and kelp credits
+- **Enterprise plans** — For teams and organizations that want collective ecological accountability
 
-- **Subscription pool** — $2.50-$15/month tiers with automated monthly batch retirements and per-subscriber attribution
-- **Smart contract** — CosmWasm on-chain pool aggregation on Regen Ledger, replacing the centralized batch service
-- **Platform partnerships** — native "Regenerative AI" integration in AI assistants
-- **Credit supply expansion** — onboarding new project developers for soil carbon, biochar, mangrove, and kelp credits
+## Get Started
 
-Want to contribute? The project is open source: [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute). Check the [issues](https://github.com/regen-network/regen-compute/issues) for open tasks, or read the [ROADMAP.md](https://github.com/regen-network/regen-compute/blob/main/ROADMAP.md) for the full strategic context.
+**Subscribe:** [compute.regen.network](https://compute.regen.network)
 
-## The Vision
+**Install the AI plugin:** `claude mcp add -s user regen-compute -- npx regen-compute`
 
-AI, which is powered by burning energy, can provide the economic engine to fund ecological regeneration. Not through guilt. Not through marketing. Through verified, on-chain, permanent proof of contribution to real projects in real places — forests in Kenya, biodiversity reserves in Colombia, marine ecosystems in Indonesia, grazing lands in the UK.
+**Explore the code:** [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute)
 
-One command to install. On-chain proof of every retirement. Real regeneration funded by real contributions.
+AI is powered by burning energy. That energy can fund ecological regeneration. Not through guilt. Not through marketing. Through verified, on-chain, permanent proof of contribution to real projects in real places.
 
 That is what Regenerative AI looks like.
 
 ---
 
-*Regenerative Compute is published on [npm](https://www.npmjs.com/package/regen-compute) as v0.3.0. Source code: [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute). Licensed Apache-2.0.*
+*Regenerative Compute is live at [compute.regen.network](https://compute.regen.network). The AI plugin is on [npm](https://www.npmjs.com/package/regen-compute) as v0.3.4. Source code: [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute). Licensed Apache-2.0.*
