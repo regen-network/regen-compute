@@ -25,7 +25,7 @@ import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
 import { loadConfig } from "../config.js";
-import { regenLogoSVG } from "./brand.js";
+import { regenLogoSVG, regenLogoPNG } from "./brand.js";
 
 export function startServer(options: { port?: number; dbPath?: string } = {}) {
   const port = options.port ?? parseInt(process.env.REGEN_SERVER_PORT ?? "3141", 10);
@@ -49,6 +49,13 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     res.setHeader("Content-Type", "image/svg+xml");
     res.setHeader("Cache-Control", "public, max-age=31536000");
     res.send(regenLogoSVG);
+  });
+
+  // Static logo for emails (PNG — compatible with Gmail, Outlook, Apple Mail)
+  app.get("/logo.png", (_req, res) => {
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.send(regenLogoPNG);
   });
 
   // OG image for social media previews

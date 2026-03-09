@@ -46,6 +46,16 @@ export const regenLogoSVG = `<svg width="186" height="84" viewBox="0 0 186 84" f
 </svg>`;
 
 // ---------------------------------------------------------------------------
+// Regen Network logo PNG (horizontal, black on transparent, 361×162 2x retina)
+// Used in emails — most email clients (Gmail, Outlook) block SVG images.
+// ---------------------------------------------------------------------------
+
+export const regenLogoPNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAWkAAACiCAYAAACDIzyNAAAACXBIWXMAAAsSAAALEgHS3X78AAAZBUlEQVR4nO2d23EbObeF4VP/4SGfpIlAmgjMiUCcCKSJQHQEpiMwHcFoIjAVgaUITEYwUgQjRfCbT1LpRacgL3hgCN3Y6Ebf0OurYnlGZDebfVnY2NiXN8/Pz2osTKazC6XUnVLq6unx4W40P5wQMlhGI9KT6WyplPps/elWKbVRSm2fHh9uOjw0QggpZBQiPZnO5lqMlVIHBR+519a1UuqCFjYhpE9kL9KT6ewQAv1W8PHd0+PDooXDIoQQEf8zgtO0Fgq0Zt7wsRBCSBRZW9KT6exMKfUlcrNf6fIghPSFbC3pyXR2jIXBWI67PXJCCPmXnN0dhyULhWXQJ00I6Q3ZijTC6nYVNqVfmhDSG3JfOFxX2IYiTQjpDWMIwdPhdycx2zw9Prxp7ogIIUTOWELwophMZ/RLE0J6QfYi/fT4sK3gm6bLgxDSC8ZgSasK1jRjpQkhvWA0Ig1r+l76eVTOI4SQThmTJa0irWmKNCGkF4xWpIXWNEWaENILxmJJK+k1Q+U8QgjplNGINGKlL6WfR+U8QgjpEoogIYR0CEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6DEWaEEJ6zP8DDK+cWH2f3lcAAAAASUVORK5CYII=",
+  "base64"
+);
+
+// ---------------------------------------------------------------------------
 // Google Fonts link tags
 // ---------------------------------------------------------------------------
 

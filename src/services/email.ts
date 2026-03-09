@@ -24,8 +24,8 @@ import type { PoolRunResult, CreditTypeResult } from "./pool.js";
 
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email";
 
-// Regen Network logo served from our own server (email clients need a real image URL)
-const REGEN_LOGO_URL = "https://compute.regen.network/logo.svg";
+// PNG logo — Gmail, Outlook, and most email clients block SVG images
+const REGEN_LOGO_URL = "https://compute.regen.network/logo.png";
 
 /** Shared email header: REGENERATIVE COMPUTE title + Powered by Regen Network */
 function emailHeader(): string {
