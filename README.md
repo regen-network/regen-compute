@@ -186,6 +186,17 @@ Most MCP clients accept this standard config:
 
 > **ChatGPT and OpenAI API**: These platforms require a remote HTTP MCP server (streamable HTTP or SSE transport). Regenerative Compute currently uses stdio transport. HTTP transport support is on the [roadmap](ROADMAP.md).
 
+## Quick Start
+
+After installing, ask your AI assistant to run these tools:
+
+1. **`estimate_session_footprint`** — See the energy and CO2 cost of your current session
+2. **`browse_available_credits`** — Explore live ecological credits (carbon, biodiversity, marine) on Regen Marketplace
+3. **`retire_credits`** — Retire credits to fund regeneration (credit card link by default, or on-chain with a wallet)
+4. **`get_retirement_certificate`** — Get a verifiable on-chain proof of your contribution
+
+Or just ask: *"Estimate my session's footprint and show me credits I can retire"* — the AI handles the rest.
+
 ## What You Get
 
 | Tool | What it does |
