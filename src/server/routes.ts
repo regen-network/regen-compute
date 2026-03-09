@@ -227,6 +227,14 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
     </div>
   </section>
 
+  <!-- Impact callout -->
+  <div style="text-align:center; padding: 18px 24px; background: linear-gradient(135deg, rgba(79,181,115,0.08), rgba(121,198,170,0.08)); border-top: 1px solid rgba(79,181,115,0.15); border-bottom: 1px solid rgba(79,181,115,0.15);">
+    <p style="margin:0; font-family: 'Inter', Arial, sans-serif; font-size: 15px; color: #374151; font-weight: 500;">
+      A daily AI user generates <strong style="color:#101570;">2–10 kg CO&#8322;/year</strong>. Agentic workflows: <strong style="color:#101570;">up to 335 kg</strong>.
+      <a href="/research" style="color:#4FB573; font-weight:600; margin-left:6px;">See the research &rarr;</a>
+    </p>
+  </div>
+
   <!-- How it works -->
   <section class="hiw-section">
     <div class="regen-container">
@@ -297,7 +305,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
         <span style="font-weight:700;font-size:15px;color:var(--regen-navy);white-space:nowrap;">Set your own subscription amount</span>
         <div style="display:flex;align-items:center;gap:8px;">
           <label style="font-size:15px;color:var(--regen-navy);font-weight:600;">$</label>
-          <input id="custom-amount" type="number" min="1" step="0.50" value="5" style="width:80px;padding:8px 12px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:16px;text-align:center;">
+          <input id="custom-amount" type="number" min="1" step="0.50" value="10" style="width:80px;padding:8px 12px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:16px;text-align:center;">
           <span style="font-size:14px;color:var(--regen-gray-500);">/mo</span>
         </div>
         <button onclick="fundCustom()" class="regen-btn regen-btn--solid regen-btn--sm" style="white-space:nowrap;">Subscribe</button>
