@@ -195,6 +195,61 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       font-size: 14px; color: var(--regen-gray-500); margin-top: 4px;
     }
 
+    /* Credit basket section */
+    .basket-section { padding: 64px 0; border-top: 1px solid var(--regen-gray-200); }
+    .basket-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px; margin-top: 28px;
+    }
+    .basket-card {
+      background: var(--regen-white);
+      border: 1px solid var(--regen-gray-200);
+      border-radius: var(--regen-radius-lg);
+      overflow: hidden; text-align: left;
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .basket-card:hover {
+      box-shadow: var(--regen-shadow-card-hover);
+      transform: translateY(-3px);
+    }
+    .basket-visual {
+      height: 96px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .basket-visual svg {
+      width: 48px; height: 48px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+    .basket-visual--carbon { background: linear-gradient(135deg, #2d6a4f, #52b788); }
+    .basket-visual--biodiversity { background: linear-gradient(135deg, #7b5e00, #d4a017); }
+    .basket-visual--urban { background: linear-gradient(135deg, #527984, #79C6AA); }
+    .basket-visual--marine { background: linear-gradient(135deg, #1565c0, #42a5f5); }
+    .basket-visual--grazing { background: linear-gradient(135deg, #5d4037, #a1887f); }
+    .basket-body { padding: 20px 24px 24px; }
+    .basket-dimension {
+      font-family: var(--regen-font-secondary);
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 4px;
+    }
+    .basket-dimension--carbon { color: #2d6a4f; }
+    .basket-dimension--biodiversity { color: #b8860b; }
+    .basket-dimension--urban { color: #527984; }
+    .basket-dimension--marine { color: #1565c0; }
+    .basket-dimension--grazing { color: #6d4c41; }
+    .basket-name {
+      font-size: 16px; font-weight: 700; color: var(--regen-navy);
+      margin-bottom: 8px;
+    }
+    .basket-desc {
+      font-size: 13px; color: var(--regen-gray-500);
+      line-height: 1.55; margin: 0 0 14px;
+    }
+    .basket-link {
+      font-family: var(--regen-font-secondary);
+      font-size: 13px; font-weight: 600; color: var(--regen-green);
+    }
+    .basket-link:hover { text-decoration: underline; }
+
     /* Trust section */
     .trust-section { padding: 64px 0; border-top: 1px solid var(--regen-gray-200); }
     .trust-grid { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; }
@@ -207,6 +262,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       .stats-bar { gap: 24px; }
       .stats-bar__num { font-size: 28px; }
       .trust-item { flex: 1 1 100%; max-width: 100%; }
+      .basket-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -363,26 +419,73 @@ Then estimate my AI usage footprint and recommend a tier ($1.25, $2.50, or $5/mo
     </div>
   </section>
 
-  <!-- What You Fund -->
-  <section class="hiw-section">
+  <!-- What Your Subscription Funds — Credit Basket -->
+  <section class="basket-section">
     <div class="regen-container">
       <h2 class="regen-section-title" style="text-align:center;">What Your Subscription Funds</h2>
-      <div class="hiw-steps" style="gap:20px;">
-        <div style="flex:1 1 200px;max-width:280px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px;text-align:left;">
-          <div style="font-size:12px;font-weight:700;color:var(--regen-green);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Jaguar Habitat</div>
-          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:6px;">Terrasos Biodiversity Credits</div>
-          <p style="font-size:13px;color:var(--regen-gray-500);margin:0;line-height:1.5;">Preserving threatened tropical forest ecosystems in Colombia. 30-year crediting periods protect habitat for jaguars and hundreds of species.</p>
+      <p class="regen-section-subtitle" style="text-align:center;">Every subscription retires a curated basket of verified ecocredits across five impact dimensions — from forests and oceans to grasslands and urban canopy.</p>
+      <div class="basket-grid">
+
+        <div class="basket-card">
+          <div class="basket-visual basket-visual--carbon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 6c-2 3-6 8-6 14a6 6 0 0012 0c0-6-4-11-6-14z" fill="#fff" opacity="0.3"/><path d="M24 4V44M16 36l8-12 8 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 24c3-2 6-2 9 1M27 21c3-3 6-3 9 0" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/><circle cx="24" cy="8" r="2" fill="#fff" opacity="0.5"/></svg>
+          </div>
+          <div class="basket-body">
+            <div class="basket-dimension basket-dimension--carbon">Carbon Removal</div>
+            <div class="basket-name">Carbon Credits</div>
+            <p class="basket-desc">Forest conservation and reforestation projects sequestering atmospheric carbon. Every tonne retired represents real carbon removed from the atmosphere and locked in living ecosystems.</p>
+            <a class="basket-link" href="https://app.regen.network/credit-classes/C" target="_blank" rel="noopener">Learn more &rarr;</a>
+          </div>
         </div>
-        <div style="flex:1 1 200px;max-width:280px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px;text-align:left;">
-          <div style="font-size:12px;font-weight:700;color:var(--regen-green);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Urban Forests</div>
-          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:6px;">City Forest Credits</div>
-          <p style="font-size:13px;color:var(--regen-gray-500);margin:0;line-height:1.5;">The national standard for urban forest carbon. Tree preservation and planting in U.S. cities — sequestering carbon while improving air quality, water filtration, and wildlife habitat.</p>
+
+        <div class="basket-card">
+          <div class="basket-visual basket-visual--biodiversity">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 18c0-4 4-8 10-8s10 4 10 8c0 6-4 8-6 12h-8c-2-4-6-6-6-12z" fill="#fff" opacity="0.25"/><path d="M18 34c0 0 2 6 6 6s6-6 6-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><circle cx="20" cy="18" r="2" fill="#fff"/><circle cx="28" cy="18" r="2" fill="#fff"/><path d="M8 12c2 0 4 2 4 4M40 12c-2 0-4 2-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/><path d="M20 24c1.5 1 3 1 4 1s2.5 0 4-1" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="basket-body">
+            <div class="basket-dimension basket-dimension--biodiversity">Biodiversity</div>
+            <div class="basket-name">Terrasos Biodiversity Credits</div>
+            <p class="basket-desc">Habitat conservation protecting Colombia's critical ecosystems and wildlife corridors. 30-year crediting periods safeguard jaguars, tapirs, and hundreds of endemic species.</p>
+            <a class="basket-link" href="https://app.regen.network/credit-classes/BT" target="_blank" rel="noopener">Learn more &rarr;</a>
+          </div>
         </div>
-        <div style="flex:1 1 200px;max-width:280px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px;text-align:left;">
-          <div style="font-size:12px;font-weight:700;color:var(--regen-green);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Umbrella Species</div>
-          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:6px;">Community Conservation</div>
-          <p style="font-size:13px;color:var(--regen-gray-500);margin:0;line-height:1.5;">Protecting keystone species whose conservation shelters entire ecosystems. Verified with remote sensing and traditional ecological knowledge.</p>
+
+        <div class="basket-card">
+          <div class="basket-visual basket-visual--urban">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="22" width="12" height="18" rx="1.5" fill="#fff" opacity="0.7"/><rect x="9" y="25" width="3" height="3" rx="0.5" fill="#527984" opacity="0.6"/><rect x="12" y="25" width="3" height="3" rx="0.5" fill="#527984" opacity="0.6"/><rect x="9" y="31" width="3" height="3" rx="0.5" fill="#527984" opacity="0.6"/><rect x="12" y="31" width="3" height="3" rx="0.5" fill="#527984" opacity="0.6"/><path d="M32 40V18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><circle cx="32" cy="14" r="8" fill="#fff" opacity="0.35"/><circle cx="32" cy="10" r="5" fill="#fff" opacity="0.5"/><line x1="4" y1="40" x2="44" y2="40" stroke="#fff" stroke-width="1.5" opacity="0.4"/></svg>
+          </div>
+          <div class="basket-body">
+            <div class="basket-dimension basket-dimension--urban">Urban Canopy</div>
+            <div class="basket-name">City Forest Credits</div>
+            <p class="basket-desc">Urban tree canopy projects cleaning air, reducing heat islands, and strengthening communities. The national standard for urban forest carbon in U.S. cities.</p>
+            <a class="basket-link" href="https://app.regen.network/credit-classes/CFC" target="_blank" rel="noopener">Learn more &rarr;</a>
+          </div>
         </div>
+
+        <div class="basket-card">
+          <div class="basket-visual basket-visual--marine">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 22c4-3 8-3 12 0s8 3 12 0 8-3 12 0" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.9"/><path d="M4 28c4-3 8-3 12 0s8 3 12 0 8-3 12 0" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/><path d="M4 34c4-3 8-3 12 0s8 3 12 0 8-3 12 0" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.3"/><path d="M26 6c0 0 7 3 9 9s-3 11-9 11-9-5-9-11c0-4 4-7 7-9" fill="#fff" opacity="0.35"/><path d="M35 13l5-2-5-2" fill="#fff" opacity="0.6"/><circle cx="29" cy="13" r="1.5" fill="#fff"/></svg>
+          </div>
+          <div class="basket-body">
+            <div class="basket-dimension basket-dimension--marine">Ocean &amp; Coast</div>
+            <div class="basket-name">Marine Biodiversity Stewardship</div>
+            <p class="basket-desc">Coastal and ocean ecosystem protection supporting the health of marine habitats, fisheries, and the communities that depend on them.</p>
+            <a class="basket-link" href="https://app.regen.network/credit-classes/MBS" target="_blank" rel="noopener">Learn more &rarr;</a>
+          </div>
+        </div>
+
+        <div class="basket-card">
+          <div class="basket-visual basket-visual--grazing">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="24" rx="11" ry="7" fill="#fff" opacity="0.35"/><circle cx="24" cy="17" r="5" fill="#fff" opacity="0.45"/><circle cx="20" cy="15" r="2.5" fill="#fff" opacity="0.55"/><circle cx="28" cy="15" r="2.5" fill="#fff" opacity="0.55"/><circle cx="24" cy="12.5" r="2.5" fill="#fff" opacity="0.55"/><circle cx="21" cy="19" r="1" fill="#5d4037"/><circle cx="27" cy="19" r="1" fill="#5d4037"/><line x1="18" y1="31" x2="18" y2="36" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.7"/><line x1="30" y1="31" x2="30" y2="36" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.7"/><path d="M6 40c4-2 8-3 12-1s8 2 12 0 8-2 12-1" stroke="#fff" stroke-width="1" opacity="0.35"/></svg>
+          </div>
+          <div class="basket-body">
+            <div class="basket-dimension basket-dimension--grazing">Regenerative Grazing</div>
+            <div class="basket-name">Kilo-Sheep-Hour Credits</div>
+            <p class="basket-desc">Regenerative grazing practices restoring grassland health by measuring verified animal impact. Building soil carbon, water retention, and biodiversity from the ground up.</p>
+            <a class="basket-link" href="https://app.regen.network/credit-classes/KSH" target="_blank" rel="noopener">Learn more &rarr;</a>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -767,6 +870,51 @@ ${betaBannerJS()}
         </ul>
         <p style="margin:12px 0 0;color:var(--regen-gray-700);">This isn't a carbon offset. It's a direct contribution to ecological regeneration.</p>
         <a style="display:inline-block;margin-top:16px;color:var(--regen-green);font-weight:600;" href="https://app.regen.network" target="_blank" rel="noopener">Learn more about Regen Network and ecocredits &rarr;</a>
+      </div>
+    </div>
+
+    <div class="regen-card" style="margin-top:24px;">
+      <div class="regen-card__body">
+        <h2 style="color:var(--regen-navy);margin:0 0 8px;font-size:18px;font-weight:700;">The credits your subscription retires</h2>
+        <p style="color:var(--regen-gray-500);font-size:14px;margin:0 0 16px;">Your contribution is spread across a curated basket of verified ecocredits spanning five impact dimensions.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--regen-gray-50);border-radius:10px;border-left:3px solid #2d6a4f;">
+            <span style="font-size:18px;flex-shrink:0;">&#127794;</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--regen-navy);">Carbon Credits</div>
+              <div style="font-size:12px;color:var(--regen-gray-500);line-height:1.4;">Forest conservation and reforestation sequestering atmospheric carbon.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--regen-gray-50);border-radius:10px;border-left:3px solid #d4a017;">
+            <span style="font-size:18px;flex-shrink:0;">&#129409;</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--regen-navy);">Terrasos Biodiversity Credits</div>
+              <div style="font-size:12px;color:var(--regen-gray-500);line-height:1.4;">Protecting Colombia's critical ecosystems and wildlife corridors.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--regen-gray-50);border-radius:10px;border-left:3px solid #4FB573;">
+            <span style="font-size:18px;flex-shrink:0;">&#127795;</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--regen-navy);">City Forest Credits</div>
+              <div style="font-size:12px;color:var(--regen-gray-500);line-height:1.4;">Urban tree canopy cleaning air, reducing heat islands, strengthening communities.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--regen-gray-50);border-radius:10px;border-left:3px solid #1e88e5;">
+            <span style="font-size:18px;flex-shrink:0;">&#127754;</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--regen-navy);">Marine Biodiversity Stewardship</div>
+              <div style="font-size:12px;color:var(--regen-gray-500);line-height:1.4;">Coastal and ocean ecosystem protection.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--regen-gray-50);border-radius:10px;border-left:3px solid #8d6e63;">
+            <span style="font-size:18px;flex-shrink:0;">&#127807;</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--regen-navy);">Kilo-Sheep-Hour Credits</div>
+              <div style="font-size:12px;color:var(--regen-gray-500);line-height:1.4;">Regenerative grazing restoring grassland health and soil carbon.</div>
+            </div>
+          </div>
+        </div>
+        <a style="display:inline-block;margin-top:14px;font-size:13px;color:var(--regen-green);font-weight:600;" href="https://app.regen.network" target="_blank" rel="noopener">Browse all projects on Regen Marketplace &rarr;</a>
       </div>
     </div>
 
