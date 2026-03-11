@@ -306,7 +306,7 @@ export function createResearchRoutes(baseUrl: string): Router {
         Where Wh/query = 0.3&ndash;2.9 (typical), g CO&#x2082;/kWh = 445 (global average) or a country-specific value.
       </p>
       <p>
-        <strong>Example:</strong> 50 queries/day &times; 0.3 Wh &rarr; 5.475 kWh/yr &rarr; ~2.44 kg CO&#x2082;/yr at 445 g/kWh.
+        <strong>Example:</strong> 50 queries/day &times; 365 days &times; 0.3 Wh = 5,475 Wh = 5.475 kWh/yr &rarr; ~2.44 kg CO&#x2082;/yr at 445 g/kWh.
       </p>
 
       <h2>References</h2>
