@@ -23,11 +23,13 @@ import {
   getCumulativeAttribution,
   getMonthlyAttributions,
   getTransactions,
+  getCommunityStats,
   createMagicLinkToken,
   verifyMagicLinkToken,
   type CumulativeAttribution,
   type MonthlyAttribution,
   type Transaction,
+  type CommunityStats,
 } from "./db.js";
 import { createSessionToken, getSessionEmail } from "./magic-link.js";
 import { sendMagicLinkEmail } from "../services/email.js";
@@ -220,6 +222,7 @@ function renderDashboardPage(
   baseUrl: string,
   nextRetirementDate: string | null,
   transactions: Transaction[],
+  communityStats: CommunityStats,
 ): string {
   const planName = displayPlanName(plan);
   const totalCredits = cumulative.total_carbon + cumulative.total_biodiversity + cumulative.total_uss;
@@ -333,6 +336,119 @@ function renderDashboardPage(
   })}
 
   <div class="regen-container">
+    ${monthly.length === 0 ? `
+    <!-- ====== PRE-RETIREMENT WELCOME EXPERIENCE ====== -->
+
+    <!-- Welcome hero -->
+    <div style="padding:40px 0 24px;text-align:center;">
+      <h1 style="font-size:28px;font-weight:800;margin:0 0 8px;color:var(--regen-navy);">Welcome to the Regenerative Compute Community</h1>
+      <p style="font-size:15px;color:var(--regen-gray-500);margin:0 0 4px;">Member since ${escapeHtml(memberSince)}</p>
+    </div>
+
+    <!-- Payment confirmation -->
+    <div style="margin-bottom:32px;">
+      <div style="background:linear-gradient(135deg,#f0f7f2,#e8f5ec);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius);padding:28px 32px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:8px;">&#10003;</div>
+        <div style="font-size:18px;font-weight:800;color:var(--regen-navy);margin-bottom:8px;">Payment received &mdash; thank you!</div>
+        <p style="font-size:14px;color:var(--regen-gray-500);margin:0;max-width:480px;display:inline-block;">
+          Your first ecocredit retirements are scheduled for
+          <strong style="color:var(--regen-navy);">${escapeHtml(nextRetirementDate ?? "next billing cycle")}</strong>.
+          We&rsquo;ll retire verified ecological credits on-chain and send you proof.
+        </p>
+      </div>
+    </div>
+
+    <!-- How it works timeline -->
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">How It Works</h2>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;max-width:700px;margin:0 auto;">
+        <div style="flex:1;min-width:140px;background:var(--regen-green-bg);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;">
+          <div style="font-size:24px;margin-bottom:4px;">&#10003;</div>
+          <div style="font-size:13px;font-weight:700;color:var(--regen-green);">Payment Received</div>
+          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Your subscription is active</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;opacity:0.85;">
+          <div style="font-size:24px;margin-bottom:4px;">&#128269;</div>
+          <div style="font-size:13px;font-weight:700;color:var(--regen-navy);">Credits Selected</div>
+          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Best-price verified credits</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;opacity:0.7;">
+          <div style="font-size:24px;margin-bottom:4px;">&#9939;</div>
+          <div style="font-size:13px;font-weight:700;color:var(--regen-navy);">Retired On-Chain</div>
+          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Permanently recorded on Regen Ledger</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;opacity:0.55;">
+          <div style="font-size:24px;margin-bottom:4px;">&#128220;</div>
+          <div style="font-size:13px;font-weight:700;color:var(--regen-navy);">Certificate Issued</div>
+          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Shareable proof of retirement</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What your subscription funds -->
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">What Your Subscription Funds</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;max-width:700px;margin:0 auto;">
+        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-green);border-radius:var(--regen-radius);padding:18px;">
+          <div style="font-size:15px;font-weight:700;color:var(--regen-green);margin-bottom:4px;">Carbon</div>
+          <div style="font-size:12px;color:var(--regen-gray-500);">Verified carbon removal and avoidance from projects around the world</div>
+        </div>
+        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-teal);border-radius:var(--regen-radius);padding:18px;">
+          <div style="font-size:15px;font-weight:700;color:var(--regen-teal);margin-bottom:4px;">Biodiversity</div>
+          <div style="font-size:12px;color:var(--regen-gray-500);">Habitat protection and species conservation credits via Terrasos</div>
+        </div>
+        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-sage);border-radius:var(--regen-radius);padding:18px;">
+          <div style="font-size:15px;font-weight:700;color:var(--regen-sage);margin-bottom:4px;">Marine</div>
+          <div style="font-size:12px;color:var(--regen-gray-500);">Ocean ecosystem stewardship and marine biodiversity protection</div>
+        </div>
+        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-navy);border-radius:var(--regen-radius);padding:18px;">
+          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:4px;">Urban Forestry</div>
+          <div style="font-size:12px;color:var(--regen-gray-500);">City tree planting and urban canopy expansion credits</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Community stats -->
+    ${communityStats.total_credits > 0 || communityStats.member_count > 1 ? `
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">Community Impact</h2>
+      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+        <div class="regen-stat-card regen-stat-card--green" style="min-width:160px;">
+          <div class="regen-stat-value">${escapeHtml(formatCredits(communityStats.total_credits))}</div>
+          <div class="regen-stat-label">Total Credits Retired</div>
+        </div>
+        <div class="regen-stat-card regen-stat-card--navy" style="min-width:160px;">
+          <div class="regen-stat-value">${communityStats.member_count}</div>
+          <div class="regen-stat-label">Community Members</div>
+        </div>
+      </div>
+    </div>
+    ` : ""}
+
+    <!-- Share your commitment -->
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">Share Your Commitment</h2>
+      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;text-align:center;">
+        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 16px;">Let others know you&rsquo;re making your AI usage regenerative.</p>
+        <div class="regen-share-btns">
+          <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("I just joined @RegenNetwork's Regenerative Compute \u2014 making my AI compute fund verified ecological regeneration on-chain. Every session contributes to carbon, biodiversity, and marine credits.")}&url=${shareUrl}" target="_blank" rel="noopener">Post on X</a>
+          <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}" target="_blank" rel="noopener">Share on LinkedIn</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transition note -->
+    <div style="margin-bottom:32px;text-align:center;">
+      <div style="background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 28px;display:inline-block;max-width:520px;">
+        <p style="font-size:14px;color:var(--regen-gray-500);margin:0;">
+          Once your first retirements happen, you&rsquo;ll see your personal impact stats, monthly breakdown charts, on-chain proof, and achievement badges right here.
+        </p>
+      </div>
+    </div>
+
+    ` : `
+    <!-- ====== NORMAL DASHBOARD WITH RETIREMENT DATA ====== -->
+
     <!-- Hero -->
     <div style="padding:32px 0 24px;text-align:center;">
       <h1 style="font-size:28px;font-weight:800;margin:0 0 4px;color:var(--regen-navy);">Your Ecological Impact</h1>
@@ -366,17 +482,7 @@ function renderDashboardPage(
         <div class="regen-stat-label">Months Active</div>
       </div>
     </div>
-
-    <!-- Next retirement -->
-    ${monthly.length === 0 && nextRetirementDate ? `
-    <div style="margin-bottom:32px;">
-      <div style="background:linear-gradient(135deg,#f0f7f2,#e8f5ec);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius);padding:24px 28px;text-align:center;">
-        <div style="font-size:13px;font-weight:700;color:var(--regen-green);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Next Credit Retirement</div>
-        <div style="font-size:22px;font-weight:800;color:var(--regen-navy);margin-bottom:8px;">${escapeHtml(nextRetirementDate)}</div>
-        <p style="font-size:14px;color:var(--regen-gray-500);margin:0;max-width:420px;display:inline-block;">Your subscription is already funding ecological regeneration. Credits will be retired on-chain at the end of your billing cycle and you'll receive a report with proof.</p>
-      </div>
-    </div>
-    ` : ""}
+    `}
 
     <!-- Contributions -->
     ${transactions.length > 0 ? `
@@ -397,9 +503,9 @@ function renderDashboardPage(
               const typeLabel = isBoost ? "One-time boost" : "Credit retirement";
               const typeColor = isBoost ? "var(--regen-green)" : "var(--regen-teal)";
               const hasRetirement = !!t.retirement_tx_hash;
-              const statusLabel = hasRetirement ? "Retired" : "Pending";
-              const statusBg = hasRetirement ? "#f0f7f2" : "#fef3c7";
-              const statusColor = hasRetirement ? "#2d6a4f" : "#92400e";
+              const statusLabel = hasRetirement ? "Retired" : "Paid — Retirement Scheduled";
+              const statusBg = hasRetirement ? "#f0f7f2" : "#eff6ff";
+              const statusColor = hasRetirement ? "#2d6a4f" : "#1e40af";
               const proofLink = hasRetirement
                 ? ` <a href="https://www.mintscan.io/regen/tx/${escapeHtml(t.retirement_tx_hash!)}" target="_blank" rel="noopener" style="font-size:11px;">proof</a>`
                 : "";
@@ -689,6 +795,7 @@ export function createDashboardRoutes(
     const memberSince = formatDate(subscriber.created_at);
     const manageUrl = `${baseUrl}/manage?email=${encodeURIComponent(email)}`;
     const transactions = getTransactions(db, user.id, 20);
+    const communityStats = getCommunityStats(db);
 
     // Next retirement date from subscription period end
     const nextRetirementDate = subscriber.current_period_end
@@ -708,6 +815,7 @@ export function createDashboardRoutes(
       baseUrl,
       nextRetirementDate,
       transactions,
+      communityStats,
     ));
   });
 

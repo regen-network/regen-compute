@@ -647,6 +647,42 @@ export function getCumulativeAttribution(db: Database.Database, subscriberId: nu
   };
 }
 
+// --- Community stats helpers ---
+
+export interface CommunityStats {
+  total_credits: number;
+  total_carbon: number;
+  total_biodiversity: number;
+  total_uss: number;
+  member_count: number;
+}
+
+export function getCommunityStats(db: Database.Database): CommunityStats {
+  const credits = db.prepare(`
+    SELECT
+      COALESCE(SUM(carbon_credits), 0) AS total_carbon,
+      COALESCE(SUM(biodiversity_credits), 0) AS total_biodiversity,
+      COALESCE(SUM(uss_credits), 0) AS total_uss
+    FROM attributions
+  `).get() as { total_carbon: number; total_biodiversity: number; total_uss: number } | undefined;
+
+  const members = db.prepare(`
+    SELECT COUNT(*) AS member_count FROM subscribers WHERE status = 'active'
+  `).get() as { member_count: number } | undefined;
+
+  const tc = credits?.total_carbon ?? 0;
+  const tb = credits?.total_biodiversity ?? 0;
+  const tu = credits?.total_uss ?? 0;
+
+  return {
+    total_credits: tc + tb + tu,
+    total_carbon: tc,
+    total_biodiversity: tb,
+    total_uss: tu,
+    member_count: members?.member_count ?? 0,
+  };
+}
+
 // --- API usage tracking ---
 
 export function recordApiUsage(
