@@ -218,7 +218,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
 <body>
   ${betaBannerHTML()}
 
-  ${brandHeader({ nav: [{ label: "Home", href: "/" }, { label: "Research", href: "/research" }, { label: "Dashboard", href: "/dashboard/login" }] })}
+  ${brandHeader({ nav: [{ label: "Home", href: "/" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Dashboard", href: "/dashboard/login" }] })}
 
   <!-- Hero -->
   <section class="plugin-hero">

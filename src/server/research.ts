@@ -157,6 +157,7 @@ export function createResearchRoutes(baseUrl: string): Router {
     nav: [
       { label: "AI Plugin", href: "/ai-plugin" },
       { label: "Research", href: "/research" },
+      { label: "About", href: "/about" },
       { label: "Dashboard", href: "/dashboard/login" },
     ],
   })}

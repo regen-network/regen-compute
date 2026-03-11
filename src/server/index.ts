@@ -23,6 +23,7 @@ import { createCertificateRoutes } from "./certificate.js";
 import { createApiRoutes } from "./api-routes.js";
 import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
+import { createAboutRoutes } from "./about.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
 import { loadConfig } from "../config.js";
 import { regenLogoSVG, regenLogoPNG } from "./brand.js";
@@ -94,6 +95,10 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // Research page (static, no dependencies)
   const researchRoutes = createResearchRoutes(baseUrl);
   app.use(researchRoutes);
+
+  // About page (static, no dependencies)
+  const aboutRoutes = createAboutRoutes(baseUrl);
+  app.use(aboutRoutes);
 
   // AI Plugin page (static, no dependencies)
   const aiPluginRoutes = createAiPluginRoutes(baseUrl);

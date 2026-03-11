@@ -246,7 +246,7 @@ function renderCertificatePage(
 </head>
 <body>
   ${betaBannerHTML()}
-  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "Dashboard", href: "/dashboard/login" }] })}
+  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Dashboard", href: "/dashboard/login" }] })}
 
   <div class="cert-container">
     <div class="cert-card">
