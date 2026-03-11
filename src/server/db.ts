@@ -278,7 +278,7 @@ export function getUserByApiKey(db: Database.Database, apiKey: string): User | u
 }
 
 export function getUserByEmail(db: Database.Database, email: string): User | undefined {
-  return db.prepare("SELECT * FROM users WHERE email = ?").get(email) as User | undefined;
+  return db.prepare("SELECT * FROM users WHERE LOWER(email) = LOWER(?)").get(email) as User | undefined;
 }
 
 export function createUser(
@@ -289,10 +289,11 @@ export function createUser(
 ): User {
   const apiKey = generateApiKey();
   const referralCode = generateReferralCode();
+  const normalizedEmail = email ? email.toLowerCase() : null;
   const stmt = db.prepare(
     "INSERT INTO users (api_key, email, stripe_customer_id, referral_code, referred_by) VALUES (?, ?, ?, ?, ?)"
   );
-  const result = stmt.run(apiKey, email, stripeCustomerId, referralCode, referredByUserId ?? null);
+  const result = stmt.run(apiKey, normalizedEmail, stripeCustomerId, referralCode, referredByUserId ?? null);
   return db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid) as User;
 }
 
