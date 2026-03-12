@@ -24,13 +24,20 @@ import {
   getMonthlyAttributions,
   getTransactions,
   getCommunityStats,
+  getSubscriberBatchTotals,
+  getActiveCommunityGoal,
+  getCommunityTotalCreditsRetired,
+  getCommunitySubscriberCount,
+  getMonthlyCreditSelection,
   createMagicLinkToken,
   verifyMagicLinkToken,
   type CumulativeAttribution,
   type MonthlyAttribution,
   type Transaction,
   type CommunityStats,
+  type CommunityGoal,
 } from "./db.js";
+import { PROJECTS, getProjectForBatch, type ProjectInfo } from "./project-metadata.js";
 import { createSessionToken, getSessionEmail } from "./magic-link.js";
 import { sendMagicLinkEmail } from "../services/email.js";
 
@@ -210,32 +217,159 @@ function displayPlanName(plan: string): string {
   return names[plan] ?? plan.charAt(0).toUpperCase() + plan.slice(1);
 }
 
-function renderDashboardPage(
-  email: string,
-  plan: string,
-  memberSince: string,
-  cumulative: CumulativeAttribution,
-  monthly: MonthlyAttribution[],
-  badges: Badge[],
-  manageUrl: string,
-  amountCents: number,
-  baseUrl: string,
-  nextRetirementDate: string | null,
-  transactions: Transaction[],
-  communityStats: CommunityStats,
-): string {
+/** Data for rendering a project card on the dashboard */
+interface ProjectCardData {
+  project: ProjectInfo;
+  batchDenom: string;
+  totalCredits: number;
+  latestTxHash: string | null;
+}
+
+function renderDashboardPage(opts: {
+  email: string;
+  plan: string;
+  memberSince: string;
+  cumulative: CumulativeAttribution;
+  monthly: MonthlyAttribution[];
+  badges: Badge[];
+  manageUrl: string;
+  amountCents: number;
+  baseUrl: string;
+  nextRetirementDate: string | null;
+  transactions: Transaction[];
+  communityStats: CommunityStats;
+  regenAddress: string | null;
+  projectCards: ProjectCardData[];
+  communityGoal: CommunityGoal | undefined;
+  communityTotalCredits: number;
+  communitySubscriberCount: number;
+  batchDenomMap: Map<string, string>;
+}): string {
+  const {
+    email, plan, memberSince, cumulative, monthly, badges, manageUrl,
+    amountCents, baseUrl, nextRetirementDate, transactions, communityStats,
+    regenAddress, projectCards, communityGoal, communityTotalCredits, communitySubscriberCount,
+    batchDenomMap,
+  } = opts;
+
   const planName = displayPlanName(plan);
   const totalCredits = cumulative.total_carbon + cumulative.total_biodiversity + cumulative.total_uss;
-  // Show subscription amount if no pool runs have happened yet
   const contributedCents = cumulative.total_contribution_cents > 0
     ? cumulative.total_contribution_cents
     : amountCents;
   const shareText = encodeURIComponent(
-    `I'm funding ecological regeneration through my AI usage with @RegenNetwork's Regenerative Compute. ${formatCredits(totalCredits)} credits retired so far.`
+    `I'm funding ecological regeneration through my AI usage with @RegenNetwork's Regenerative Compute. Join the community and make your AI sessions count.`
   );
   const shareUrl = encodeURIComponent(baseUrl);
 
-  // Prepare chart data as JSON
+  // Profile link
+  const profileUrl = regenAddress
+    ? `https://app.regen.network/profiles/${regenAddress}/portfolio`
+    : null;
+
+  // Community goal progress
+  let goalHtml = "";
+  if (communityGoal) {
+    const progress = Math.min(communityTotalCredits / communityGoal.goal_credits, 1);
+    const pct = (progress * 100).toFixed(1);
+    const remaining = Math.max(communityGoal.goal_credits - communityTotalCredits, 0);
+    const deadlineStr = communityGoal.goal_deadline
+      ? ` by ${communityGoal.goal_deadline}` : "";
+    goalHtml = `
+    <div style="margin-bottom:32px;">
+      <div style="background:linear-gradient(135deg,#f0f7f2,#e8f5ec);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius-lg);padding:28px 32px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--regen-green);margin-bottom:4px;">Community Goal</div>
+            <div style="font-size:18px;font-weight:800;color:var(--regen-navy);">${escapeHtml(communityGoal.goal_label)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:24px;font-weight:800;color:var(--regen-green);">${pct}%</div>
+            <div style="font-size:12px;color:var(--regen-gray-500);">${communitySubscriberCount} subscriber${communitySubscriberCount !== 1 ? "s" : ""} contributing</div>
+          </div>
+        </div>
+        <div style="background:var(--regen-green-light);border-radius:8px;height:12px;overflow:hidden;">
+          <div style="background:linear-gradient(90deg,#4FB573,#79C6AA);height:100%;width:${pct}%;border-radius:8px;transition:width 0.5s ease;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--regen-gray-500);">
+          <span>${formatCredits(communityTotalCredits)} credits retired</span>
+          <span>${formatCredits(remaining)} to go${escapeHtml(deadlineStr)}</span>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    // No goal set — compact community stats row
+    goalHtml = `
+    <div style="margin-bottom:32px;">
+      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="font-size:14px;color:var(--regen-gray-700);">
+          <strong style="color:var(--regen-navy);">${communitySubscriberCount}</strong> subscriber${communitySubscriberCount !== 1 ? "s" : ""} have retired
+          <strong style="color:var(--regen-green);">${formatCredits(communityTotalCredits)}</strong> credits together
+        </div>
+        <a href="/#pricing" style="font-size:13px;font-weight:600;color:var(--regen-green);">Invite a friend &rarr;</a>
+      </div>
+    </div>`;
+  }
+
+  // Project cards HTML
+  let projectCardsHtml = "";
+  if (projectCards.length > 0) {
+    const cards = projectCards.map(pc => {
+      const p = pc.project;
+      const txLink = pc.latestTxHash
+        ? `<a href="https://www.mintscan.io/regen/tx/${escapeHtml(pc.latestTxHash)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--regen-green);font-weight:600;">View on-chain</a>`
+        : "";
+      return `
+      <div class="project-card" style="border-color:${p.accentColor}20;">
+        <div class="project-card__img" style="background-image:url('${escapeHtml(p.imageUrl)}');">
+          <span class="project-card__badge" style="background:${p.accentColor};">${escapeHtml(p.creditTypeLabel)}</span>
+        </div>
+        <div class="project-card__body">
+          <h3 class="project-card__name">${escapeHtml(p.name)}</h3>
+          <p class="project-card__location">${escapeHtml(p.location)}</p>
+          <p class="project-card__desc">${escapeHtml(p.description)}</p>
+          <div class="project-card__credits">
+            <span style="font-size:20px;font-weight:800;color:${p.accentColor};">${formatCredits(pc.totalCredits)}</span>
+            <span style="font-size:12px;color:var(--regen-gray-500);margin-left:4px;">credits retired</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+            <a href="${escapeHtml(p.projectPageUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--regen-green);font-weight:600;">View project</a>
+            ${txLink}
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+
+    // Add a "coming soon" card if odd number of projects, to fill out the grid
+    const comingSoonCard = projectCards.length % 2 !== 0 ? `
+      <div class="project-card" style="border-color:var(--regen-gray-200);display:flex;flex-direction:column;">
+        <div class="project-card__img" style="background:linear-gradient(135deg,var(--regen-green-bg),#e0ede4);display:flex;align-items:center;justify-content:center;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="color:var(--regen-green);opacity:0.6;">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="project-card__body" style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;">
+          <h3 class="project-card__name" style="color:var(--regen-gray-500);">More to come</h3>
+          <p class="project-card__desc" style="color:var(--regen-gray-500);">Your subscription rotates through different ecological projects each month. Check back to see what gets retired next.</p>
+        </div>
+      </div>` : "";
+
+    projectCardsHtml = `
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;">Projects You&rsquo;re Supporting</h2>
+      <div class="project-cards-grid">${cards}${comingSoonCard}</div>
+    </div>`;
+  }
+
+  // Projects for the boost dropdown — only those with a known batch denom
+  const boostOptions = PROJECTS
+    .filter(p => batchDenomMap.has(p.projectId))
+    .map(p => {
+      const denom = batchDenomMap.get(p.projectId)!;
+      return `<option value="${escapeHtml(denom)}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} (${escapeHtml(p.creditTypeLabel)})</option>`;
+    }).join("");
+
+  // Prepare chart data
   const chartData = JSON.stringify({
     labels: monthly.map(m => {
       const d = new Date(m.run_date);
@@ -246,41 +380,7 @@ function renderDashboardPage(
     uss: monthly.map(m => m.uss_credits),
   });
 
-  // Render monthly history rows
-  let monthlyRows = "";
-  for (const m of [...monthly].reverse()) {
-    const total = m.carbon_credits + m.biodiversity_credits + m.uss_credits;
-    const dateLabel = formatDate(m.run_date);
-    const certLink = m.carbon_tx_hash
-      ? `<a href="https://www.mintscan.io/regen/tx/${escapeHtml(m.carbon_tx_hash)}" target="_blank" rel="noopener">View</a>`
-      : m.biodiversity_tx_hash
-        ? `<a href="https://www.mintscan.io/regen/tx/${escapeHtml(m.biodiversity_tx_hash)}" target="_blank" rel="noopener">View</a>`
-        : "--";
-    monthlyRows += `<tr>
-      <td>${escapeHtml(dateLabel)}</td>
-      <td>${escapeHtml(formatCredits(m.carbon_credits))}</td>
-      <td>${escapeHtml(formatCredits(m.biodiversity_credits))}</td>
-      <td>${escapeHtml(formatCredits(m.uss_credits))}</td>
-      <td><strong>${escapeHtml(formatCredits(total))}</strong></td>
-      <td>${certLink}</td>
-    </tr>`;
-  }
-
-  // Render badges
-  let badgeHtml = "";
-  for (const badge of badges) {
-    const opacity = badge.earned ? "1" : "0.35";
-    const bgColor = badge.earned ? badge.color + "15" : "#f3f4f6";
-    const borderColor = badge.earned ? badge.color : "#e5e7eb";
-    const svgColor = badge.earned ? badge.color : "#9ca3af";
-    const statusText = badge.earned ? badge.description : "Keep going!";
-    badgeHtml += `
-      <div class="regen-badge" style="opacity: ${opacity}; background: ${bgColor}; border-color: ${borderColor};">
-        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" style="color: ${svgColor};">${badge.icon}</svg>
-        <div class="regen-badge__name">${escapeHtml(badge.name)}</div>
-        <div class="regen-badge__desc">${escapeHtml(statusText)}</div>
-      </div>`;
-  }
+  const hasRetirements = monthly.length > 0 || projectCards.length > 0;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -294,6 +394,51 @@ function renderDashboardPage(
     ${brandCSS()}
     body { background: var(--regen-gray-50); }
 
+    /* Project cards */
+    .project-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .project-card {
+      background: var(--regen-white);
+      border: 1px solid var(--regen-gray-200);
+      border-radius: var(--regen-radius-lg);
+      overflow: hidden;
+      box-shadow: var(--regen-shadow-card);
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .project-card:hover {
+      box-shadow: var(--regen-shadow-card-hover);
+      transform: translateY(-2px);
+    }
+    .project-card__img {
+      height: 160px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .project-card__badge {
+      position: absolute; top: 12px; left: 12px;
+      font-size: 11px; font-weight: 700; color: #fff;
+      padding: 4px 10px; border-radius: 6px;
+      letter-spacing: 0.03em;
+    }
+    .project-card__body { padding: 16px 20px 20px; }
+    .project-card__name {
+      font-size: 16px; font-weight: 800; color: var(--regen-navy);
+      margin: 0 0 2px;
+    }
+    .project-card__location {
+      font-size: 12px; color: var(--regen-gray-500); margin: 0 0 8px;
+      font-weight: 500;
+    }
+    .project-card__desc {
+      font-size: 13px; color: var(--regen-gray-700); margin: 0 0 12px;
+      line-height: 1.5;
+    }
+    .project-card__credits { margin-top: 4px; }
+
     /* Chart */
     .dash-chart-section { margin-bottom: 32px; }
     .dash-chart-container {
@@ -305,25 +450,24 @@ function renderDashboardPage(
       text-align: center; padding: 48px 0; color: var(--regen-gray-500); font-size: 15px;
     }
 
-    /* Table */
-    .dash-table-section { margin-bottom: 32px; }
-    .dash-table-wrapper {
+    /* Compact stat row */
+    .dash-stats-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;
+      justify-content: center;
+    }
+    .dash-stat-pill {
       background: var(--regen-white); border: 1px solid var(--regen-gray-200);
-      border-radius: var(--regen-radius); overflow-x: auto;
+      border-radius: 20px; padding: 8px 16px;
+      font-size: 13px; color: var(--regen-gray-700);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dash-stat-pill strong {
+      font-weight: 800; color: var(--regen-navy);
     }
 
-    /* Export */
-    .dash-export {
-      margin-bottom: 32px;
-      background: var(--regen-gray-50); border: 1px dashed var(--regen-gray-300);
-      border-radius: var(--regen-radius); padding: 24px; text-align: center;
-    }
-    .dash-export p { margin: 0; color: var(--regen-gray-500); font-size: 14px; }
-    .dash-coming-soon {
-      display: inline-block; font-size: 11px; font-weight: 700;
-      color: var(--regen-gray-500); background: var(--regen-gray-100);
-      padding: 3px 8px; border-radius: 4px; margin-left: 6px;
-      text-transform: uppercase; letter-spacing: 0.05em;
+    @media (max-width: 640px) {
+      .project-cards-grid { grid-template-columns: 1fr; }
+      .project-card__img { height: 140px; }
     }
   </style>
 </head>
@@ -336,16 +480,13 @@ function renderDashboardPage(
   })}
 
   <div class="regen-container">
-    ${monthly.length === 0 ? `
-    <!-- ====== PRE-RETIREMENT WELCOME EXPERIENCE ====== -->
 
-    <!-- Welcome hero -->
+    ${!hasRetirements ? `
+    <!-- ====== PRE-RETIREMENT WELCOME ====== -->
     <div style="padding:40px 0 24px;text-align:center;">
       <h1 style="font-size:28px;font-weight:800;margin:0 0 8px;color:var(--regen-navy);">Welcome to the Regenerative Compute Community</h1>
       <p style="font-size:15px;color:var(--regen-gray-500);margin:0 0 4px;">Member since ${escapeHtml(memberSince)}</p>
     </div>
-
-    <!-- Payment confirmation -->
     <div style="margin-bottom:32px;">
       <div style="background:linear-gradient(135deg,#f0f7f2,#e8f5ec);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius);padding:28px 32px;text-align:center;">
         <div style="font-size:36px;margin-bottom:8px;">&#10003;</div>
@@ -357,156 +498,77 @@ function renderDashboardPage(
         </p>
       </div>
     </div>
-
-    <!-- How it works timeline -->
-    <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">How It Works</h2>
-      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;max-width:700px;margin:0 auto;">
-        <div style="flex:1;min-width:140px;background:var(--regen-green-bg);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;">
-          <div style="font-size:24px;margin-bottom:4px;">&#10003;</div>
-          <div style="font-size:13px;font-weight:700;color:var(--regen-green);">Payment Received</div>
-          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Your subscription is active</div>
-        </div>
-        <div style="flex:1;min-width:140px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;opacity:0.85;">
-          <div style="font-size:24px;margin-bottom:4px;">&#128269;</div>
-          <div style="font-size:13px;font-weight:700;color:var(--regen-navy);">Credits Selected</div>
-          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Best-price verified credits</div>
-        </div>
-        <div style="flex:1;min-width:140px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;opacity:0.7;">
-          <div style="font-size:24px;margin-bottom:4px;">&#9939;</div>
-          <div style="font-size:13px;font-weight:700;color:var(--regen-navy);">Retired On-Chain</div>
-          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Permanently recorded on Regen Ledger</div>
-        </div>
-        <div style="flex:1;min-width:140px;background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 16px;text-align:center;opacity:0.55;">
-          <div style="font-size:24px;margin-bottom:4px;">&#128220;</div>
-          <div style="font-size:13px;font-weight:700;color:var(--regen-navy);">Certificate Issued</div>
-          <div style="font-size:11px;color:var(--regen-gray-500);margin-top:4px;">Shareable proof of retirement</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- What your subscription funds -->
-    <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">What Your Subscription Funds</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;max-width:700px;margin:0 auto;">
-        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-green);border-radius:var(--regen-radius);padding:18px;">
-          <div style="font-size:15px;font-weight:700;color:var(--regen-green);margin-bottom:4px;">Carbon</div>
-          <div style="font-size:12px;color:var(--regen-gray-500);">Verified carbon removal and avoidance from projects around the world</div>
-        </div>
-        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-teal);border-radius:var(--regen-radius);padding:18px;">
-          <div style="font-size:15px;font-weight:700;color:var(--regen-teal);margin-bottom:4px;">Biodiversity</div>
-          <div style="font-size:12px;color:var(--regen-gray-500);">Habitat protection and species conservation credits via Terrasos</div>
-        </div>
-        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-sage);border-radius:var(--regen-radius);padding:18px;">
-          <div style="font-size:15px;font-weight:700;color:var(--regen-sage);margin-bottom:4px;">Marine</div>
-          <div style="font-size:12px;color:var(--regen-gray-500);">Ocean ecosystem stewardship and marine biodiversity protection</div>
-        </div>
-        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-left:4px solid var(--regen-navy);border-radius:var(--regen-radius);padding:18px;">
-          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);margin-bottom:4px;">Urban Forestry</div>
-          <div style="font-size:12px;color:var(--regen-gray-500);">City tree planting and urban canopy expansion credits</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Community stats -->
-    ${communityStats.total_credits > 0 || communityStats.member_count > 1 ? `
-    <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">Community Impact</h2>
-      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-        <div class="regen-stat-card regen-stat-card--green" style="min-width:160px;">
-          <div class="regen-stat-value">${escapeHtml(formatCredits(communityStats.total_credits))}</div>
-          <div class="regen-stat-label">Total Credits Retired</div>
-        </div>
-        <div class="regen-stat-card regen-stat-card--navy" style="min-width:160px;">
-          <div class="regen-stat-value">${communityStats.member_count}</div>
-          <div class="regen-stat-label">Community Members</div>
-        </div>
-      </div>
-    </div>
-    ` : ""}
-
-    <!-- Share your commitment -->
-    <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;text-align:center;">Share Your Commitment</h2>
-      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;text-align:center;">
-        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 16px;">Let others know you&rsquo;re making your AI usage regenerative.</p>
-        <div class="regen-share-btns">
-          <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("I just joined @RegenNetwork's Regenerative Compute \u2014 making my AI compute fund verified ecological regeneration on-chain. Every session contributes to carbon, biodiversity, and marine credits.")}&url=${shareUrl}" target="_blank" rel="noopener">Post on X</a>
-          <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}" target="_blank" rel="noopener">Share on LinkedIn</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transition note -->
-    <div style="margin-bottom:32px;text-align:center;">
-      <div style="background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 28px;display:inline-block;max-width:520px;">
-        <p style="font-size:14px;color:var(--regen-gray-500);margin:0;">
-          Once your first retirements happen, you&rsquo;ll see your personal impact stats, monthly breakdown charts, on-chain proof, and achievement badges right here.
-        </p>
-      </div>
-    </div>
-
     ` : `
-    <!-- ====== NORMAL DASHBOARD WITH RETIREMENT DATA ====== -->
-
-    <!-- Hero -->
-    <div style="padding:32px 0 24px;text-align:center;">
+    <!-- ====== POST-RETIREMENT DASHBOARD ====== -->
+    <div style="padding:32px 0 16px;text-align:center;">
       <h1 style="font-size:28px;font-weight:800;margin:0 0 4px;color:var(--regen-navy);">Your Ecological Impact</h1>
-      <p style="font-size:14px;color:var(--regen-gray-500);margin:0;">Member since ${escapeHtml(memberSince)}</p>
+      <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 8px;">Member since ${escapeHtml(memberSince)}</p>
+      ${profileUrl ? `
+      <p style="font-size:13px;color:var(--regen-gray-500);margin:4px 0 0;max-width:420px;display:inline-block;">Every credit is minted based on verified ecological impact and retired permanently on the blockchain &mdash; <a href="${escapeHtml(profileUrl)}" target="_blank" rel="noopener" style="font-weight:600;">view your personal on-chain portfolio &rarr;</a></p>
+      ` : ""}
     </div>
 
-    <!-- Cumulative stats -->
-    <div class="regen-stats-grid">
-      <div class="regen-stat-card regen-stat-card--green">
-        <div class="regen-stat-value">${escapeHtml(formatCredits(cumulative.total_carbon))}</div>
-        <div class="regen-stat-label">Carbon Credits</div>
-      </div>
-      <div class="regen-stat-card regen-stat-card--teal">
-        <div class="regen-stat-value">${escapeHtml(formatCredits(cumulative.total_biodiversity))}</div>
-        <div class="regen-stat-label">Biodiversity Credits</div>
-      </div>
-      <div class="regen-stat-card regen-stat-card--sage">
-        <div class="regen-stat-value">${escapeHtml(formatCredits(cumulative.total_uss))}</div>
-        <div class="regen-stat-label">USS/Marine Credits</div>
-      </div>
-      <div class="regen-stat-card regen-stat-card--navy">
-        <div class="regen-stat-value">${escapeHtml(formatCredits(totalCredits))}</div>
-        <div class="regen-stat-label">Total Credits</div>
-      </div>
-      <div class="regen-stat-card regen-stat-card--muted">
-        <div class="regen-stat-value">$${escapeHtml((contributedCents / 100).toFixed(2))}</div>
-        <div class="regen-stat-label">Contributed</div>
-      </div>
-      <div class="regen-stat-card regen-stat-card--muted">
-        <div class="regen-stat-value">${cumulative.months_active}</div>
-        <div class="regen-stat-label">Months Active</div>
-      </div>
+    <!-- Compact stats -->
+    <div class="dash-stats-row">
+      ${totalCredits >= 4 ? `<div class="dash-stat-pill"><strong>${escapeHtml(formatCredits(totalCredits))}</strong> total credits</div>` : ""}
+      <div class="dash-stat-pill"><strong>$${escapeHtml((contributedCents / 100).toFixed(2))}</strong> contributed</div>
+      <div class="dash-stat-pill"><strong>${Math.max(1, cumulative.months_active)}</strong> month${Math.max(1, cumulative.months_active) !== 1 ? "s" : ""}</div>
     </div>
     `}
 
-    <!-- Contributions -->
+    <!-- Project cards -->
+    ${projectCardsHtml}
+
+    ${hasRetirements ? `
+    <!-- Boost Your Impact -->
+    <div style="margin-bottom:32px;">
+      <h2 class="regen-section-title" style="font-size:20px;">Boost Your Impact</h2>
+      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:24px 28px;">
+        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 16px;">Choose a project and make a one-time contribution to retire more credits.</p>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <select id="boost-project" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--regen-gray-300);border-radius:8px;font-size:14px;font-family:var(--regen-font-primary);color:var(--regen-navy);">
+            ${boostOptions}
+          </select>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:16px;font-weight:700;color:var(--regen-navy);">$</span>
+            <input id="boost-amount" type="number" min="1" step="0.50" value="5" style="width:80px;padding:10px 12px;border:1px solid var(--regen-gray-300);border-radius:8px;font-size:16px;text-align:center;font-family:var(--regen-font-primary);">
+          </div>
+          <button onclick="boostProject()" class="regen-btn regen-btn--solid regen-btn--sm">Retire Now</button>
+        </div>
+        <p id="boost-error" style="color:#c33;font-size:13px;margin:8px 0 0;display:none;"></p>
+      </div>
+    </div>
+
+    <!-- Monthly chart -->
+    ${monthly.length > 0 ? `
+    <div class="dash-chart-section">
+      <h2 class="regen-section-title" style="font-size:20px;">Monthly Breakdown</h2>
+      <div class="dash-chart-container">
+        <canvas id="impactChart"></canvas>
+        <script type="application/json" id="chart-data">${chartData}</script>
+      </div>
+    </div>
+    ` : ""}
+    ` : ""}
+
+    <!-- Contributions table -->
     ${transactions.length > 0 ? `
     <div style="margin-bottom:32px;">
       <h2 class="regen-section-title" style="font-size:20px;">Contributions</h2>
       <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);overflow:hidden;">
         <table class="regen-table">
-          <thead><tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Status</th>
-          </tr></thead>
+          <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
           <tbody>
             ${transactions.map(t => {
               const date = new Date(t.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
               const isBoost = t.type === "topup";
-              const typeLabel = isBoost ? "One-time boost" : "Credit retirement";
+              const typeLabel = isBoost ? "One-time boost" : "Monthly subscription";
               const typeColor = isBoost ? "var(--regen-green)" : "var(--regen-teal)";
-              const hasRetirement = !!t.retirement_tx_hash;
-              const statusLabel = hasRetirement ? "Retired" : "Paid — Retirement Scheduled";
-              const statusBg = hasRetirement ? "#f0f7f2" : "#eff6ff";
-              const statusColor = hasRetirement ? "#2d6a4f" : "#1e40af";
-              const proofLink = hasRetirement
+              const hasRetirementTx = !!t.retirement_tx_hash;
+              const statusLabel = hasRetirementTx ? "Retired" : "Paid";
+              const statusBg = hasRetirementTx ? "#f0f7f2" : "#eff6ff";
+              const statusColor = hasRetirementTx ? "#2d6a4f" : "#1e40af";
+              const proofLink = hasRetirementTx
                 ? ` <a href="https://www.mintscan.io/regen/tx/${escapeHtml(t.retirement_tx_hash!)}" target="_blank" rel="noopener" style="font-size:11px;">proof</a>`
                 : "";
               return `<tr>
@@ -522,77 +584,28 @@ function renderDashboardPage(
     </div>
     ` : ""}
 
-    <!-- Monthly chart -->
-    <div class="dash-chart-section">
-      <h2 class="regen-section-title" style="font-size:20px;">Monthly Breakdown</h2>
-      <div class="dash-chart-container">
-        ${monthly.length > 0
-          ? `<canvas id="impactChart"></canvas>
-             <script type="application/json" id="chart-data">${chartData}</script>`
-          : `<div class="dash-empty">No retirements yet. Your first monthly report will appear here.</div>`
-        }
-      </div>
-    </div>
-
-    <!-- Monthly history table -->
-    <div class="dash-table-section">
-      <h2 class="regen-section-title" style="font-size:20px;">History</h2>
-      <div class="dash-table-wrapper">
-        ${monthly.length > 0 ? `
-        <table class="regen-table">
-          <thead><tr>
-            <th>Month</th><th>Carbon</th><th>Biodiversity</th><th>USS</th><th>Total</th><th>Proof</th>
-          </tr></thead>
-          <tbody>${monthlyRows}</tbody>
-        </table>
-        ` : `<div class="dash-empty">No history yet.</div>`}
-      </div>
-    </div>
-
-    <!-- Badges -->
+    <!-- Share -->
     <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;">Achievements</h2>
-      <div class="regen-badges-grid">
-        ${badgeHtml}
-      </div>
-    </div>
-
-    <!-- Share your impact -->
-    <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;">Share Your Impact</h2>
       <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;text-align:center;">
-        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 16px;">Spread the word about regenerative AI and invite others to join.</p>
+        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 12px;">Invite others to make their AI usage regenerative.</p>
         <div class="regen-share-btns">
           <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}" target="_blank" rel="noopener">Post on X</a>
           <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}" target="_blank" rel="noopener">Share on LinkedIn</a>
-          <button class="regen-share-btn regen-share-btn--copy" onclick="navigator.clipboard.writeText('${escapeHtml(baseUrl)}').then(function(){this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Link'},1500)}.bind(this))">Copy Link</button>
         </div>
       </div>
     </div>
 
-    <!-- Boost your impact -->
-    <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;">Boost Your Impact</h2>
-      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
-        <span style="font-size:14px;color:var(--regen-gray-500);">Make a one-time contribution to retire more credits:</span>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <label style="font-size:15px;color:var(--regen-navy);font-weight:600;">$</label>
-          <input id="boost-amount" type="number" min="1" step="0.50" value="5" style="width:80px;padding:8px 12px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:16px;text-align:center;">
-        </div>
-        <button onclick="boostImpact()" class="regen-btn regen-btn--solid regen-btn--sm">Boost</button>
-        <p id="boost-error" style="color:#c33;font-size:13px;margin:0;display:none;width:100%;text-align:center;"></p>
-      </div>
-    </div>
+    <!-- Community goal / stats -->
+    ${goalHtml}
 
-    <!-- Subscription management -->
+    <!-- Subscription -->
     <div style="margin-bottom:32px;">
-      <h2 class="regen-section-title" style="font-size:20px;">Subscription</h2>
-      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
-          <div style="font-size:15px;font-weight:700;color:var(--regen-navy);">${escapeHtml(planName)} Plan <span style="font-size:13px;font-weight:500;color:var(--regen-gray-500);">($${(amountCents / 100).toFixed(2)}/mo)</span></div>
-          <div style="font-size:13px;color:var(--regen-gray-500);margin-top:4px;">Member since ${escapeHtml(memberSince)}</div>
+          <span style="font-size:14px;font-weight:700;color:var(--regen-navy);">${escapeHtml(planName)} Plan</span>
+          <span style="font-size:13px;color:var(--regen-gray-500);margin-left:4px;">$${(amountCents / 100).toFixed(2)}/mo</span>
         </div>
-        <a class="regen-btn regen-btn--outline regen-btn--sm" href="${escapeHtml(manageUrl)}">Manage Subscription</a>
+        <a class="regen-btn regen-btn--outline regen-btn--sm" href="${escapeHtml(manageUrl)}">Manage</a>
       </div>
     </div>
   </div>
@@ -633,21 +646,30 @@ function renderDashboardPage(
   ` : ""}
 
   <script>
-    function boostImpact() {
+    function boostProject() {
+      var select = document.getElementById('boost-project');
       var input = document.getElementById('boost-amount');
       var errEl = document.getElementById('boost-error');
+      if (!select || !input || !errEl) return;
       var amount = parseFloat(input.value);
+      var batchDenom = select.value;
+      var projectName = select.options[select.selectedIndex].getAttribute('data-name') || '';
       errEl.style.display = 'none';
       if (!amount || amount < 1) {
         errEl.textContent = 'Minimum amount is $1.00';
         errEl.style.display = 'block';
         return;
       }
+      if (!batchDenom) {
+        errEl.textContent = 'Please select a project';
+        errEl.style.display = 'block';
+        return;
+      }
       var cents = Math.round(amount * 100);
-      fetch('/checkout', {
+      fetch('/boost-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount_cents: cents })
+        body: JSON.stringify({ amount_cents: cents, batch_denom: batchDenom, project_name: projectName })
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -763,7 +785,7 @@ export function createDashboardRoutes(
     const isProduction = baseUrl.startsWith("https");
 
     res.setHeader("Set-Cookie", [
-      `rfa_session=${sessionToken}; Path=/dashboard; HttpOnly; SameSite=Lax; Max-Age=86400${isProduction ? "; Secure" : ""}`
+      `rfa_session=${sessionToken}; Path=/dashboard; HttpOnly; SameSite=Lax; Max-Age=2592000${isProduction ? "; Secure" : ""}`
     ]);
     res.redirect("/dashboard");
   });
@@ -802,21 +824,71 @@ export function createDashboardRoutes(
       ? formatDate(subscriber.current_period_end)
       : null;
 
+    // Per-batch totals → project cards
+    const batchTotals = getSubscriberBatchTotals(db, subscriber.id);
+    const projectCards: ProjectCardData[] = [];
+    for (const bt of batchTotals) {
+      const project = getProjectForBatch(bt.batch_denom);
+      if (project) {
+        projectCards.push({
+          project,
+          batchDenom: bt.batch_denom,
+          totalCredits: bt.total_credits,
+          latestTxHash: bt.latest_tx_hash,
+        });
+      }
+    }
+
+    // Regen address for the subscriber
+    const regenAddress = (db.prepare(
+      "SELECT regen_address FROM subscriber_retirements WHERE subscriber_id = ? ORDER BY id DESC LIMIT 1"
+    ).get(subscriber.id) as { regen_address: string } | undefined)?.regen_address ?? null;
+
+    // Community goal data
+    const communityGoal = getActiveCommunityGoal(db);
+    const communityTotalCredits = getCommunityTotalCreditsRetired(db);
+    const communitySubscriberCount = getCommunitySubscriberCount(db);
+
+    // Build batch denom map for boost dropdown — from subscriber's retirements + monthly selection
+    const batchDenomMap = new Map<string, string>(); // projectId → batchDenom
+    for (const bt of batchTotals) {
+      const project = getProjectForBatch(bt.batch_denom);
+      if (project) batchDenomMap.set(project.projectId, bt.batch_denom);
+    }
+    // Fill in from monthly credit selection for any projects not yet retired
+    const now = new Date();
+    const currentMonth = now.toISOString().slice(0, 7);
+    const creditSelection = getMonthlyCreditSelection(db, currentMonth);
+    if (creditSelection) {
+      for (const denom of [creditSelection.batch1_denom, creditSelection.batch2_denom, creditSelection.batch3_denom]) {
+        const project = getProjectForBatch(denom);
+        if (project && !batchDenomMap.has(project.projectId)) {
+          batchDenomMap.set(project.projectId, denom);
+        }
+      }
+    }
+
     res.setHeader("Content-Type", "text/html");
-    res.send(renderDashboardPage(
+    res.send(renderDashboardPage({
       email,
-      subscriber.plan,
+      plan: subscriber.plan,
       memberSince,
       cumulative,
       monthly,
       badges,
       manageUrl,
-      subscriber.amount_cents,
+      amountCents: subscriber.amount_cents,
       baseUrl,
       nextRetirementDate,
       transactions,
       communityStats,
-    ));
+      regenAddress,
+      projectCards,
+      communityGoal,
+      communityTotalCredits,
+      communitySubscriberCount,
+      batchDenomMap,
+    }));
   });
 
   // GET /dashboard/logout

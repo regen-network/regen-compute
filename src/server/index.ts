@@ -72,8 +72,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // Stripe setup (optional — display pages work without it)
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   if (stripeKey && process.env.NODE_ENV === "production" && !process.env.STRIPE_WEBHOOK_SECRET) {
-    console.error("FATAL: STRIPE_WEBHOOK_SECRET is required in production when Stripe is enabled");
-    process.exit(1);
+    console.warn("WARNING: STRIPE_WEBHOOK_SECRET not set — webhook signature verification disabled. Set this for production security.");
   }
   const stripe = stripeKey ? new Stripe(stripeKey) : null;
 

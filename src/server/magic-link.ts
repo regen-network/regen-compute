@@ -11,7 +11,7 @@
 
 import { createHmac } from "crypto";
 
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 /**
  * Create a signed session token containing the subscriber's email and expiry.

@@ -5,7 +5,15 @@
  * via a dedicated Telegram bot.
  */
 
-import { getDb, getMonthlyCreditSelection, confirmMonthlyCreditSelection, getAllMonthlyCreditSelections } from "../server/db.js";
+import {
+  getDb,
+  getMonthlyCreditSelection,
+  confirmMonthlyCreditSelection,
+  getAllMonthlyCreditSelections,
+  getActiveCommunityGoal,
+  getCommunityTotalCreditsRetired,
+  getCommunitySubscriberCount,
+} from "../server/db.js";
 
 const ADMIN_BOT_TOKEN = process.env.ADMIN_TELEGRAM_BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.ADMIN_TELEGRAM_CHAT_ID;
@@ -113,6 +121,11 @@ export async function checkAndSendMonthlyReminder(dbPath?: string): Promise<void
     await sendMonthlyCreditReminder(dbPath);
   }
 
+  // Send community goal check on the 15th
+  if (dayOfMonth === 15) {
+    await sendCommunityGoalReminder(dbPath);
+  }
+
   // Also send on the 1st if next month is still unconfirmed
   if (dayOfMonth === 1) {
     const db = getDb(dbPath);
@@ -125,5 +138,57 @@ export async function checkAndSendMonthlyReminder(dbPath?: string): Promise<void
         `Reply "confirm" to lock it in, or let me know if you want changes.`
       );
     }
+  }
+}
+
+/**
+ * Send a community goal status update and prompt for new goal if needed.
+ * Runs on the 15th of each month.
+ */
+export async function sendCommunityGoalReminder(dbPath?: string): Promise<void> {
+  const db = getDb(dbPath);
+  const goal = getActiveCommunityGoal(db);
+  const totalCredits = getCommunityTotalCreditsRetired(db);
+  const subscriberCount = getCommunitySubscriberCount(db);
+
+  if (!goal) {
+    await sendTelegram(
+      `🎯 *Regen Compute — Community Goal*\n\n` +
+      `No active community goal is set.\n` +
+      `Community total: ${totalCredits.toFixed(2)} credits retired\n` +
+      `Active subscribers: ${subscriberCount}\n\n` +
+      `Would you like to set a goal? Reply with something like:\n` +
+      `"Set goal: 100 credits by Earth Day 2026"`
+    );
+    return;
+  }
+
+  const progress = totalCredits / goal.goal_credits;
+  const pct = Math.min(progress * 100, 100).toFixed(1);
+  const remaining = Math.max(goal.goal_credits - totalCredits, 0).toFixed(2);
+  const isComplete = totalCredits >= goal.goal_credits;
+
+  if (isComplete) {
+    await sendTelegram(
+      `🎉 *Regen Compute — Goal Reached!*\n\n` +
+      `"${goal.goal_label}" — *COMPLETE*\n` +
+      `${totalCredits.toFixed(2)} / ${goal.goal_credits} credits (${pct}%)\n` +
+      `Active subscribers: ${subscriberCount}\n\n` +
+      `Time to set a new goal! Reply with something like:\n` +
+      `"Set goal: 250 credits by World Environment Day"`
+    );
+  } else {
+    const deadlineStr = goal.goal_deadline
+      ? `\nDeadline: ${goal.goal_deadline}`
+      : "";
+
+    await sendTelegram(
+      `🎯 *Regen Compute — Community Goal Update*\n\n` +
+      `"${goal.goal_label}"\n` +
+      `Progress: ${totalCredits.toFixed(2)} / ${goal.goal_credits} credits (${pct}%)${deadlineStr}\n` +
+      `Remaining: ${remaining} credits\n` +
+      `Active subscribers: ${subscriberCount}\n\n` +
+      `Want to adjust this goal or set a new one? Reply here.`
+    );
   }
 }
