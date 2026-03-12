@@ -14,6 +14,7 @@ import {
   getCommunityTotalCreditsRetired,
   getCommunitySubscriberCount,
 } from "../server/db.js";
+import { listSellOrders } from "./ledger.js";
 
 const ADMIN_BOT_TOKEN = process.env.ADMIN_TELEGRAM_BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.ADMIN_TELEGRAM_CHAT_ID;
@@ -194,26 +195,70 @@ export async function sendCommunityGoalReminder(dbPath?: string): Promise<void> 
 }
 
 /**
- * Alert admin when credits auto-retired to master wallet instead of subscriber.
- * This happens when no sell orders with disable_auto_retire=true are available.
+ * Alert admin when no tradable sell orders exist for a batch.
+ * Retirement for this batch will be skipped until tradable orders are created.
  */
-export async function sendAutoRetireAlert(
-  subscriberId: number,
-  subscriberAddress: string,
+export async function sendNoTradableOrdersAlert(
   batchDenom: string,
-  creditsAmount: number,
-  sellOrderIds: string
+  subscriberId: number
 ): Promise<void> {
   await sendTelegram(
-    `⚠️ *Auto-Retire Fallback Alert*\n\n` +
-    `Credits retired to *master wallet* instead of subscriber's address.\n` +
-    `No \`disable_auto_retire=true\` sell orders were available.\n\n` +
-    `Subscriber: #${subscriberId}\n` +
-    `Their address: \`${subscriberAddress}\`\n` +
+    `🚫 *No Tradable Orders Available*\n\n` +
     `Batch: \`${batchDenom}\`\n` +
-    `Credits: ${creditsAmount.toFixed(6)}\n` +
-    `Sell orders used: ${sellOrderIds}\n\n` +
+    `Subscriber #${subscriberId} retirement *skipped* for this batch.\n\n` +
     `*Action needed:* Create a sell order with \`disable_auto_retire=true\` ` +
-    `for this batch to prevent this in future retirements.`
+    `for this batch so credits can be sent to subscriber addresses.`
   );
+}
+
+/**
+ * Alert admin when tradable supply for a batch drops below 10 credits.
+ */
+export async function sendLowStockAlert(
+  batchDenom: string,
+  remainingCredits: number
+): Promise<void> {
+  const urgency = remainingCredits < 1 ? "🔴 CRITICAL" : remainingCredits < 5 ? "🟠 LOW" : "🟡 Getting Low";
+  await sendTelegram(
+    `${urgency} *— Tradable Credit Supply*\n\n` +
+    `Batch: \`${batchDenom}\`\n` +
+    `Remaining tradable supply: *${remainingCredits.toFixed(2)} credits*\n\n` +
+    `*Action needed:* Create more sell orders with \`disable_auto_retire=true\` ` +
+    `for this batch to ensure upcoming retirements can proceed.`
+  );
+}
+
+const LOW_STOCK_THRESHOLD = 10;
+
+/**
+ * Daily stock check for all batches in the current month's credit selection.
+ * Alerts via Telegram if any batch has < 10 tradable credits remaining.
+ * Called alongside the daily monthly reminder check.
+ */
+export async function checkTradableStock(dbPath?: string): Promise<void> {
+  const db = getDb(dbPath);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const selection = getMonthlyCreditSelection(db, currentMonth);
+  if (!selection) return;
+
+  const batchDenoms = [selection.batch1_denom, selection.batch2_denom, selection.batch3_denom];
+
+  try {
+    const sellOrders = await listSellOrders();
+    for (const batchDenom of batchDenoms) {
+      const tradableOrders = sellOrders.filter(
+        (o) => o.batch_denom === batchDenom &&
+               o.disable_auto_retire === true &&
+               parseFloat(o.quantity) > 0 &&
+               (!o.expiration || new Date(o.expiration) > new Date())
+      );
+      const totalTradable = tradableOrders.reduce((sum, o) => sum + parseFloat(o.quantity), 0);
+
+      if (totalTradable < LOW_STOCK_THRESHOLD) {
+        await sendLowStockAlert(batchDenom, totalTradable);
+      }
+    }
+  } catch (err) {
+    console.error("Stock check failed:", err instanceof Error ? err.message : err);
+  }
 }

@@ -12,7 +12,7 @@ import { loadConfig } from "../config.js";
 import { initWallet, signAndBroadcast } from "./wallet.js";
 import { deriveSubscriberAddress } from "./subscriber-wallet.js";
 import { listSellOrders, listCreditClasses, getAllowedDenoms, type SellOrder } from "./ledger.js";
-import { sendAutoRetireAlert } from "./admin-telegram.js";
+import { sendLowStockAlert, sendNoTradableOrdersAlert } from "./admin-telegram.js";
 import {
   getDb,
   getSubscriberByStripeId,
@@ -251,6 +251,8 @@ export async function retireForSubscriber(options: {
     if (!selectedBatchDenoms.includes(order.batch_denom)) return false;
     if (order.expiration && new Date(order.expiration) <= now) return false;
     if (parseFloat(order.quantity) <= 0) return false;
+    // ONLY use tradable orders — never auto-retire orders
+    if (!order.disable_auto_retire) return false;
     return true;
   });
 
@@ -262,17 +264,28 @@ export async function retireForSubscriber(options: {
     batchOrdersMap.set(order.batch_denom, existing);
   }
 
-  // Only include batches that have sell orders AND haven't already succeeded
+  // Only include batches that have tradable sell orders AND haven't already succeeded
   const batchDenoms = selectedBatchDenoms.filter(
     (d) => batchOrdersMap.has(d) && !alreadyRetiredBatches.has(d)
   );
+
+  // Alert for any batches that have NO tradable orders at all
+  const missingBatches = selectedBatchDenoms.filter(
+    (d) => !batchOrdersMap.has(d) && !alreadyRetiredBatches.has(d)
+  );
+  if (missingBatches.length > 0) {
+    for (const batch of missingBatches) {
+      sendNoTradableOrdersAlert(batch, subscriberId).catch(() => {});
+    }
+  }
+
   if (batchDenoms.length === 0 && priorBatchResults.length === 0) {
     return {
       subscriberId, regenAddress, status: "failed",
       grossAmountCents, netAmountCents, creditsBudgetCents,
       burnBudgetCents, opsBudgetCents,
       batches: [], totalCreditsRetired: 0, totalSpentCents: 0,
-      errors: [`No sell orders found for this month's selected batches: ${selectedBatchDenoms.join(", ")}`],
+      errors: [`No tradable sell orders found for this month's selected batches: ${selectedBatchDenoms.join(", ")}`],
     };
   }
 
@@ -332,13 +345,9 @@ export async function retireForSubscriber(options: {
         batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom);
         if (batchOrders.length === 0) batchOrders = orders;
       }
-      // Prefer disable_auto_retire=true orders (tradable → MsgSend to subscriber)
-      // so credits end up on the subscriber's address, not master wallet.
-      // Within each group, sort by price ascending (cheapest first).
+      // Sort by price ascending (cheapest first).
+      // All orders are already tradable (disable_auto_retire=true) — filtered upstream.
       batchOrders.sort((a, b) => {
-        if (a.disable_auto_retire !== b.disable_auto_retire) {
-          return a.disable_auto_retire ? -1 : 1;
-        }
         const diff = BigInt(a.ask_amount) - BigInt(b.ask_amount);
         return diff < 0n ? -1 : diff > 0n ? 1 : 0;
       });
@@ -383,73 +392,42 @@ export async function retireForSubscriber(options: {
         continue;
       }
 
-      // Separate orders by auto-retire behavior:
-      // - Orders where disable_auto_retire=true: we can buy tradable, then MsgSend to subscriber
-      // - Orders where disable_auto_retire=false: credits auto-retire to buyer (master wallet);
-      //   we cannot send-and-retire these, so they retire under the master wallet on-chain
-      //   and we record the attribution to the subscriber in our DB
-      const tradableOrders = selectedOrders.filter((s) => s.order.disable_auto_retire === true);
-      const autoRetireOrders = selectedOrders.filter((s) => s.order.disable_auto_retire === false);
+      // All orders are tradable (disable_auto_retire=true) — buy then MsgSend to subscriber
+      const buyOrders = selectedOrders.map((s) => ({
+        sellOrderId: BigInt(s.order.id),
+        quantity: s.quantity,
+        bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
+        disableAutoRetire: true,
+        retirementJurisdiction: "",
+        retirementReason: "",
+      }));
 
-      const msgs: { typeUrl: string; value: any }[] = [];
+      const sendCredits = selectedOrders.map((s) => ({
+        batchDenom: s.order.batch_denom,
+        tradableAmount: "0",
+        retiredAmount: s.quantity,
+        retirementJurisdiction: config.defaultJurisdiction,
+        retirementReason: displayName
+          ? `Regenerative Compute — ${displayName}'s monthly ecological contribution`
+          : "Regenerative Compute subscription — ecological accountability for AI",
+      }));
 
-      // Step A: Buy orders where we CAN disable auto-retire (tradable purchase + send-retire)
-      if (tradableOrders.length > 0) {
-        const buyOrders = tradableOrders.map((s) => ({
-          sellOrderId: BigInt(s.order.id),
-          quantity: s.quantity,
-          bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
-          disableAutoRetire: true,
-          retirementJurisdiction: "",
-          retirementReason: "",
-        }));
-
-        msgs.push({
+      const msgs = [
+        {
           typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
           value: { buyer: walletAddress, orders: buyOrders },
-        });
-
-        // MsgSend with retiredAmount to subscriber address
-        const sendCredits = tradableOrders.map((s) => ({
-          batchDenom: s.order.batch_denom,
-          tradableAmount: "0",
-          retiredAmount: s.quantity,
-          retirementJurisdiction: config.defaultJurisdiction,
-          retirementReason: displayName
-            ? `Regenerative Compute — ${displayName}'s monthly ecological contribution`
-            : "Regenerative Compute subscription — ecological accountability for AI",
-        }));
-
-        msgs.push({
+        },
+        {
           typeUrl: "/regen.ecocredit.v1.MsgSend",
           value: {
             sender: walletAddress,
             recipient: regenAddress,
             credits: sendCredits,
           },
-        });
-      }
+        },
+      ];
 
-      // Step B: Buy orders where auto-retire is forced ON (retires to master wallet)
-      if (autoRetireOrders.length > 0) {
-        const buyOrders = autoRetireOrders.map((s) => ({
-          sellOrderId: BigInt(s.order.id),
-          quantity: s.quantity,
-          bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
-          disableAutoRetire: false,
-          retirementJurisdiction: config.defaultJurisdiction,
-          retirementReason: displayName
-            ? `Regenerative Compute — ${displayName}'s monthly ecological contribution (${regenAddress})`
-            : `Regenerative Compute subscription — subscriber #${subscriberId} (${regenAddress})`,
-        }));
-
-        msgs.push({
-          typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
-          value: { buyer: walletAddress, orders: buyOrders },
-        });
-      }
-
-      // Execute all messages atomically in one transaction
+      // Execute buy + send-retire atomically in one transaction
       const txResult = await signAndBroadcast(msgs);
 
       if (txResult.code !== 0) {
@@ -459,19 +437,13 @@ export async function retireForSubscriber(options: {
         errors.push(`${batchDenom}: ${result.error}`);
       } else {
         result.buyTxHash = txResult.transactionHash;
-        result.sendRetireTxHash = txResult.transactionHash; // Same tx for both msgs
-        if (autoRetireOrders.length > 0) {
-          const autoRetiredCredits = autoRetireOrders.reduce((s, o) => s + parseFloat(o.quantity), 0);
-          const orderIds = autoRetireOrders.map((o) => o.order.id).join(", ");
-          console.warn(
-            `⚠️ AUTO-RETIRE FALLBACK: ${autoRetiredCredits.toFixed(6)} credits from ${batchDenom} ` +
-            `auto-retired to master wallet (sell orders: ${orderIds}). ` +
-            `No disable_auto_retire=true orders were available. ` +
-            `Subscriber #${subscriberId} (${regenAddress}) attribution recorded in DB only.`
-          );
-          // Alert admin via Telegram so they can create tradable sell orders
-          sendAutoRetireAlert(subscriberId, regenAddress, batchDenom, autoRetiredCredits, orderIds).catch(() => {});
-        }
+        result.sendRetireTxHash = txResult.transactionHash;
+      }
+
+      // Check remaining tradable supply and alert if low
+      const remainingSupply = batchOrders.reduce((sum, o) => sum + parseFloat(o.quantity), 0) - totalCredits;
+      if (remainingSupply < 10) {
+        sendLowStockAlert(batchDenom, remainingSupply).catch(() => {});
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
