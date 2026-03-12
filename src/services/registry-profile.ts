@@ -110,7 +110,7 @@ export interface ProfileUpdateResult {
  */
 export async function updateRegistryProfile(
   subscriberId: number,
-  profile: { name: string; description?: string },
+  profile: { name: string; description?: string; image?: string; bgImage?: string },
 ): Promise<ProfileUpdateResult> {
   const jar = new CookieJar();
 
@@ -169,6 +169,8 @@ export async function updateRegistryProfile(
                 addr: address,
                 name: profile.name,
                 description,
+                ...(profile.image && { image: profile.image }),
+                ...(profile.bgImage && { bgImage: profile.bgImage }),
               },
             },
           },
@@ -252,6 +254,8 @@ export async function updateRegistryProfile(
             accountPatch: {
               name: profile.name,
               description,
+              ...(profile.image && { image: profile.image }),
+              ...(profile.bgImage && { bgImage: profile.bgImage }),
             },
           },
         },

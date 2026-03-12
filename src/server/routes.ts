@@ -1485,7 +1485,11 @@ ${betaBannerJS()}
 
       // Push profile to app.regen.network registry in the background (non-blocking)
       if (subscriber) {
-        updateRegistryProfile(subscriber.id, { name }).then((result) => {
+        updateRegistryProfile(subscriber.id, {
+          name,
+          image: `${baseUrl}/logo.png`,
+          bgImage: `${baseUrl}/og-image.jpg`,
+        }).then((result) => {
           if (result.success) {
             console.log(`Registry profile synced for subscriber=${subscriber.id}`);
           } else {
