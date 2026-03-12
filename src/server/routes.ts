@@ -423,7 +423,7 @@ Then estimate my AI usage footprint and recommend a tier ($1.25, $2.50, or $5/mo
   <section class="basket-section">
     <div class="regen-container">
       <h2 class="regen-section-title" style="text-align:center;">What Your Subscription Funds</h2>
-      <p class="regen-section-subtitle" style="text-align:center;">Every subscription retires a curated basket of verified ecocredits across five impact dimensions — from forests and oceans to grasslands and urban canopy.</p>
+      <p class="regen-section-subtitle" style="text-align:center;">Your subscription retires verified ecocredits drawn from a curated selection across the Regen Registry — including carbon, biodiversity, and other ecological credit types. The mix evolves as new projects and credits become available.</p>
       <div class="basket-grid">
 
         <div class="basket-card">
@@ -876,7 +876,7 @@ ${betaBannerJS()}
     <div class="regen-card" style="margin-top:24px;">
       <div class="regen-card__body">
         <h2 style="color:var(--regen-navy);margin:0 0 8px;font-size:18px;font-weight:700;">The credits your subscription retires</h2>
-        <p style="color:var(--regen-gray-500);font-size:14px;margin:0 0 16px;">Your contribution is spread across a curated basket of verified ecocredits spanning five impact dimensions.</p>
+        <p style="color:var(--regen-gray-500);font-size:14px;margin:0 0 16px;">Your contribution retires verified ecocredits drawn from a curated selection across the Regen Registry, including carbon, biodiversity, and other ecological credit types.</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--regen-gray-50);border-radius:10px;border-left:3px solid #2d6a4f;">
             <span style="font-size:18px;flex-shrink:0;">&#127794;</span>
