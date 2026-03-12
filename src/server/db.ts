@@ -228,6 +228,23 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_scheduled_retirements_status ON scheduled_retirements(status);
     CREATE INDEX IF NOT EXISTS idx_scheduled_retirements_date ON scheduled_retirements(scheduled_date);
 
+    CREATE TABLE IF NOT EXISTS monthly_credit_selection (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      month TEXT NOT NULL UNIQUE,
+      batch1_denom TEXT NOT NULL,
+      batch1_name TEXT NOT NULL,
+      batch2_denom TEXT NOT NULL,
+      batch2_name TEXT NOT NULL,
+      batch3_denom TEXT NOT NULL,
+      batch3_name TEXT NOT NULL,
+      featured_batch INTEGER NOT NULL DEFAULT 3 CHECK(featured_batch IN (1, 2, 3)),
+      confirmed INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_monthly_credits_month ON monthly_credit_selection(month);
+
     CREATE TABLE IF NOT EXISTS burn_accumulator (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       amount_cents INTEGER NOT NULL,
@@ -556,6 +573,72 @@ export function getCumulativeSubscriberRetirements(db: Database.Database, subscr
     WHERE subscriber_id = ?
   `).get(subscriberId) as { total_credits_retired: number; total_spent_cents: number; total_gross_cents: number; retirement_count: number } | undefined;
   return row ?? { total_credits_retired: 0, total_spent_cents: 0, total_gross_cents: 0, retirement_count: 0 };
+}
+
+// --- Monthly credit selection types and helpers ---
+
+export interface MonthlyCreditSelection {
+  id: number;
+  month: string;
+  batch1_denom: string;
+  batch1_name: string;
+  batch2_denom: string;
+  batch2_name: string;
+  batch3_denom: string;
+  batch3_name: string;
+  featured_batch: 1 | 2 | 3;
+  confirmed: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Get the credit selection for a given month.
+ * Falls back to the most recent previous month if no selection exists.
+ */
+export function getMonthlyCreditSelection(db: Database.Database, month: string): MonthlyCreditSelection | undefined {
+  // Try exact month first
+  const exact = db.prepare(
+    "SELECT * FROM monthly_credit_selection WHERE month = ?"
+  ).get(month) as MonthlyCreditSelection | undefined;
+  if (exact) return exact;
+
+  // Fall back to most recent previous month
+  return db.prepare(
+    "SELECT * FROM monthly_credit_selection WHERE month < ? ORDER BY month DESC LIMIT 1"
+  ).get(month) as MonthlyCreditSelection | undefined;
+}
+
+export function getAllMonthlyCreditSelections(db: Database.Database): MonthlyCreditSelection[] {
+  return db.prepare(
+    "SELECT * FROM monthly_credit_selection ORDER BY month ASC"
+  ).all() as MonthlyCreditSelection[];
+}
+
+export function upsertMonthlyCreditSelection(
+  db: Database.Database,
+  month: string,
+  batch1Denom: string, batch1Name: string,
+  batch2Denom: string, batch2Name: string,
+  batch3Denom: string, batch3Name: string,
+  featuredBatch: 1 | 2 | 3 = 3
+): MonthlyCreditSelection {
+  db.prepare(`
+    INSERT INTO monthly_credit_selection (month, batch1_denom, batch1_name, batch2_denom, batch2_name, batch3_denom, batch3_name, featured_batch)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(month) DO UPDATE SET
+      batch1_denom = excluded.batch1_denom, batch1_name = excluded.batch1_name,
+      batch2_denom = excluded.batch2_denom, batch2_name = excluded.batch2_name,
+      batch3_denom = excluded.batch3_denom, batch3_name = excluded.batch3_name,
+      featured_batch = excluded.featured_batch, updated_at = datetime('now')
+  `).run(month, batch1Denom, batch1Name, batch2Denom, batch2Name, batch3Denom, batch3Name, featuredBatch);
+  return db.prepare("SELECT * FROM monthly_credit_selection WHERE month = ?").get(month) as MonthlyCreditSelection;
+}
+
+export function confirmMonthlyCreditSelection(db: Database.Database, month: string): void {
+  db.prepare(
+    "UPDATE monthly_credit_selection SET confirmed = 1, updated_at = datetime('now') WHERE month = ?"
+  ).run(month);
 }
 
 // --- Scheduled retirement types and helpers ---

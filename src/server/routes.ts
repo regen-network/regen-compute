@@ -40,6 +40,7 @@ import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 import { sendWelcomeEmail } from "../services/email.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { retireForSubscriber, accumulateBurnBudget, calculateNetAfterStripe } from "../services/retire-subscriber.js";
+import { checkAndSendMonthlyReminder } from "../services/admin-telegram.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 
 // 5-minute in-memory cache for network stats
@@ -1348,6 +1349,20 @@ ${betaBannerJS()}
 <table><thead><tr><th>ID</th><th>Date</th><th>Category</th><th>Name</th><th>Message</th><th>Page</th></tr></thead>
 <tbody>${tableRows || "<tr><td colspan=6>No feedback yet</td></tr>"}</tbody></table></body></html>`);
   });
+
+  // Daily admin reminder check (monthly credit selection confirmation)
+  const DAILY_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  setInterval(() => {
+    checkAndSendMonthlyReminder().catch((err) => {
+      console.error("Monthly reminder check error:", err instanceof Error ? err.message : err);
+    });
+  }, DAILY_CHECK_INTERVAL_MS);
+  // Also check on startup
+  setTimeout(() => {
+    checkAndSendMonthlyReminder().catch((err) => {
+      console.error("Monthly reminder check error (startup):", err instanceof Error ? err.message : err);
+    });
+  }, 15_000);
 
   // Start scheduled retirement processor — checks every hour for due yearly retirements
   const SCHEDULED_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour

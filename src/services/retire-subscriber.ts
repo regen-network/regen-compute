@@ -15,7 +15,9 @@ import { listSellOrders, listCreditClasses, getAllowedDenoms, type SellOrder } f
 import {
   getDb,
   getSubscriberByStripeId,
+  getMonthlyCreditSelection,
   type Subscriber,
+  type MonthlyCreditSelection,
 } from "../server/db.js";
 import type Database from "better-sqlite3";
 
@@ -141,7 +143,24 @@ export async function retireForSubscriber(options: {
     }
   }
 
-  // 4. Fetch eligible sell orders
+  // 4. Get this month's credit selection
+  const currentMonth = new Date().toISOString().slice(0, 7); // "2026-03"
+  const selection = getMonthlyCreditSelection(db, currentMonth);
+
+  if (!selection) {
+    return {
+      subscriberId, regenAddress, status: "failed",
+      grossAmountCents, netAmountCents, creditsBudgetCents,
+      burnBudgetCents, opsBudgetCents,
+      batches: [], totalCreditsRetired: 0, totalSpentCents: 0,
+      errors: ["No monthly credit selection configured for " + currentMonth],
+    };
+  }
+
+  // The 3 selected batches for this month
+  const selectedBatchDenoms = [selection.batch1_denom, selection.batch2_denom, selection.batch3_denom];
+
+  // 5. Fetch sell orders for the selected batches
   const [sellOrders, classes, allowedDenoms] = await Promise.all([
     listSellOrders(),
     listCreditClasses(),
@@ -155,7 +174,7 @@ export async function retireForSubscriber(options: {
 
   const now = new Date();
   const eligibleOrders = sellOrders.filter((order) => {
-    if (EXCLUDED_BATCHES.has(order.batch_denom)) return false;
+    if (!selectedBatchDenoms.includes(order.batch_denom)) return false;
     if (order.expiration && new Date(order.expiration) <= now) return false;
     if (parseFloat(order.quantity) <= 0) return false;
     return true;
@@ -169,18 +188,19 @@ export async function retireForSubscriber(options: {
     batchOrdersMap.set(order.batch_denom, existing);
   }
 
-  const batchDenoms = Array.from(batchOrdersMap.keys()).sort();
+  // Only include batches that have sell orders
+  const batchDenoms = selectedBatchDenoms.filter((d) => batchOrdersMap.has(d));
   if (batchDenoms.length === 0) {
     return {
       subscriberId, regenAddress, status: "failed",
       grossAmountCents, netAmountCents, creditsBudgetCents,
       burnBudgetCents, opsBudgetCents,
       batches: [], totalCreditsRetired: 0, totalSpentCents: 0,
-      errors: ["No eligible sell orders found on marketplace"],
+      errors: [`No sell orders found for this month's selected batches: ${selectedBatchDenoms.join(", ")}`],
     };
   }
 
-  // 5. Equal dollar allocation across batches
+  // 6. Equal dollar allocation across the selected batches (typically 3)
   const perBatchBudget = Math.floor(creditsBudgetCents / batchDenoms.length);
   const budgetRemainder = creditsBudgetCents - (perBatchBudget * batchDenoms.length);
 
