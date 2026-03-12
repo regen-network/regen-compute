@@ -12,6 +12,7 @@ import { loadConfig } from "../config.js";
 import { initWallet, signAndBroadcast } from "./wallet.js";
 import { deriveSubscriberAddress } from "./subscriber-wallet.js";
 import { listSellOrders, listCreditClasses, getAllowedDenoms, type SellOrder } from "./ledger.js";
+import { sendAutoRetireAlert } from "./admin-telegram.js";
 import {
   getDb,
   getSubscriberByStripeId,
@@ -331,7 +332,13 @@ export async function retireForSubscriber(options: {
         batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom);
         if (batchOrders.length === 0) batchOrders = orders;
       }
+      // Prefer disable_auto_retire=true orders (tradable → MsgSend to subscriber)
+      // so credits end up on the subscriber's address, not master wallet.
+      // Within each group, sort by price ascending (cheapest first).
       batchOrders.sort((a, b) => {
+        if (a.disable_auto_retire !== b.disable_auto_retire) {
+          return a.disable_auto_retire ? -1 : 1;
+        }
         const diff = BigInt(a.ask_amount) - BigInt(b.ask_amount);
         return diff < 0n ? -1 : diff > 0n ? 1 : 0;
       });
@@ -455,11 +462,15 @@ export async function retireForSubscriber(options: {
         result.sendRetireTxHash = txResult.transactionHash; // Same tx for both msgs
         if (autoRetireOrders.length > 0) {
           const autoRetiredCredits = autoRetireOrders.reduce((s, o) => s + parseFloat(o.quantity), 0);
-          console.log(
-            `Note: ${autoRetiredCredits.toFixed(6)} credits from ${batchDenom} ` +
-            `auto-retired to master wallet (sell order has auto-retire ON). ` +
-            `Attribution recorded for subscriber #${subscriberId}.`
+          const orderIds = autoRetireOrders.map((o) => o.order.id).join(", ");
+          console.warn(
+            `⚠️ AUTO-RETIRE FALLBACK: ${autoRetiredCredits.toFixed(6)} credits from ${batchDenom} ` +
+            `auto-retired to master wallet (sell orders: ${orderIds}). ` +
+            `No disable_auto_retire=true orders were available. ` +
+            `Subscriber #${subscriberId} (${regenAddress}) attribution recorded in DB only.`
           );
+          // Alert admin via Telegram so they can create tradable sell orders
+          sendAutoRetireAlert(subscriberId, regenAddress, batchDenom, autoRetiredCredits, orderIds).catch(() => {});
         }
       }
     } catch (err) {

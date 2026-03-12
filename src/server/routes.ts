@@ -1487,8 +1487,8 @@ ${betaBannerJS()}
       if (subscriber) {
         updateRegistryProfile(subscriber.id, {
           name,
-          image: `${baseUrl}/logo.png`,
-          bgImage: `${baseUrl}/og-image.jpg`,
+          image: `${baseUrl}/profile-avatar.svg`,
+          bgImage: `${baseUrl}/profile-banner.svg`,
         }).then((result) => {
           if (result.success) {
             console.log(`Registry profile synced for subscriber=${subscriber.id}`);

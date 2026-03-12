@@ -790,6 +790,9 @@ export function createDashboardRoutes(
     res.redirect("/dashboard");
   });
 
+  // Admin emails that can impersonate other subscribers via ?as=<subscriber_id>
+  const ADMIN_EMAILS = new Set(["christian@regen.network"]);
+
   // GET /dashboard — main dashboard (authenticated)
   router.get("/dashboard", (req: Request, res: Response) => {
     const email = getSessionEmail(req.headers.cookie, config.sessionSecret);
@@ -804,7 +807,21 @@ export function createDashboardRoutes(
       return;
     }
 
-    const subscriber = getSubscriberByUserId(db, user.id);
+    // Admin impersonation: ?as=<subscriber_id>
+    const asParam = typeof req.query.as === "string" ? parseInt(req.query.as, 10) : NaN;
+    let subscriber;
+    let viewEmail = email;
+    if (!isNaN(asParam) && ADMIN_EMAILS.has(email)) {
+      // Look up subscriber directly by ID
+      subscriber = db.prepare(
+        "SELECT s.*, u.email FROM subscribers s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.status = 'active'"
+      ).get(asParam) as (typeof subscriber & { email?: string }) | undefined;
+      if (subscriber && (subscriber as any).email) {
+        viewEmail = (subscriber as any).email;
+      }
+    } else {
+      subscriber = getSubscriberByUserId(db, user.id);
+    }
     if (!subscriber) {
       res.setHeader("Content-Type", "text/html");
       res.send(renderLoginPage("No active subscription found for this email."));
@@ -815,8 +832,9 @@ export function createDashboardRoutes(
     const monthly = getMonthlyAttributions(db, subscriber.id);
     const badges = computeBadges(cumulative);
     const memberSince = formatDate(subscriber.created_at);
-    const manageUrl = `${baseUrl}/manage?email=${encodeURIComponent(email)}`;
-    const transactions = getTransactions(db, user.id, 20);
+    const manageUrl = `${baseUrl}/manage?email=${encodeURIComponent(viewEmail)}`;
+    const viewUser = getUserByEmail(db, viewEmail);
+    const transactions = getTransactions(db, viewUser?.id ?? user.id, 20);
     const communityStats = getCommunityStats(db);
 
     // Next retirement date from subscription period end

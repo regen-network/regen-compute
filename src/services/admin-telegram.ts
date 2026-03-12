@@ -192,3 +192,28 @@ export async function sendCommunityGoalReminder(dbPath?: string): Promise<void> 
     );
   }
 }
+
+/**
+ * Alert admin when credits auto-retired to master wallet instead of subscriber.
+ * This happens when no sell orders with disable_auto_retire=true are available.
+ */
+export async function sendAutoRetireAlert(
+  subscriberId: number,
+  subscriberAddress: string,
+  batchDenom: string,
+  creditsAmount: number,
+  sellOrderIds: string
+): Promise<void> {
+  await sendTelegram(
+    `⚠️ *Auto-Retire Fallback Alert*\n\n` +
+    `Credits retired to *master wallet* instead of subscriber's address.\n` +
+    `No \`disable_auto_retire=true\` sell orders were available.\n\n` +
+    `Subscriber: #${subscriberId}\n` +
+    `Their address: \`${subscriberAddress}\`\n` +
+    `Batch: \`${batchDenom}\`\n` +
+    `Credits: ${creditsAmount.toFixed(6)}\n` +
+    `Sell orders used: ${sellOrderIds}\n\n` +
+    `*Action needed:* Create a sell order with \`disable_auto_retire=true\` ` +
+    `for this batch to prevent this in future retirements.`
+  );
+}
