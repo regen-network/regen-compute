@@ -129,8 +129,11 @@ export async function updateRegistryProfile(
     const { token: csrfToken } = await csrfRes.json() as { token: string };
     if (!csrfToken) throw new Error("Failed to get CSRF token");
 
-    // 2. Get nonce
-    const nonceRes = await fetch(
+    // 2. Get nonce (may need to create account first)
+    const description = profile.description ??
+      "Regenerative Compute subscriber — funding verified ecological regeneration through AI";
+
+    let nonceRes = await fetch(
       `${REGISTRY_API}/marketplace/v1/wallet-auth/nonce?` +
         new URLSearchParams({ userAddress: address }),
       {
@@ -142,8 +145,65 @@ export async function updateRegistryProfile(
       },
     );
     jar.addFromResponse(nonceRes);
-    const { nonce } = await nonceRes.json() as { nonce: string };
-    if (!nonce) throw new Error("Failed to get nonce");
+    let nonceData = await nonceRes.json() as { nonce?: string; error?: string };
+
+    // Account doesn't exist yet — create it via GraphQL, then retry nonce
+    if (nonceRes.status === 404 || !nonceData.nonce) {
+      console.log(`Registry: creating account for ${address}...`);
+      const createRes = await fetch(`${REGISTRY_API}/marketplace/v1/graphql`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken,
+          Cookie: jar.toString(),
+        },
+        body: JSON.stringify({
+          query: `mutation CreateAccount($input: CreateAccountInput!) {
+            createAccount(input: $input) { account { id } }
+          }`,
+          variables: {
+            input: {
+              account: {
+                type: "USER",
+                addr: address,
+                name: profile.name,
+                description,
+              },
+            },
+          },
+        }),
+      });
+      jar.addFromResponse(createRes);
+      const createData = await createRes.json() as {
+        data?: { createAccount?: { account?: { id: string } } };
+        errors?: Array<{ message: string }>;
+      };
+      if (createData.errors?.length) {
+        throw new Error(`CreateAccount failed: ${createData.errors.map((e) => e.message).join(", ")}`);
+      }
+      const createdId = createData.data?.createAccount?.account?.id;
+      if (!createdId) throw new Error("CreateAccount returned no account ID");
+      console.log(`Registry: account created (id=${createdId}), retrying nonce...`);
+
+      // Retry nonce
+      nonceRes = await fetch(
+        `${REGISTRY_API}/marketplace/v1/wallet-auth/nonce?` +
+          new URLSearchParams({ userAddress: address }),
+        {
+          method: "GET",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken,
+            Cookie: jar.toString(),
+          },
+        },
+      );
+      jar.addFromResponse(nonceRes);
+      nonceData = await nonceRes.json() as { nonce?: string };
+    }
+
+    const nonce = nonceData.nonce;
+    if (!nonce) throw new Error("Failed to get nonce after account creation");
 
     // 3. Sign the login message (same format as Keplr signArbitrary)
     const arbitraryData = JSON.stringify({
@@ -172,9 +232,6 @@ export async function updateRegistryProfile(
     const accountId = loginData.user.accountId;
 
     // 5. Update profile via GraphQL mutation
-    const description = profile.description ??
-      "Regenerative Compute subscriber — funding verified ecological regeneration through AI";
-
     const gqlRes = await fetch(`${REGISTRY_API}/marketplace/v1/graphql`, {
       method: "POST",
       headers: {
