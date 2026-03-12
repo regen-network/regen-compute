@@ -71,7 +71,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     </linearGradient>
   </defs>
   <rect width="400" height="400" fill="url(#bg)"/>
-  <g transform="translate(120,80) scale(3.8)" fill="white" opacity="0.95">
+  <g transform="translate(46.5,41) scale(3.8)" fill="white" opacity="0.95">
     <path d="M39.83 27.32V27.37L34.98 1.8L30.97.52 28.44 3.92 39.83 27.32Z"/>
     <path d="M42.46 16.65L44.52 26.55 46.73 16.5 44.57 15.05 42.46 16.65Z"/>
     <path d="M57.76 18.4L55.13 18.66 52.04 28.46 58.84 20.78 57.76 18.4Z"/>
