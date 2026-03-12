@@ -35,12 +35,15 @@ import {
   getDueScheduledRetirements,
   updateScheduledRetirement,
   cancelScheduledRetirements,
+  setUserDisplayName,
+  getSubscriberByUserId,
 } from "./db.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 import { sendWelcomeEmail } from "../services/email.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { retireForSubscriber, accumulateBurnBudget, calculateNetAfterStripe } from "../services/retire-subscriber.js";
 import { checkAndSendMonthlyReminder } from "../services/admin-telegram.js";
+import { updateRegistryProfile } from "../services/registry-profile.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 
 // 5-minute in-memory cache for network stats
@@ -827,6 +830,78 @@ ${betaBannerJS()}
   });
 
   /**
+   * POST /boost-checkout
+   * Body: { amount_cents: 500, batch_denom: "BT01-001-...", project_name: "El Globo..." }
+   * Creates a Stripe Checkout session for a one-time boost retirement targeting a specific project.
+   * Returns: { url: "https://checkout.stripe.com/..." }
+   */
+  router.post("/boost-checkout", async (req: Request, res: Response) => {
+    try {
+      const { amount_cents, batch_denom, project_name } = req.body;
+
+      if (!amount_cents || typeof amount_cents !== "number" || amount_cents < 100) {
+        res.status(400).json({ error: "amount_cents must be at least 100 ($1.00)" });
+        return;
+      }
+
+      if (!batch_denom || typeof batch_denom !== "string") {
+        res.status(400).json({ error: "batch_denom is required" });
+        return;
+      }
+
+      // Get the logged-in subscriber from the session cookie
+      const { getSessionEmail } = await import("./magic-link.js");
+      const email = getSessionEmail(req.headers.cookie, config?.sessionSecret ?? "");
+      if (!email) {
+        res.status(401).json({ error: "Not logged in" });
+        return;
+      }
+
+      const user = getUserByEmail(db, email);
+      const subscriber = user ? getSubscriberByStripeId(db, "") : null;
+      // Look up subscriber by user id instead
+      const sub = user ? db.prepare("SELECT * FROM subscribers WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1").get(user.id) as { id: number } | undefined : undefined;
+
+      const amountDollars = (amount_cents / 100).toFixed(2);
+      const displayName = project_name || batch_denom;
+
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              unit_amount: amount_cents,
+              product_data: {
+                name: `Boost: ${displayName}`,
+                description: `$${amountDollars} one-time ecological credit retirement — ${displayName}`,
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: {
+          type: "boost",
+          batch_denom,
+          project_name: displayName,
+          subscriber_id: sub?.id?.toString() ?? "",
+        },
+        success_url: `${baseUrl}/dashboard?boost=success`,
+        cancel_url: `${baseUrl}/dashboard`,
+        customer_email: email,
+      };
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      res.json({ url: session.url });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("Boost checkout error:", msg);
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  /**
    * POST /webhook
    * Stripe webhook handler — processes checkout.session.completed events.
    * Creates user if new, credits their balance, generates API key.
@@ -953,6 +1028,17 @@ ${betaBannerJS()}
     .setup-toggle { background: none; border: none; color: var(--regen-green); font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
     .setup-toggle:hover { color: var(--regen-teal); }
     .setup-details { display: none; margin-top: 16px; }
+    .profile-prompt { background: linear-gradient(135deg, var(--regen-gray-50), #f0faf4); border: 1px solid #d0e8d8; border-radius: 12px; padding: 20px 24px; }
+    .profile-prompt h2 { color: var(--regen-green); margin: 0 0 6px; font-size: 18px; font-weight: 700; }
+    .profile-prompt p { color: var(--regen-gray-700); font-size: 14px; margin: 0 0 14px; }
+    .profile-prompt input { width: 100%; padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; font-family: inherit; box-sizing: border-box; }
+    .profile-prompt input:focus { outline: none; border-color: var(--regen-green); box-shadow: 0 0 0 2px rgba(76,175,80,0.15); }
+    .profile-prompt .btn-row { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
+    .profile-prompt .save-btn { background: var(--regen-green); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .profile-prompt .save-btn:hover { background: var(--regen-teal); }
+    .profile-prompt .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .profile-prompt .skip-btn { background: none; border: none; color: var(--regen-gray-500); font-size: 13px; cursor: pointer; text-decoration: underline; }
+    .profile-saved { display: none; padding: 14px 20px; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px; color: var(--regen-green); font-weight: 600; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -977,6 +1063,17 @@ ${betaBannerJS()}
         <a style="display:inline-block;margin-top:16px;color:var(--regen-green);font-weight:600;" href="https://app.regen.network" target="_blank" rel="noopener">Learn more about Regen Network and ecocredits &rarr;</a>
       </div>
     </div>
+
+    <div class="profile-prompt" id="profilePrompt" style="margin-top:24px;">
+      <h2>How should we credit your impact?</h2>
+      <p>Each retirement is recorded on-chain to your personal Regen address. Add your name so it appears on your <a href="https://app.regen.network" target="_blank" rel="noopener" style="color:var(--regen-green);font-weight:600;">Regen Network portfolio page</a> and retirement certificates. This is optional and you can change it anytime from your dashboard.</p>
+      <input type="text" id="displayNameInput" placeholder="Your name (e.g. Jane Smith)" maxlength="100" autocomplete="name" />
+      <div class="btn-row">
+        <button class="save-btn" id="saveNameBtn" onclick="saveDisplayName()">Save</button>
+        <button class="skip-btn" onclick="skipDisplayName()">Skip for now</button>
+      </div>
+    </div>
+    <div class="profile-saved" id="profileSaved"></div>
 
     <div class="regen-card" style="margin-top:24px;">
       <div class="regen-card__body">
@@ -1078,6 +1175,40 @@ export REGEN_BALANCE_URL=${baseUrl}</pre>
         d.style.display = 'block';
         btn.textContent = 'Hide setup instructions';
       }
+    }
+    function saveDisplayName() {
+      var name = document.getElementById('displayNameInput').value.trim();
+      if (!name) return;
+      var btn = document.getElementById('saveNameBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      fetch('/profile/display-name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: '${sessionId}', display_name: name })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.ok) {
+          document.getElementById('profilePrompt').style.display = 'none';
+          var saved = document.getElementById('profileSaved');
+          saved.style.display = 'block';
+          var msg = 'Saved! Your retirements will be credited to <strong>' + name.replace(/</g,'&lt;') + '</strong>.';
+          if (data.profile_url) {
+            msg += ' <a href="' + data.profile_url + '" target="_blank" rel="noopener" style="color:var(--regen-green);font-weight:600;">View your Regen portfolio &rarr;</a>';
+          }
+          saved.innerHTML = msg;
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Save';
+          alert('Could not save: ' + (data.error || 'unknown error'));
+        }
+      }).catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Save';
+        alert('Network error — please try again.');
+      });
+    }
+    function skipDisplayName() {
+      document.getElementById('profilePrompt').style.display = 'none';
     }
   </script>
 ${betaBannerJS()}
@@ -1311,6 +1442,64 @@ ${betaBannerJS()}
         amount_dollars: (t.amount_cents / 100).toFixed(2),
       })),
     });
+  });
+
+  // --- Profile endpoints ---
+
+  router.post("/profile/display-name", async (req: Request, res: Response) => {
+    try {
+      const { session_id, display_name } = req.body ?? {};
+      if (!session_id || typeof session_id !== "string") {
+        res.status(400).json({ error: "session_id is required" });
+        return;
+      }
+      const name = typeof display_name === "string" ? display_name.trim().slice(0, 100) : "";
+      if (!name) {
+        res.status(400).json({ error: "display_name is required" });
+        return;
+      }
+      if (!stripe) {
+        res.status(503).json({ error: "Stripe not configured" });
+        return;
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+      const email = session.customer_email ?? session.customer_details?.email ?? null;
+      if (!email) {
+        res.status(400).json({ error: "No email found for session" });
+        return;
+      }
+
+      const user = getUserByEmail(db, email);
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      setUserDisplayName(db, user.id, name);
+      const subscriber = getSubscriberByUserId(db, user.id);
+      const regenAddress = subscriber?.regen_address ?? null;
+      const profileUrl = regenAddress
+        ? `https://app.regen.network/profiles/${regenAddress}/portfolio`
+        : null;
+
+      // Push profile to app.regen.network registry in the background (non-blocking)
+      if (subscriber) {
+        updateRegistryProfile(subscriber.id, { name }).then((result) => {
+          if (result.success) {
+            console.log(`Registry profile synced for subscriber=${subscriber.id}`);
+          } else {
+            console.warn(`Registry profile sync failed for subscriber=${subscriber.id}: ${result.error}`);
+          }
+        }).catch(() => {}); // swallow — this is best-effort
+      }
+
+      res.json({ ok: true, display_name: name, regen_address: regenAddress, profile_url: profileUrl });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("Profile display-name error:", msg);
+      res.status(500).json({ error: "Failed to save display name" });
+    }
   });
 
   // --- Beta feedback endpoints ---
@@ -1613,10 +1802,10 @@ async function handleInvoicePaid(db: Database.Database, invoice: Stripe.Invoice)
         );
 
         // Execute first month immediately — pass precomputedNetCents to skip double fee deduction
-        executeRetirementAsync(db, existing.id, firstMonthGross, existing.billing_interval, firstMonthNet);
+        executeRetirementAsync(db, existing.id, firstMonthGross, existing.billing_interval, firstMonthNet, invoice.id);
       } else {
         // Monthly: execute immediately (Stripe fees deducted inside retireForSubscriber)
-        executeRetirementAsync(db, existing.id, amountCents, existing.billing_interval);
+        executeRetirementAsync(db, existing.id, amountCents, existing.billing_interval, undefined, invoice.id);
       }
     }
   } catch (err) {
@@ -1630,21 +1819,38 @@ function executeRetirementAsync(
   subscriberId: number,
   grossAmountCents: number,
   billingInterval: "monthly" | "yearly",
-  precomputedNetCents?: number
+  precomputedNetCents?: number,
+  paymentId?: string
 ): void {
   retireForSubscriber({
     subscriberId,
     grossAmountCents,
     billingInterval,
     precomputedNetCents,
+    paymentId,
   }).then((result) => {
-    if (result.status === "success" || result.status === "partial") {
-      if (result.burnBudgetCents > 0) {
-        accumulateBurnBudget(db, result.burnBudgetCents);
-      }
+    if (result.burnBudgetCents > 0 && (result.status === "success" || result.status === "partial")) {
+      accumulateBurnBudget(db, result.burnBudgetCents);
+    }
+    if (result.status === "success") {
       console.log(
         `Retirement completed: subscriber=${subscriberId} credits=${result.totalCreditsRetired.toFixed(6)} ` +
         `spent=$${(result.totalSpentCents / 100).toFixed(2)} status=${result.status}`
+      );
+    } else if (result.status === "partial" && paymentId) {
+      // Some batches failed — schedule a retry in 1 hour
+      console.warn(
+        `Retirement partial: subscriber=${subscriberId} credits=${result.totalCreditsRetired.toFixed(6)} ` +
+        `errors=${result.errors.length} — scheduling retry in 1 hour`
+      );
+      setTimeout(() => {
+        console.log(`Retrying partial retirement for subscriber=${subscriberId} payment=${paymentId}`);
+        executeRetirementAsync(db, subscriberId, grossAmountCents, billingInterval, precomputedNetCents, paymentId);
+      }, 60 * 60 * 1000);
+    } else if (result.status === "partial") {
+      console.warn(
+        `Retirement partial: subscriber=${subscriberId} credits=${result.totalCreditsRetired.toFixed(6)} ` +
+        `errors=${result.errors.length} (no paymentId, cannot retry)`
       );
     } else {
       console.error(
@@ -1675,9 +1881,10 @@ async function processScheduledRetirements(db: Database.Database): Promise<void>
         grossAmountCents: scheduled.gross_amount_cents,
         billingInterval: scheduled.billing_interval as "monthly" | "yearly",
         precomputedNetCents: scheduled.net_amount_cents || undefined,
+        paymentId: `scheduled-${scheduled.id}`,
       });
 
-      if (result.status === "success" || result.status === "partial") {
+      if (result.status === "success") {
         if (result.burnBudgetCents > 0) {
           accumulateBurnBudget(db, result.burnBudgetCents);
         }
@@ -1688,6 +1895,20 @@ async function processScheduledRetirements(db: Database.Database): Promise<void>
         console.log(
           `Scheduled retirement completed: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
           `credits=${result.totalCreditsRetired.toFixed(6)}`
+        );
+      } else if (result.status === "partial") {
+        // Some batches succeeded, others failed — mark as partial so it will be retried
+        if (result.burnBudgetCents > 0) {
+          accumulateBurnBudget(db, result.burnBudgetCents);
+        }
+        updateScheduledRetirement(db, scheduled.id, {
+          status: "partial",
+          error: result.errors.join("; "),
+          executed_at: new Date().toISOString(),
+        });
+        console.warn(
+          `Scheduled retirement partial: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
+          `credits=${result.totalCreditsRetired.toFixed(6)} — will retry failed batches`
         );
       } else {
         updateScheduledRetirement(db, scheduled.id, {

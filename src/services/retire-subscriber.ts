@@ -16,6 +16,7 @@ import {
   getDb,
   getSubscriberByStripeId,
   getMonthlyCreditSelection,
+  getUserDisplayNameBySubscriberId,
   type Subscriber,
   type MonthlyCreditSelection,
 } from "../server/db.js";
@@ -84,10 +85,11 @@ export async function retireForSubscriber(options: {
   grossAmountCents: number;
   billingInterval: "monthly" | "yearly";
   precomputedNetCents?: number;
+  paymentId?: string;
   dbPath?: string;
   dryRun?: boolean;
 }): Promise<SubscriberRetirementResult> {
-  const { subscriberId, grossAmountCents, billingInterval, dryRun = false } = options;
+  const { subscriberId, grossAmountCents, billingInterval, dryRun = false, paymentId } = options;
   const db = getDb(options.dbPath);
   const config = loadConfig();
   const errors: string[] = [];
@@ -106,6 +108,9 @@ export async function retireForSubscriber(options: {
       errors: [`Address derivation failed: ${msg}`],
     };
   }
+
+  // 1b. Look up subscriber's display name for personalized retirement reason
+  const displayName = getUserDisplayNameBySubscriberId(db, subscriberId);
 
   // 2. Calculate net and apply revenue split
   // If precomputedNetCents is provided (yearly monthly portions), skip Stripe fee deduction
@@ -143,6 +148,20 @@ export async function retireForSubscriber(options: {
     }
   }
 
+  // 3b. Fetch wallet balances to know which denoms we can pay with
+  const walletBalanceDenoms = new Set<string>();
+  if (!dryRun && walletAddress) {
+    try {
+      const balRes = await fetch(`https://lcd-regen.keplr.app/cosmos/bank/v1beta1/balances/${walletAddress}`);
+      const balData = await balRes.json() as { balances: { denom: string; amount: string }[] };
+      for (const b of balData.balances) {
+        if (BigInt(b.amount) > 0n) walletBalanceDenoms.add(b.denom);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch wallet balances, will try all denoms:", err instanceof Error ? err.message : err);
+    }
+  }
+
   // 4. Get this month's credit selection
   const currentMonth = new Date().toISOString().slice(0, 7); // "2026-03"
   const selection = getMonthlyCreditSelection(db, currentMonth);
@@ -159,6 +178,60 @@ export async function retireForSubscriber(options: {
 
   // The 3 selected batches for this month
   const selectedBatchDenoms = [selection.batch1_denom, selection.batch2_denom, selection.batch3_denom];
+
+  // 4b. Check for prior attempts with same paymentId — skip already-succeeded batches
+  const alreadyRetiredBatches = new Set<string>();
+  let priorSpentCents = 0;
+  let priorCreditsRetired = 0;
+  const priorBatchResults: BatchRetirementResult[] = [];
+
+  if (paymentId && !dryRun) {
+    const priorBatches = db.prepare(`
+      SELECT srb.* FROM subscriber_retirement_batches srb
+      JOIN subscriber_retirements sr ON sr.id = srb.retirement_id
+      WHERE sr.payment_id = ? AND srb.error IS NULL AND srb.credits_retired > 0
+    `).all(paymentId) as Array<{
+      batch_denom: string; credit_class_id: string; credit_type_abbrev: string;
+      budget_cents: number; spent_cents: number; credits_retired: number;
+      buy_tx_hash: string | null; send_retire_tx_hash: string | null;
+    }>;
+
+    for (const pb of priorBatches) {
+      alreadyRetiredBatches.add(pb.batch_denom);
+      priorSpentCents += pb.spent_cents;
+      priorCreditsRetired += pb.credits_retired;
+      priorBatchResults.push({
+        batchDenom: pb.batch_denom,
+        creditClassId: pb.credit_class_id,
+        creditTypeAbbrev: pb.credit_type_abbrev,
+        budgetCents: pb.budget_cents,
+        spentCents: pb.spent_cents,
+        creditsRetired: pb.credits_retired,
+        buyTxHash: pb.buy_tx_hash,
+        sendRetireTxHash: pb.send_retire_tx_hash,
+        error: null,
+      });
+    }
+
+    if (alreadyRetiredBatches.size > 0) {
+      console.log(
+        `Payment ${paymentId}: ${alreadyRetiredBatches.size} batch(es) already retired ` +
+        `(${Array.from(alreadyRetiredBatches).join(", ")}). Retrying remaining batches only.`
+      );
+    }
+
+    // If all 3 batches already succeeded, return early
+    if (selectedBatchDenoms.every((d) => alreadyRetiredBatches.has(d))) {
+      console.log(`Payment ${paymentId}: all batches already retired — nothing to do.`);
+      return {
+        subscriberId, regenAddress, status: "success",
+        grossAmountCents, netAmountCents, creditsBudgetCents,
+        burnBudgetCents, opsBudgetCents,
+        batches: priorBatchResults, totalCreditsRetired: priorCreditsRetired,
+        totalSpentCents: priorSpentCents, errors: [],
+      };
+    }
+  }
 
   // 5. Fetch sell orders for the selected batches
   const [sellOrders, classes, allowedDenoms] = await Promise.all([
@@ -188,9 +261,11 @@ export async function retireForSubscriber(options: {
     batchOrdersMap.set(order.batch_denom, existing);
   }
 
-  // Only include batches that have sell orders
-  const batchDenoms = selectedBatchDenoms.filter((d) => batchOrdersMap.has(d));
-  if (batchDenoms.length === 0) {
+  // Only include batches that have sell orders AND haven't already succeeded
+  const batchDenoms = selectedBatchDenoms.filter(
+    (d) => batchOrdersMap.has(d) && !alreadyRetiredBatches.has(d)
+  );
+  if (batchDenoms.length === 0 && priorBatchResults.length === 0) {
     return {
       subscriberId, regenAddress, status: "failed",
       grossAmountCents, netAmountCents, creditsBudgetCents,
@@ -200,9 +275,11 @@ export async function retireForSubscriber(options: {
     };
   }
 
-  // 6. Equal dollar allocation across the selected batches (typically 3)
-  const perBatchBudget = Math.floor(creditsBudgetCents / batchDenoms.length);
-  const budgetRemainder = creditsBudgetCents - (perBatchBudget * batchDenoms.length);
+  // 6. Equal dollar allocation across remaining batches
+  // Subtract budget already spent by prior successful batches
+  const remainingCreditsBudget = creditsBudgetCents - priorSpentCents;
+  const perBatchBudget = batchDenoms.length > 0 ? Math.floor(remainingCreditsBudget / batchDenoms.length) : 0;
+  const budgetRemainder = batchDenoms.length > 0 ? remainingCreditsBudget - (perBatchBudget * batchDenoms.length) : 0;
 
   // Payment denom preference
   const usdcDenom = allowedDenoms.find(
@@ -239,9 +316,21 @@ export async function retireForSubscriber(options: {
     }
 
     try {
-      // Filter and sort orders
-      let batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom);
-      if (batchOrders.length === 0) batchOrders = orders;
+      // Filter orders: only consider orders priced in denoms we actually hold
+      // Priority: preferred denom > any held denom > all orders (last resort for dry runs)
+      let batchOrders: SellOrder[];
+      if (walletBalanceDenoms.size > 0) {
+        // First try preferred payment denom that we hold
+        batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom && walletBalanceDenoms.has(o.ask_denom));
+        if (batchOrders.length === 0) {
+          // Fall back to any denom we hold
+          batchOrders = orders.filter((o) => walletBalanceDenoms.has(o.ask_denom));
+        }
+      } else {
+        // No balance info (dry run or fetch failed) — prefer denomBankDenom, then all
+        batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom);
+        if (batchOrders.length === 0) batchOrders = orders;
+      }
       batchOrders.sort((a, b) => {
         const diff = BigInt(a.ask_amount) - BigInt(b.ask_amount);
         return diff < 0n ? -1 : diff > 0n ? 1 : 0;
@@ -287,41 +376,74 @@ export async function retireForSubscriber(options: {
         continue;
       }
 
-      // Step A: MsgBuyDirect with disableAutoRetire: true
-      const buyOrders = selectedOrders.map((s) => ({
-        sellOrderId: BigInt(s.order.id),
-        quantity: s.quantity,
-        bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
-        disableAutoRetire: true,
-        retirementJurisdiction: "",
-        retirementReason: "",
-      }));
+      // Separate orders by auto-retire behavior:
+      // - Orders where disable_auto_retire=true: we can buy tradable, then MsgSend to subscriber
+      // - Orders where disable_auto_retire=false: credits auto-retire to buyer (master wallet);
+      //   we cannot send-and-retire these, so they retire under the master wallet on-chain
+      //   and we record the attribution to the subscriber in our DB
+      const tradableOrders = selectedOrders.filter((s) => s.order.disable_auto_retire === true);
+      const autoRetireOrders = selectedOrders.filter((s) => s.order.disable_auto_retire === false);
 
-      const buyMsg = {
-        typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
-        value: { buyer: walletAddress, orders: buyOrders },
-      };
+      const msgs: { typeUrl: string; value: any }[] = [];
 
-      // Step B: MsgSend with retiredAmount to subscriber address
-      const sendCredits = selectedOrders.map((s) => ({
-        batchDenom: s.order.batch_denom,
-        tradableAmount: "0",
-        retiredAmount: s.quantity,
-        retirementJurisdiction: config.defaultJurisdiction,
-        retirementReason: "Regenerative Compute subscription — ecological accountability for AI",
-      }));
+      // Step A: Buy orders where we CAN disable auto-retire (tradable purchase + send-retire)
+      if (tradableOrders.length > 0) {
+        const buyOrders = tradableOrders.map((s) => ({
+          sellOrderId: BigInt(s.order.id),
+          quantity: s.quantity,
+          bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
+          disableAutoRetire: true,
+          retirementJurisdiction: "",
+          retirementReason: "",
+        }));
 
-      const sendMsg = {
-        typeUrl: "/regen.ecocredit.v1.MsgSend",
-        value: {
-          sender: walletAddress,
-          recipient: regenAddress,
-          credits: sendCredits,
-        },
-      };
+        msgs.push({
+          typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
+          value: { buyer: walletAddress, orders: buyOrders },
+        });
 
-      // Execute both messages atomically in one transaction
-      const txResult = await signAndBroadcast([buyMsg, sendMsg]);
+        // MsgSend with retiredAmount to subscriber address
+        const sendCredits = tradableOrders.map((s) => ({
+          batchDenom: s.order.batch_denom,
+          tradableAmount: "0",
+          retiredAmount: s.quantity,
+          retirementJurisdiction: config.defaultJurisdiction,
+          retirementReason: displayName
+            ? `Regenerative Compute — ${displayName}'s monthly ecological contribution`
+            : "Regenerative Compute subscription — ecological accountability for AI",
+        }));
+
+        msgs.push({
+          typeUrl: "/regen.ecocredit.v1.MsgSend",
+          value: {
+            sender: walletAddress,
+            recipient: regenAddress,
+            credits: sendCredits,
+          },
+        });
+      }
+
+      // Step B: Buy orders where auto-retire is forced ON (retires to master wallet)
+      if (autoRetireOrders.length > 0) {
+        const buyOrders = autoRetireOrders.map((s) => ({
+          sellOrderId: BigInt(s.order.id),
+          quantity: s.quantity,
+          bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
+          disableAutoRetire: false,
+          retirementJurisdiction: config.defaultJurisdiction,
+          retirementReason: displayName
+            ? `Regenerative Compute — ${displayName}'s monthly ecological contribution (${regenAddress})`
+            : `Regenerative Compute subscription — subscriber #${subscriberId} (${regenAddress})`,
+        }));
+
+        msgs.push({
+          typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
+          value: { buyer: walletAddress, orders: buyOrders },
+        });
+      }
+
+      // Execute all messages atomically in one transaction
+      const txResult = await signAndBroadcast(msgs);
 
       if (txResult.code !== 0) {
         result.error = `Tx failed (code ${txResult.code}): ${txResult.rawLog || "unknown"}`;
@@ -331,6 +453,14 @@ export async function retireForSubscriber(options: {
       } else {
         result.buyTxHash = txResult.transactionHash;
         result.sendRetireTxHash = txResult.transactionHash; // Same tx for both msgs
+        if (autoRetireOrders.length > 0) {
+          const autoRetiredCredits = autoRetireOrders.reduce((s, o) => s + parseFloat(o.quantity), 0);
+          console.log(
+            `Note: ${autoRetiredCredits.toFixed(6)} credits from ${batchDenom} ` +
+            `auto-retired to master wallet (sell order has auto-retire ON). ` +
+            `Attribution recorded for subscriber #${subscriberId}.`
+          );
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -343,21 +473,23 @@ export async function retireForSubscriber(options: {
     batchResults.push(result);
   }
 
-  // 7. Record results in DB
-  const totalCreditsRetired = batchResults.reduce((sum, b) => sum + b.creditsRetired, 0);
-  const totalSpentCents = batchResults.reduce((sum, b) => sum + b.spentCents, 0);
+  // 7. Merge prior successful results with new results
+  const allBatchResults = [...priorBatchResults, ...batchResults];
+  const totalCreditsRetired = allBatchResults.reduce((sum, b) => sum + b.creditsRetired, 0);
+  const totalSpentCents = allBatchResults.reduce((sum, b) => sum + b.spentCents, 0);
 
   if (!dryRun) {
     recordSubscriberRetirement(db, {
       subscriberId, regenAddress, grossAmountCents, netAmountCents,
       creditsBudgetCents, burnBudgetCents, opsBudgetCents,
       batches: batchResults, totalCreditsRetired, totalSpentCents,
+      paymentId,
     });
   }
 
-  // Determine status
-  const anySuccess = batchResults.some((b) => b.creditsRetired > 0);
-  const allSuccess = batchResults.every((b) => b.error === null);
+  // Determine status (consider both prior and new results)
+  const anySuccess = allBatchResults.some((b) => b.creditsRetired > 0);
+  const allSuccess = allBatchResults.every((b) => b.error === null);
   let status: "success" | "partial" | "failed";
   if (dryRun || (allSuccess && anySuccess)) status = "success";
   else if (anySuccess) status = "partial";
@@ -367,6 +499,8 @@ export async function retireForSubscriber(options: {
     `Subscriber retirement: id=${subscriberId} addr=${regenAddress} ` +
     `gross=$${(grossAmountCents / 100).toFixed(2)} net=$${(netAmountCents / 100).toFixed(2)} ` +
     `credits=${totalCreditsRetired.toFixed(6)} status=${status}` +
+    (paymentId ? ` payment=${paymentId}` : "") +
+    (priorBatchResults.length > 0 ? ` prior=${priorBatchResults.length}` : "") +
     (errors.length > 0 ? ` errors=${errors.length}` : "")
   );
 
@@ -374,7 +508,7 @@ export async function retireForSubscriber(options: {
     subscriberId, regenAddress, status,
     grossAmountCents, netAmountCents, creditsBudgetCents,
     burnBudgetCents, opsBudgetCents,
-    batches: batchResults, totalCreditsRetired, totalSpentCents, errors,
+    batches: allBatchResults, totalCreditsRetired, totalSpentCents, errors,
   };
 }
 
@@ -392,6 +526,7 @@ function recordSubscriberRetirement(
     batches: BatchRetirementResult[];
     totalCreditsRetired: number;
     totalSpentCents: number;
+    paymentId?: string;
   }
 ): void {
   const txn = db.transaction(() => {
@@ -400,12 +535,13 @@ function recordSubscriberRetirement(
       INSERT INTO subscriber_retirements (
         subscriber_id, regen_address, gross_amount_cents, net_amount_cents,
         credits_budget_cents, burn_budget_cents, ops_budget_cents,
-        total_credits_retired, total_spent_cents
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        total_credits_retired, total_spent_cents, payment_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.subscriberId, data.regenAddress, data.grossAmountCents,
       data.netAmountCents, data.creditsBudgetCents, data.burnBudgetCents,
-      data.opsBudgetCents, data.totalCreditsRetired, data.totalSpentCents
+      data.opsBudgetCents, data.totalCreditsRetired, data.totalSpentCents,
+      data.paymentId ?? null
     );
 
     const retirementId = result.lastInsertRowid;

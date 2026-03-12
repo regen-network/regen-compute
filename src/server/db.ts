@@ -187,6 +187,7 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
       ops_budget_cents INTEGER NOT NULL,
       total_credits_retired REAL NOT NULL DEFAULT 0,
       total_spent_cents INTEGER NOT NULL DEFAULT 0,
+      payment_id TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -217,7 +218,7 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
       net_amount_cents INTEGER NOT NULL DEFAULT 0,
       billing_interval TEXT NOT NULL DEFAULT 'yearly',
       scheduled_date TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'running', 'completed', 'failed')),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'running', 'completed', 'partial', 'failed')),
       retirement_id INTEGER REFERENCES subscriber_retirements(id),
       error TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -253,6 +254,15 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     );
 
     CREATE INDEX IF NOT EXISTS idx_burn_accumulator_executed ON burn_accumulator(executed);
+
+    CREATE TABLE IF NOT EXISTS community_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      goal_label TEXT NOT NULL,
+      goal_credits REAL NOT NULL,
+      goal_deadline TEXT,
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
 
     CREATE TABLE IF NOT EXISTS referral_rewards (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -330,6 +340,44 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     console.log("Migration: added display_name column to users");
   }
 
+  // Migration: add payment_id to subscriber_retirements
+  const retCols = (_db.pragma("table_info(subscriber_retirements)") as Array<{ name: string }>).map((c) => c.name);
+  if (retCols.length > 0 && !retCols.includes("payment_id")) {
+    _db.exec(`ALTER TABLE subscriber_retirements ADD COLUMN payment_id TEXT`);
+    console.log("Migration: added payment_id column to subscriber_retirements");
+  }
+  // Always ensure the index exists (covers both new and migrated DBs)
+  if (retCols.length > 0) {
+    _db.exec(`CREATE INDEX IF NOT EXISTS idx_sub_retirements_payment ON subscriber_retirements(payment_id)`);
+  }
+
+  // Migration: update scheduled_retirements CHECK constraint to include 'partial'
+  const schedSchema = (_db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='scheduled_retirements'").get() as { sql: string } | undefined)?.sql ?? "";
+  if (schedSchema && !schedSchema.includes("partial")) {
+    _db.exec(`
+      CREATE TABLE IF NOT EXISTS scheduled_retirements_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
+        gross_amount_cents INTEGER NOT NULL,
+        net_amount_cents INTEGER NOT NULL DEFAULT 0,
+        billing_interval TEXT NOT NULL DEFAULT 'yearly',
+        scheduled_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'running', 'completed', 'partial', 'failed')),
+        retirement_id INTEGER REFERENCES subscriber_retirements(id),
+        error TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        executed_at TEXT
+      );
+      INSERT INTO scheduled_retirements_new (id, subscriber_id, gross_amount_cents, billing_interval, scheduled_date, status, retirement_id, error, created_at, executed_at)
+        SELECT id, subscriber_id, gross_amount_cents, billing_interval, scheduled_date, status, retirement_id, error, created_at, executed_at FROM scheduled_retirements;
+      DROP TABLE scheduled_retirements;
+      ALTER TABLE scheduled_retirements_new RENAME TO scheduled_retirements;
+      CREATE INDEX IF NOT EXISTS idx_scheduled_retirements_subscriber ON scheduled_retirements(subscriber_id);
+      CREATE INDEX IF NOT EXISTS idx_scheduled_retirements_status ON scheduled_retirements(status);
+    `);
+    console.log("Migration: updated scheduled_retirements CHECK constraint to include 'partial'");
+  }
+
   // Backfill referral codes for users that don't have one
   const usersWithoutCodes = _db.prepare(
     "SELECT id FROM users WHERE referral_code IS NULL"
@@ -359,6 +407,7 @@ export interface User {
   id: number;
   api_key: string;
   email: string | null;
+  display_name: string | null;
   balance_cents: number;
   stripe_customer_id: string | null;
   referral_code: string;
@@ -402,6 +451,17 @@ export function createUser(
   );
   const result = stmt.run(apiKey, normalizedEmail, stripeCustomerId, referralCode, referredByUserId ?? null);
   return db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid) as User;
+}
+
+export function setUserDisplayName(db: Database.Database, userId: number, displayName: string | null): void {
+  db.prepare("UPDATE users SET display_name = ?, updated_at = datetime('now') WHERE id = ?").run(displayName, userId);
+}
+
+export function getUserDisplayNameBySubscriberId(db: Database.Database, subscriberId: number): string | null {
+  const row = db.prepare(
+    "SELECT u.display_name FROM users u JOIN subscribers s ON s.user_id = u.id WHERE s.id = ?"
+  ).get(subscriberId) as { display_name: string | null } | undefined;
+  return row?.display_name ?? null;
 }
 
 export function creditBalance(
@@ -575,6 +635,41 @@ export function getCumulativeSubscriberRetirements(db: Database.Database, subscr
   return row ?? { total_credits_retired: 0, total_spent_cents: 0, total_gross_cents: 0, retirement_count: 0 };
 }
 
+/** Get per-batch retirement totals for a subscriber (for project cards) */
+export function getSubscriberBatchTotals(db: Database.Database, subscriberId: number): Array<{
+  batch_denom: string;
+  credit_class_id: string;
+  credit_type_abbrev: string;
+  total_credits: number;
+  total_spent_cents: number;
+  latest_tx_hash: string | null;
+  retirement_count: number;
+}> {
+  return db.prepare(`
+    SELECT
+      srb.batch_denom,
+      srb.credit_class_id,
+      srb.credit_type_abbrev,
+      SUM(srb.credits_retired) AS total_credits,
+      SUM(srb.spent_cents) AS total_spent_cents,
+      MAX(srb.buy_tx_hash) AS latest_tx_hash,
+      COUNT(*) AS retirement_count
+    FROM subscriber_retirement_batches srb
+    JOIN subscriber_retirements sr ON sr.id = srb.retirement_id
+    WHERE sr.subscriber_id = ? AND srb.credits_retired > 0
+    GROUP BY srb.batch_denom
+    ORDER BY total_credits DESC
+  `).all(subscriberId) as Array<{
+    batch_denom: string;
+    credit_class_id: string;
+    credit_type_abbrev: string;
+    total_credits: number;
+    total_spent_cents: number;
+    latest_tx_hash: string | null;
+    retirement_count: number;
+  }>;
+}
+
 // --- Monthly credit selection types and helpers ---
 
 export interface MonthlyCreditSelection {
@@ -641,6 +736,50 @@ export function confirmMonthlyCreditSelection(db: Database.Database, month: stri
   ).run(month);
 }
 
+// --- Community goals ---
+
+export interface CommunityGoal {
+  id: number;
+  goal_label: string;
+  goal_credits: number;
+  goal_deadline: string | null;
+  active: number;
+  created_at: string;
+}
+
+export function getActiveCommunityGoal(db: Database.Database): CommunityGoal | undefined {
+  return db.prepare(
+    "SELECT * FROM community_goals WHERE active = 1 ORDER BY id DESC LIMIT 1"
+  ).get() as CommunityGoal | undefined;
+}
+
+export function createCommunityGoal(
+  db: Database.Database,
+  goalLabel: string,
+  goalCredits: number,
+  goalDeadline?: string
+): void {
+  // Deactivate all existing goals
+  db.prepare("UPDATE community_goals SET active = 0").run();
+  db.prepare(
+    "INSERT INTO community_goals (goal_label, goal_credits, goal_deadline) VALUES (?, ?, ?)"
+  ).run(goalLabel, goalCredits, goalDeadline ?? null);
+}
+
+export function getCommunityTotalCreditsRetired(db: Database.Database): number {
+  const row = db.prepare(
+    "SELECT COALESCE(SUM(total_credits_retired), 0) AS total FROM subscriber_retirements"
+  ).get() as { total: number } | undefined;
+  return row?.total ?? 0;
+}
+
+export function getCommunitySubscriberCount(db: Database.Database): number {
+  const row = db.prepare(
+    "SELECT COUNT(*) AS count FROM subscribers WHERE status = 'active'"
+  ).get() as { count: number } | undefined;
+  return row?.count ?? 0;
+}
+
 // --- Scheduled retirement types and helpers ---
 
 export interface ScheduledRetirement {
@@ -650,7 +789,7 @@ export interface ScheduledRetirement {
   net_amount_cents: number;
   billing_interval: "monthly" | "yearly";
   scheduled_date: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "running" | "completed" | "partial" | "failed";
   retirement_id: number | null;
   error: string | null;
   created_at: string;
@@ -673,7 +812,7 @@ export function createScheduledRetirement(
 
 export function getDueScheduledRetirements(db: Database.Database): ScheduledRetirement[] {
   return db.prepare(
-    "SELECT sr.* FROM scheduled_retirements sr JOIN subscribers s ON sr.subscriber_id = s.id WHERE sr.status = 'pending' AND sr.scheduled_date <= datetime('now') AND s.status = 'active' ORDER BY sr.scheduled_date ASC"
+    "SELECT sr.* FROM scheduled_retirements sr JOIN subscribers s ON sr.subscriber_id = s.id WHERE sr.status IN ('pending', 'partial') AND sr.scheduled_date <= datetime('now') AND s.status = 'active' ORDER BY sr.scheduled_date ASC"
   ).all() as ScheduledRetirement[];
 }
 
