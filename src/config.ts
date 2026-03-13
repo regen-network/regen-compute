@@ -124,7 +124,7 @@ export function loadConfig(): Config {
     stripePortalReturnUrl: process.env.STRIPE_PORTAL_RETURN_URL || undefined,
 
     postmarkServerToken: process.env.POSTMARK_SERVER_TOKEN || undefined,
-    emailFromAddress: process.env.EMAIL_FROM_ADDRESS || "impact@compute.regen.network",
+    emailFromAddress: process.env.EMAIL_FROM_ADDRESS || "Regen Compute <impact@compute.regen.network>",
     emailReplyToAddress: process.env.EMAIL_REPLY_TO_ADDRESS || undefined,
     emailEnabled: process.env.EMAIL_ENABLED !== "false",
 
