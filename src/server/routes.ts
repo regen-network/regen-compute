@@ -1058,34 +1058,34 @@ ${betaBannerJS()}
   ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Dashboard", href: "/dashboard" }] })}
 
   <div class="regen-container--narrow" style="padding-top:32px;">
-    <div class="regen-card">
-      <div class="regen-card__header">
-        <h1 style="margin:0 0 12px;font-size:28px;font-weight:800;">Thank you for being part of this.</h1>
-        <p style="margin:0;opacity:0.92;font-size:17px;">While you use AI for your life and your work, you're now also rewarding the people and projects creating real ecological impact around the world.</p>
+    <div style="text-align:center;padding:32px 0 8px;">
+      <h1 style="margin:0 0 12px;font-size:36px;font-weight:800;color:var(--regen-navy);">Thank You</h1>
+      <p style="margin:0 auto;font-size:18px;color:var(--regen-gray-600);max-width:460px;line-height:1.6;">You're now funding real ecological regeneration every month. Welcome aboard.</p>
+    </div>
+
+    <div class="profile-prompt" id="profilePrompt" style="margin-top:28px;">
+      <h2 style="color:var(--regen-navy);font-size:20px;margin:0 0 4px;">One more thing</h2>
+      <p style="color:var(--regen-gray-700);font-size:15px;margin:0 0 14px;">Every credit we retire on your behalf goes to a public <a href="https://app.regen.network" target="_blank" rel="noopener" style="color:var(--regen-green);font-weight:600;">Regen Network portfolio page</a> with your name on it. What would you like displayed?</p>
+      <input type="text" id="displayNameInput" placeholder="e.g. Jane Smith, Acme Corp, JS" maxlength="100" autocomplete="name" />
+      <div class="btn-row">
+        <button class="save-btn" id="saveNameBtn" onclick="saveDisplayName()">Save</button>
+        <button class="skip-btn" onclick="skipDisplayName()">Skip for now</button>
       </div>
+    </div>
+    <div class="profile-saved" id="profileSaved"></div>
+
+    <div class="regen-card" style="margin-top:24px;">
       <div class="regen-card__body">
         <h2 style="color:var(--regen-green);margin:0 0 12px;font-size:20px;font-weight:700;">What your subscription does</h2>
-        <p style="margin:0 0 10px;color:var(--regen-gray-700);">Every month, we pool contributions from subscribers like you and retire verified ecological credits on <strong>Regen Network</strong> — a public blockchain purpose-built for climate and biodiversity action.</p>
+        <p style="margin:0 0 10px;color:var(--regen-gray-700);">Every month, we retire verified ecological credits on <strong>Regen Network</strong> — a public blockchain purpose-built for climate and biodiversity action.</p>
         <ul style="margin:12px 0 0;padding-left:20px;color:var(--regen-gray-700);">
           <li style="margin-bottom:6px;"><strong>Real impact</strong> — your money goes directly to projects restoring forests, protecting biodiversity, and regenerating land</li>
           <li style="margin-bottom:6px;"><strong>Permanently recorded</strong> — every retirement is on-chain, immutable, and verifiable by anyone</li>
           <li style="margin-bottom:6px;"><strong>You'll get a monthly email</strong> with a certificate showing exactly what was retired on your behalf</li>
         </ul>
         <p style="margin:12px 0 0;color:var(--regen-gray-700);">This isn't a carbon offset. It's a direct contribution to ecological regeneration.</p>
-        <a style="display:inline-block;margin-top:16px;color:var(--regen-green);font-weight:600;" href="https://app.regen.network" target="_blank" rel="noopener">Learn more about Regen Network and ecocredits &rarr;</a>
       </div>
     </div>
-
-    <div class="profile-prompt" id="profilePrompt" style="margin-top:24px;">
-      <h2>Name your impact profile</h2>
-      <p>You get a public <a href="https://app.regen.network" target="_blank" rel="noopener" style="color:var(--regen-green);font-weight:600;">Regen Network portfolio page</a> showing every credit retired on your behalf. Enter your name, business name, initials, or a handle — whatever you'd like displayed. You can change it anytime from your dashboard.</p>
-      <input type="text" id="displayNameInput" placeholder="e.g. Jane Smith, Acme Corp, JS" maxlength="100" autocomplete="name" />
-      <div class="btn-row">
-        <button class="save-btn" id="saveNameBtn" onclick="saveDisplayName()">Save</button>
-        <button class="skip-btn" onclick="skipDisplayName()">Skip — use &ldquo;My On-Chain Proof&rdquo;</button>
-      </div>
-    </div>
-    <div class="profile-saved" id="profileSaved"></div>
 
     <div class="regen-card" style="margin-top:24px;">
       <div class="regen-card__body">
