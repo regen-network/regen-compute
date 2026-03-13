@@ -79,9 +79,9 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
    * Subscription landing page with live impact stats.
    */
   router.get("/", async (_req: Request, res: Response) => {
-    const seedlingUrl = config?.stripePaymentLinkSeedling ?? process.env.STRIPE_PAYMENT_LINK_SEEDLING ?? "#";
-    const groveUrl = config?.stripePaymentLinkGrove ?? process.env.STRIPE_PAYMENT_LINK_GROVE ?? "#";
-    const forestUrl = config?.stripePaymentLinkForest ?? process.env.STRIPE_PAYMENT_LINK_FOREST ?? "#";
+    const dabblerUrl = config?.stripePaymentLinkSeedling ?? process.env.STRIPE_PAYMENT_LINK_SEEDLING ?? "#";
+    const builderUrl = config?.stripePaymentLinkGrove ?? process.env.STRIPE_PAYMENT_LINK_GROVE ?? "#";
+    const agentUrl = config?.stripePaymentLinkForest ?? process.env.STRIPE_PAYMENT_LINK_FOREST ?? "#";
 
     // Check for referral code
     const refCode = (_req.query.ref as string) || "";
@@ -394,7 +394,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       </div>
 
       <div class="regen-tiers">
-        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('seedling')" : `window.location.href='${seedlingUrl}'`}">
+        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('dabbler')" : `window.location.href='${dabblerUrl}'`}">
           <div class="regen-tier__name">Dabbler</div>
           <div class="regen-tier__price price-monthly">$1.25<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$12.50<span>/yr</span></div>
@@ -402,7 +402,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
           <div class="regen-tier__desc">You use AI a few times a week. This covers your share and funds real ecological projects.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">Subscribe</div>
         </div>
-        <div class="regen-tier tier-featured regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('grove')" : `window.location.href='${groveUrl}'`}">
+        <div class="regen-tier tier-featured regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('builder')" : `window.location.href='${builderUrl}'`}">
           <div class="tier-featured-badge">Most Popular</div>
           <div class="regen-tier__name">Builder</div>
           <div class="regen-tier__price price-monthly">$2.50<span>/mo</span></div>
@@ -411,7 +411,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
           <div class="regen-tier__desc">AI is part of your daily workflow. Full ecological accountability for regular use.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
           <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">Subscribe</div>
         </div>
-        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('forest')" : `window.location.href='${forestUrl}'`}">
+        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('agent')" : `window.location.href='${agentUrl}'`}">
           <div class="regen-tier__name">Agent</div>
           <div class="regen-tier__price price-monthly">$5<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$50<span>/yr</span></div>
@@ -701,7 +701,7 @@ ${betaBannerJS()}
 
   /**
    * POST /subscribe
-   * Body: { tier: "seedling"|"grove"|"forest", interval?: "monthly"|"yearly", email?: string, referral_code?: string }
+   * Body: { tier: "dabbler"|"builder"|"agent", interval?: "monthly"|"yearly", email?: string, referral_code?: string }
    * Returns: { url: "https://checkout.stripe.com/..." }
    *
    * Creates a Stripe Checkout Session in subscription mode.
@@ -712,32 +712,33 @@ ${betaBannerJS()}
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       const { tier, interval, email, referral_code } = body ?? {};
 
-      if (!tier || !["seedling", "grove", "forest"].includes(tier)) {
-        res.status(400).json({ error: 'tier must be "seedling", "grove", or "forest"' });
+      if (!tier || !["dabbler", "builder", "agent"].includes(tier)) {
+        res.status(400).json({ error: 'tier must be "dabbler", "builder", or "agent"' });
         return;
       }
 
       const isYearly = interval === "yearly";
 
       // Resolve price ID for the tier + interval
+      // Config still uses seedling/grove/forest env var names for Stripe price IDs
       const monthlyPriceIdMap: Record<string, string | undefined> = {
-        seedling: config?.stripePriceIdSeedling,
-        grove: config?.stripePriceIdGrove,
-        forest: config?.stripePriceIdForest,
+        dabbler: config?.stripePriceIdSeedling,
+        builder: config?.stripePriceIdGrove,
+        agent: config?.stripePriceIdForest,
       };
       const yearlyPriceIdMap: Record<string, string | undefined> = {
-        seedling: config?.stripePriceIdSeedlingYearly,
-        grove: config?.stripePriceIdGroveYearly,
-        forest: config?.stripePriceIdForestYearly,
+        dabbler: config?.stripePriceIdSeedlingYearly,
+        builder: config?.stripePriceIdGroveYearly,
+        agent: config?.stripePriceIdForestYearly,
       };
 
       const priceId = isYearly ? yearlyPriceIdMap[tier] : monthlyPriceIdMap[tier];
       if (!priceId) {
         // Fall back to Payment Links (monthly only)
         const linkMap: Record<string, string> = {
-          seedling: config?.stripePaymentLinkSeedling ?? "#",
-          grove: config?.stripePaymentLinkGrove ?? "#",
-          forest: config?.stripePaymentLinkForest ?? "#",
+          dabbler: config?.stripePaymentLinkSeedling ?? "#",
+          builder: config?.stripePaymentLinkGrove ?? "#",
+          agent: config?.stripePaymentLinkForest ?? "#",
         };
         res.json({ url: linkMap[tier], fallback: true });
         return;
