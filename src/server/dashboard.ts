@@ -260,7 +260,7 @@ function renderDashboardPage(opts: {
     ? cumulative.total_contribution_cents
     : amountCents;
   const shareText = encodeURIComponent(
-    `I'm funding ecological regeneration through my AI usage with @RegenCompute by @RegenNetwork. Join the community and make your AI sessions count.`
+    `I'm funding ecological regeneration through my AI usage with @RegenCompute by @regen_network. Join the community and make your AI sessions count.`
   );
   const shareUrl = encodeURIComponent(baseUrl);
 
