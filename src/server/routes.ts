@@ -42,7 +42,8 @@ import {
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 import { sendWelcomeEmail, sendFirstRetirementEmail, sendRetirementReceiptEmail } from "../services/email.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
-import { retireForSubscriber, accumulateBurnBudget, calculateNetAfterStripe, type SubscriberRetirementResult } from "../services/retire-subscriber.js";
+import { retireForSubscriber, accumulateBurnBudget, getPendingBurnBudget, markBurnExecuted, calculateNetAfterStripe, type SubscriberRetirementResult } from "../services/retire-subscriber.js";
+import { swapAndBurn, checkOsmosisReadiness } from "../services/swap-and-burn.js";
 import { getProjectForBatch } from "./project-metadata.js";
 import { checkAndSendMonthlyReminder, checkTradableStock } from "../services/admin-telegram.js";
 import { updateRegistryProfile } from "../services/registry-profile.js";
@@ -108,7 +109,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <meta property="og:description" content="Your AI has an ecological footprint. Regenerative Compute channels a small monthly amount into verified forests, soil, and biodiversity projects — with permanent, auditable proof.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}">
-  <meta property="og:image" content="${baseUrl}/og-preview.jpg">
+  <meta property="og:image" content="${baseUrl}/og-card.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
@@ -116,7 +117,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <meta name="twitter:site" content="@RegenCompute">
   <meta name="twitter:title" content="Regenerative Compute — Fund Ecological Regeneration from Your AI Sessions">
   <meta name="twitter:description" content="Your AI has an ecological footprint. Fund verified forests, soil, and biodiversity projects with permanent proof.">
-  <meta name="twitter:image" content="${baseUrl}/og-preview.jpg">
+  <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -1872,6 +1873,8 @@ function executeRetirementAsync(
   }).then((result) => {
     if (result.burnBudgetCents > 0 && (result.status === "success" || result.status === "partial")) {
       accumulateBurnBudget(db, result.burnBudgetCents);
+      // Check if pending burn budget has reached threshold — trigger auto burn
+      maybeExecuteAutoBurn(db).catch(() => {});
     }
     if (result.status === "success") {
       console.log(
@@ -1930,6 +1933,7 @@ async function processScheduledRetirements(db: Database.Database, baseUrl?: stri
       if (result.status === "success") {
         if (result.burnBudgetCents > 0) {
           accumulateBurnBudget(db, result.burnBudgetCents);
+          maybeExecuteAutoBurn(db).catch(() => {});
         }
         updateScheduledRetirement(db, scheduled.id, {
           status: "completed",
@@ -1947,6 +1951,7 @@ async function processScheduledRetirements(db: Database.Database, baseUrl?: stri
         // Some batches succeeded, others failed — mark as partial so it will be retried
         if (result.burnBudgetCents > 0) {
           accumulateBurnBudget(db, result.burnBudgetCents);
+          maybeExecuteAutoBurn(db).catch(() => {});
         }
         updateScheduledRetirement(db, scheduled.id, {
           status: "partial",
@@ -1977,5 +1982,65 @@ async function processScheduledRetirements(db: Database.Database, baseUrl?: stri
       });
       console.error(`Scheduled retirement error: id=${scheduled.id} ${msg}`);
     }
+  }
+}
+
+// --- Auto burn trigger ---
+
+/** Minimum pending burn budget before triggering a swap-and-burn (in cents). */
+const AUTO_BURN_THRESHOLD_CENTS = 100; // $1.00
+
+/** Debounce: don't trigger another burn if one ran within the last hour. */
+let _lastBurnAttempt = 0;
+const BURN_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Check pending burn budget and trigger swap-and-burn if threshold is met.
+ * Called after every retirement that accumulates burn budget.
+ * Non-blocking, fire-and-forget — failures are logged, not thrown.
+ */
+async function maybeExecuteAutoBurn(db: Database.Database): Promise<void> {
+  const now = Date.now();
+  if (now - _lastBurnAttempt < BURN_COOLDOWN_MS) return;
+
+  const pendingCents = getPendingBurnBudget(db);
+  if (pendingCents < AUTO_BURN_THRESHOLD_CENTS) return;
+
+  // Check Osmosis wallet readiness before attempting
+  const readiness = await checkOsmosisReadiness();
+  if (!readiness.ready) {
+    console.log(
+      `Auto-burn: $${(pendingCents / 100).toFixed(2)} pending but Osmosis wallet not ready: ` +
+      readiness.issues.join("; ")
+    );
+    return;
+  }
+
+  _lastBurnAttempt = now;
+  console.log(`Auto-burn: triggering swap-and-burn for $${(pendingCents / 100).toFixed(2)} pending burn budget`);
+
+  try {
+    const result = await swapAndBurn({
+      allocationCents: pendingCents,
+      swapDenom: readiness.usdcBalance >= pendingCents / 100 ? "usdc" : "osmo",
+    });
+
+    if (result.status === "completed") {
+      // Mark accumulated entries as executed
+      const maxId = db.prepare(
+        "SELECT MAX(id) AS max_id FROM burn_accumulator WHERE executed = 0"
+      ).get() as { max_id: number | null };
+      if (maxId.max_id) {
+        markBurnExecuted(db, maxId.max_id);
+      }
+      console.log(
+        `Auto-burn completed: burned ${Number(result.burnAmountUregen) / 1e6} REGEN ` +
+        `(swap: ${result.swapTxHash}, ibc: ${result.ibcTxHash}, burn: ${result.burnTxHash})`
+      );
+    } else {
+      console.warn(`Auto-burn ${result.status}: ${result.errors.join("; ")}`);
+    }
+  } catch (err) {
+    console.error("Auto-burn error:", err instanceof Error ? err.message : err);
   }
 }

@@ -40,6 +40,7 @@ import {
 import { PROJECTS, getProjectForBatch, type ProjectInfo } from "./project-metadata.js";
 import { createSessionToken, getSessionEmail } from "./magic-link.js";
 import { sendMagicLinkEmail } from "../services/email.js";
+import { getFinancialSummary, formatFinancialReport } from "../services/accounting.js";
 
 function escapeHtml(str: string): string {
   return str
@@ -918,6 +919,25 @@ export function createDashboardRoutes(
       "rfa_session=; Path=/dashboard; HttpOnly; SameSite=Lax; Max-Age=0"
     ]);
     res.redirect("/dashboard/login");
+  });
+
+  // GET /dashboard/accounting — admin-only financial summary
+  router.get("/dashboard/accounting", (req: Request, res: Response) => {
+    const email = getSessionEmail(req.headers.cookie, config.sessionSecret);
+    if (!email || !ADMIN_EMAILS.has(email)) {
+      res.status(403).json({ error: "Admin access required" });
+      return;
+    }
+
+    const format = req.query.format === "text" ? "text" : "json";
+    const summary = getFinancialSummary(db);
+
+    if (format === "text") {
+      res.setHeader("Content-Type", "text/plain");
+      res.send(formatFinancialReport(summary));
+    } else {
+      res.json(summary);
+    }
   });
 
   return router;
