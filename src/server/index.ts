@@ -144,14 +144,14 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   });
 
   // OG image for social media previews
-  app.get("/og-preview.png", (_req, res) => {
+  app.get("/og-preview.jpg", (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=31536000");
-    res.sendFile("og-preview.png", { root: process.cwd() });
+    res.sendFile("og-preview.jpg", { root: process.cwd() });
   });
   // Legacy fallbacks
   app.get("/og-image.png", (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=31536000");
-    res.sendFile("og-preview.png", { root: process.cwd() });
+    res.sendFile("og-preview.jpg", { root: process.cwd() });
   });
   app.get("/og-image.jpg", (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=31536000");
