@@ -113,6 +113,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@RegenCompute">
   <meta name="twitter:title" content="Regenerative Compute — Fund Ecological Regeneration from Your AI Sessions">
   <meta name="twitter:description" content="Your AI has an ecological footprint. Fund verified forests, soil, and biodiversity projects with permanent proof.">
   <meta name="twitter:image" content="${baseUrl}/og-preview.jpg">
@@ -1021,7 +1022,7 @@ ${betaBannerJS()}
         // Subscription success page
         const referralLink = `${baseUrl}/r/${user.referral_code}`;
         const shareText = encodeURIComponent(
-          "I just subscribed to Regenerative Compute — funding verified ecological regeneration from my AI sessions. Use my link for a free first month:"
+          "I just subscribed to @RegenCompute — funding verified ecological regeneration from my AI sessions. Use my link for a free first month:"
         );
         const shareUrl = encodeURIComponent(referralLink);
         const twitterUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;
