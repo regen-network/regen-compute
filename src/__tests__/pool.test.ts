@@ -155,6 +155,21 @@ beforeEach(() => {
       error TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS pool_run_batches (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pool_run_id INTEGER NOT NULL REFERENCES pool_runs(id),
+      batch_denom TEXT NOT NULL,
+      credit_class_id TEXT NOT NULL,
+      credit_type_abbrev TEXT NOT NULL,
+      budget_cents INTEGER NOT NULL DEFAULT 0,
+      spent_cents INTEGER NOT NULL DEFAULT 0,
+      credits_retired REAL NOT NULL DEFAULT 0,
+      sell_order_id TEXT,
+      tx_hash TEXT,
+      error TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_pool_run_batches_run ON pool_run_batches(pool_run_id);
   `);
 
   // Override getDb to return our in-memory DB
