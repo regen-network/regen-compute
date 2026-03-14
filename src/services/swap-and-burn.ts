@@ -42,6 +42,7 @@ const REGEN_TO_OSMOSIS_CHANNEL = "channel-1";     // Regen → Osmosis (for refe
 const REGEN_ON_OSMOSIS = "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0";
 const USDC_AXL_ON_OSMOSIS = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858";
 const UOSMO = "uosmo";
+const ATOM_ON_OSMOSIS = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2";
 
 // SQS router for optimal swap routing
 const SQS_ROUTER_URL = "https://sqs.osmosis.zone";
@@ -153,12 +154,12 @@ async function getSwapRoute(
  *
  * @param allocationCents - Dollar amount (in cents) allocated to burn
  * @param dryRun - If true, log what would happen without executing
- * @param swapDenom - Which denom to swap from on Osmosis ("usdc" or "osmo")
+ * @param swapDenom - Which denom to swap from on Osmosis ("usdc", "osmo", or "atom")
  */
 export async function swapAndBurn(options: {
   allocationCents: number;
   dryRun?: boolean;
-  swapDenom?: "usdc" | "osmo";
+  swapDenom?: "usdc" | "osmo" | "atom";
 }): Promise<SwapAndBurnResult> {
   const { allocationCents, dryRun = false, swapDenom = "usdc" } = options;
 
@@ -169,7 +170,7 @@ export async function swapAndBurn(options: {
     targetRegenAmount: 0,
     swapTxHash: null,
     swapAmountIn: "0",
-    swapDenomIn: swapDenom === "usdc" ? USDC_AXL_ON_OSMOSIS : UOSMO,
+    swapDenomIn: swapDenom === "usdc" ? USDC_AXL_ON_OSMOSIS : swapDenom === "atom" ? ATOM_ON_OSMOSIS : UOSMO,
     swapAmountOut: "0",
     ibcTxHash: null,
     ibcAmountUregen: "0",
@@ -217,7 +218,7 @@ export async function swapAndBurn(options: {
   }
 
   // Determine swap input amount
-  const inputDenom = swapDenom === "usdc" ? USDC_AXL_ON_OSMOSIS : UOSMO;
+  const inputDenom = swapDenom === "usdc" ? USDC_AXL_ON_OSMOSIS : swapDenom === "atom" ? ATOM_ON_OSMOSIS : UOSMO;
   let swapInputAmount: string;
 
   if (swapDenom === "usdc") {
@@ -233,6 +234,31 @@ export async function swapAndBurn(options: {
       );
       return result;
     }
+  } else if (swapDenom === "atom") {
+    // ATOM: 6 decimals — get ATOM price via SQS (quote ATOM→USDC) then calculate amount needed
+    const atomBalance = await osmoClient.getBalance(osmoAddress, ATOM_ON_OSMOSIS);
+    const atomAmount = Number(atomBalance.amount) / 1_000_000;
+    console.log(`ATOM balance: ${atomAmount.toFixed(6)} ATOM`);
+
+    // Get ATOM/USD price by quoting 1 ATOM → USDC
+    try {
+      const priceQuote = await getSwapRoute(ATOM_ON_OSMOSIS, "1000000", USDC_AXL_ON_OSMOSIS);
+      const atomPriceUsd = Number(priceQuote.amount_out) / 1_000_000;
+      console.log(`ATOM price: ~$${atomPriceUsd.toFixed(2)}`);
+      const atomNeeded = allocationUsd / atomPriceUsd;
+      swapInputAmount = Math.floor(atomNeeded * 1_000_000).toString();
+
+      if (atomAmount < atomNeeded && !dryRun) {
+        result.errors.push(
+          `Insufficient ATOM: have ${atomAmount.toFixed(6)}, need ~${atomNeeded.toFixed(6)}. ` +
+          `Fund ${osmoAddress} with ATOM on Osmosis.`
+        );
+        return result;
+      }
+    } catch (err) {
+      result.errors.push(`ATOM price quote failed: ${err instanceof Error ? err.message : err}`);
+      return result;
+    }
   } else {
     // OSMO: calculate amount from USD allocation and OSMO price
     // Use SQS router to get a quote for the OSMO amount
@@ -244,7 +270,8 @@ export async function swapAndBurn(options: {
 
   // --- Step 1: Get swap route and execute ---
 
-  console.log(`\nStep 1: Swap ${swapInputAmount} ${swapDenom === "usdc" ? "uusdc" : "uosmo"} → REGEN on Osmosis...`);
+  const denomLabel = swapDenom === "usdc" ? "uusdc" : swapDenom === "atom" ? "uatom" : "uosmo";
+  console.log(`\nStep 1: Swap ${swapInputAmount} ${denomLabel} → REGEN on Osmosis...`);
 
   let swapRoute: SQSRoute;
   try {
@@ -274,7 +301,7 @@ export async function swapAndBurn(options: {
   });
 
   if (dryRun) {
-    console.log(`  [DRY RUN] Would swap ${Number(swapInputAmount) / 1e6} ${swapDenom} → ~${Number(swapRoute.amount_out) / 1e6} REGEN`);
+    console.log(`  [DRY RUN] Would swap ${Number(swapInputAmount) / 1e6} ${swapDenom.toUpperCase()} → ~${Number(swapRoute.amount_out) / 1e6} REGEN`);
   } else {
     try {
       const swapTx = await osmoClient.signAndBroadcast(osmoAddress, [swapMsg as EncodeObject], "auto");
@@ -440,7 +467,8 @@ export function formatSwapAndBurnResult(result: SwapAndBurnResult): string {
 
   if (result.swapTxHash) {
     lines.push(`  Swap Tx (Osmosis): ${result.swapTxHash}`);
-    lines.push(`    In: ${Number(result.swapAmountIn) / 1e6} ${result.swapDenomIn === UOSMO ? "OSMO" : "USDC"}`);
+    const denomDisplay = result.swapDenomIn === UOSMO ? "OSMO" : result.swapDenomIn === ATOM_ON_OSMOSIS ? "ATOM" : "USDC";
+    lines.push(`    In: ${Number(result.swapAmountIn) / 1e6} ${denomDisplay}`);
     lines.push(`    Out: ${Number(result.swapAmountOut) / 1e6} REGEN`);
   }
 
@@ -472,6 +500,7 @@ export async function checkOsmosisReadiness(): Promise<{
   osmoAddress: string;
   osmoBalance: number;
   usdcBalance: number;
+  atomBalance: number;
   regenOnOsmosisBalance: number;
   ready: boolean;
   issues: string[];
@@ -482,6 +511,7 @@ export async function checkOsmosisReadiness(): Promise<{
       osmoAddress: "",
       osmoBalance: 0,
       usdcBalance: 0,
+      atomBalance: 0,
       regenOnOsmosisBalance: 0,
       ready: false,
       issues: ["REGEN_WALLET_MNEMONIC not configured"],
@@ -493,23 +523,26 @@ export async function checkOsmosisReadiness(): Promise<{
 
   const osmoBalance = await client.getBalance(address, UOSMO);
   const usdcBalance = await client.getBalance(address, USDC_AXL_ON_OSMOSIS);
+  const atomBalance = await client.getBalance(address, ATOM_ON_OSMOSIS);
   const regenBalance = await client.getBalance(address, REGEN_ON_OSMOSIS);
 
   const osmoAmount = Number(osmoBalance.amount) / 1_000_000;
   const usdcAmount = Number(usdcBalance.amount) / 1_000_000;
+  const atomAmount = Number(atomBalance.amount) / 1_000_000;
   const regenAmount = Number(regenBalance.amount) / 1_000_000;
 
   if (osmoAmount < 0.05) {
     issues.push(`Need OSMO for gas: have ${osmoAmount.toFixed(6)}, need at least 0.05`);
   }
-  if (usdcAmount < 0.01 && regenAmount < 1) {
-    issues.push("No USDC or REGEN on Osmosis to swap");
+  if (usdcAmount < 0.01 && atomAmount < 0.01 && regenAmount < 1) {
+    issues.push("No USDC, ATOM, or REGEN on Osmosis to swap");
   }
 
   return {
     osmoAddress: address,
     osmoBalance: osmoAmount,
     usdcBalance: usdcAmount,
+    atomBalance: atomAmount,
     regenOnOsmosisBalance: regenAmount,
     ready: issues.length === 0,
     issues,
