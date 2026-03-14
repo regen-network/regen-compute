@@ -25,7 +25,7 @@ export function createAboutRoutes(baseUrl: string): Router {
   <meta property="og:description" content="Meet the people building ecological accountability for AI — from permaculture farms to the blockchain.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}/about">
-  <meta property="og:image" content="${baseUrl}/og-preview.jpg">
+  <meta property="og:image" content="${baseUrl}/og-card.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
@@ -33,7 +33,7 @@ export function createAboutRoutes(baseUrl: string): Router {
   <meta name="twitter:site" content="@RegenCompute">
   <meta name="twitter:title" content="About — Regenerative Compute">
   <meta name="twitter:description" content="Meet the people building ecological accountability for AI — from permaculture farms to the blockchain.">
-  <meta name="twitter:image" content="${baseUrl}/og-preview.jpg">
+  <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}

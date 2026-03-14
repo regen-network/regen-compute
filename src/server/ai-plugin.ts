@@ -26,7 +26,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
   <meta property="og:description" content="One command to connect your AI assistant to verified ecological regeneration on Regen Network.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}/ai-plugin">
-  <meta property="og:image" content="${baseUrl}/og-preview.jpg">
+  <meta property="og:image" content="${baseUrl}/og-card.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
@@ -34,7 +34,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
   <meta name="twitter:site" content="@RegenCompute">
   <meta name="twitter:title" content="AI Plugin — Regenerative Compute">
   <meta name="twitter:description" content="One command to connect your AI assistant to verified ecological regeneration on Regen Network.">
-  <meta name="twitter:image" content="${baseUrl}/og-preview.jpg">
+  <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}

@@ -26,7 +26,7 @@ export function createResearchRoutes(baseUrl: string): Router {
   <meta property="og:description" content="How much energy does one person's AI usage consume? A transparent review with citations.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="${baseUrl}/research">
-  <meta property="og:image" content="${baseUrl}/og-preview.jpg">
+  <meta property="og:image" content="${baseUrl}/og-card.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
@@ -34,7 +34,7 @@ export function createResearchRoutes(baseUrl: string): Router {
   <meta name="twitter:site" content="@RegenCompute">
   <meta name="twitter:title" content="AI Emissions Research — Regenerative Compute">
   <meta name="twitter:description" content="How much energy does one person's AI usage consume? A transparent review with citations.">
-  <meta name="twitter:image" content="${baseUrl}/og-preview.jpg">
+  <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
