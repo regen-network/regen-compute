@@ -248,20 +248,22 @@ function renderDashboardPage(opts: {
   communityTotalCredits: number;
   communitySubscriberCount: number;
   batchDenomMap: Map<string, string>;
+  totalRetiredCents: number;
+  subscriptions: Array<{ plan: string; amountCents: number; billingInterval: "monthly" | "yearly" }>;
 }): string {
   const {
     email, plan, memberSince, cumulative, monthly, badges, manageUrl,
     amountCents, billingInterval, baseUrl, nextRetirementDate, transactions, communityStats,
     regenAddress, projectCards, communityGoal, communityTotalCredits, communitySubscriberCount,
-    batchDenomMap,
+    batchDenomMap, totalRetiredCents, subscriptions,
   } = opts;
   const isYearly = billingInterval === "yearly";
 
   const planName = displayPlanName(plan);
   const totalCredits = cumulative.total_carbon + cumulative.total_biodiversity + cumulative.total_uss;
-  const contributedCents = cumulative.total_contribution_cents > 0
-    ? cumulative.total_contribution_cents
-    : amountCents;
+  const retiredCents = totalRetiredCents > 0
+    ? totalRetiredCents
+    : (cumulative.total_contribution_cents > 0 ? cumulative.total_contribution_cents : 0);
   const shareText = encodeURIComponent(
     `I'm funding ecological regeneration through my AI usage with @RegenCompute by @regen_network. Join the community and make your AI sessions count.`
   );
@@ -516,7 +518,7 @@ function renderDashboardPage(opts: {
     <!-- Compact stats -->
     <div class="dash-stats-row">
       ${totalCredits >= 4 ? `<div class="dash-stat-pill"><strong>${escapeHtml(formatCredits(totalCredits))}</strong> total credits</div>` : ""}
-      <div class="dash-stat-pill"><strong>$${escapeHtml((contributedCents / 100).toFixed(2))}</strong> contributed</div>
+      ${retiredCents > 0 ? `<div class="dash-stat-pill"><strong>$${escapeHtml((retiredCents / 100).toFixed(2))}</strong> retired to projects</div>` : ""}
       <div class="dash-stat-pill"><strong>${Math.max(1, cumulative.months_active)}</strong> month${Math.max(1, cumulative.months_active) !== 1 ? "s" : ""}</div>
     </div>
     `}
@@ -602,16 +604,19 @@ function renderDashboardPage(opts: {
     <!-- Community goal / stats -->
     ${goalHtml}
 
-    <!-- Subscription -->
+    <!-- Subscription(s) -->
     <div style="margin-bottom:32px;">
-      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div>
-          <span style="font-size:14px;font-weight:700;color:var(--regen-navy);">${escapeHtml(planName)} Plan</span>
-          <span style="font-size:13px;color:var(--regen-gray-500);margin-left:4px;">$${(amountCents / 100).toFixed(2)}/${isYearly ? "year" : "mo"}</span>
-          ${isYearly ? `<div style="font-size:12px;color:var(--regen-gray-500);margin-top:4px;">Your annual subscription funds 12 monthly retirements &mdash; credits are retired on your behalf each month throughout the year.</div>` : ""}
-        </div>
-        <a class="regen-btn regen-btn--outline regen-btn--sm" href="${escapeHtml(manageUrl)}">Manage</a>
-      </div>
+      ${subscriptions.map((sub) => {
+        const subYearly = sub.billingInterval === "yearly";
+        return `<div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;${subscriptions.length > 1 ? "margin-bottom:8px;" : ""}">
+          <div>
+            <span style="font-size:14px;font-weight:700;color:var(--regen-navy);">${escapeHtml(displayPlanName(sub.plan))} Plan</span>
+            <span style="font-size:13px;color:var(--regen-gray-500);margin-left:4px;">$${(sub.amountCents / 100).toFixed(2)}/${subYearly ? "year" : "mo"}</span>
+            ${subYearly ? `<div style="font-size:12px;color:var(--regen-gray-500);margin-top:4px;">Your annual subscription funds 12 monthly retirements &mdash; credits are retired on your behalf each month throughout the year.</div>` : ""}
+          </div>
+          <a class="regen-btn regen-btn--outline regen-btn--sm" href="${escapeHtml(manageUrl)}">Manage</a>
+        </div>`;
+      }).join("\n")}
     </div>
   </div>
 
@@ -925,14 +930,24 @@ export function createDashboardRoutes(
       }
     }
 
-    // For multi-sub users, compute combined amount and pick highest plan
+    // For multi-sub users, pick highest plan for display
     const planPriority: Record<string, number> = { dabbler: 0, seedling: 1, builder: 2, grove: 3, forest: 4, agent: 5 };
     const displaySub = allSubscribers.length > 1
       ? allSubscribers.reduce((best, s) => (planPriority[s.plan] ?? 0) > (planPriority[best.plan] ?? 0) ? s : best, allSubscribers[0])
       : subscriber;
-    // Sum monthly-equivalent across all subs
-    const totalMonthlyCents = allSubscribers.reduce((sum, s) =>
-      sum + (s.billing_interval === "yearly" ? Math.round(s.amount_cents / 12) : s.amount_cents), 0);
+
+    // Total actually spent on credit retirements across all subs
+    const retiredPlaceholders = allSubIds.map(() => "?").join(",");
+    const totalRetiredCents = (db.prepare(
+      `SELECT COALESCE(SUM(total_spent_cents), 0) AS total FROM subscriber_retirements WHERE subscriber_id IN (${retiredPlaceholders})`
+    ).get(...allSubIds) as { total: number })?.total ?? 0;
+
+    // Build subscription list for display
+    const subscriptions = (allSubscribers.length > 0 ? allSubscribers : [subscriber]).map(s => ({
+      plan: s.plan,
+      amountCents: s.amount_cents,
+      billingInterval: (s.billing_interval === "yearly" ? "yearly" : "monthly") as "monthly" | "yearly",
+    }));
 
     res.setHeader("Content-Type", "text/html");
     res.send(renderDashboardPage({
@@ -943,8 +958,8 @@ export function createDashboardRoutes(
       monthly,
       badges,
       manageUrl,
-      amountCents: allSubscribers.length > 1 ? totalMonthlyCents : subscriber.amount_cents,
-      billingInterval: allSubscribers.length > 1 ? "monthly" : (subscriber.billing_interval === "yearly" ? "yearly" : "monthly") as "monthly" | "yearly",
+      amountCents: subscriber.amount_cents,
+      billingInterval: (subscriber.billing_interval === "yearly" ? "yearly" : "monthly") as "monthly" | "yearly",
       baseUrl,
       nextRetirementDate,
       transactions,
@@ -955,6 +970,8 @@ export function createDashboardRoutes(
       communityTotalCredits,
       communitySubscriberCount,
       batchDenomMap,
+      totalRetiredCents,
+      subscriptions,
     }));
   });
 
