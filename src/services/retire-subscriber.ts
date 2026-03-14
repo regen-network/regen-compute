@@ -500,7 +500,10 @@ export async function retireForSubscriber(options: {
   };
 }
 
-/** Record retirement details in the subscriber_retirements table */
+/** Record retirement details in the subscriber_retirements table.
+ *  If a prior retirement exists with the same payment_id, UPDATE it and replace its batches
+ *  instead of creating a duplicate row. This handles retry-after-failure correctly.
+ */
 function recordSubscriberRetirement(
   db: Database.Database,
   data: {
@@ -518,23 +521,51 @@ function recordSubscriberRetirement(
   }
 ): void {
   const txn = db.transaction(() => {
-    // Insert main retirement record
-    const result = db.prepare(`
-      INSERT INTO subscriber_retirements (
-        subscriber_id, regen_address, gross_amount_cents, net_amount_cents,
-        credits_budget_cents, burn_budget_cents, ops_budget_cents,
-        total_credits_retired, total_spent_cents, payment_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      data.subscriberId, data.regenAddress, data.grossAmountCents,
-      data.netAmountCents, data.creditsBudgetCents, data.burnBudgetCents,
-      data.opsBudgetCents, data.totalCreditsRetired, data.totalSpentCents,
-      data.paymentId ?? null
-    );
+    let retirementId: number | bigint;
 
-    const retirementId = result.lastInsertRowid;
+    // Check if a prior retirement exists with the same payment_id (retry case)
+    const existing = data.paymentId
+      ? db.prepare(
+          "SELECT id FROM subscriber_retirements WHERE payment_id = ? AND subscriber_id = ?"
+        ).get(data.paymentId, data.subscriberId) as { id: number } | undefined
+      : undefined;
 
-    // Insert per-batch records
+    if (existing) {
+      // UPDATE the existing failed retirement record instead of inserting a duplicate
+      db.prepare(`
+        UPDATE subscriber_retirements SET
+          regen_address = ?, gross_amount_cents = ?, net_amount_cents = ?,
+          credits_budget_cents = ?, burn_budget_cents = ?, ops_budget_cents = ?,
+          total_credits_retired = ?, total_spent_cents = ?
+        WHERE id = ?
+      `).run(
+        data.regenAddress, data.grossAmountCents, data.netAmountCents,
+        data.creditsBudgetCents, data.burnBudgetCents, data.opsBudgetCents,
+        data.totalCreditsRetired, data.totalSpentCents,
+        existing.id
+      );
+      retirementId = existing.id;
+
+      // Delete old batch records (they'll be replaced with the merged results)
+      db.prepare("DELETE FROM subscriber_retirement_batches WHERE retirement_id = ?").run(retirementId);
+    } else {
+      // First attempt — insert new retirement record
+      const result = db.prepare(`
+        INSERT INTO subscriber_retirements (
+          subscriber_id, regen_address, gross_amount_cents, net_amount_cents,
+          credits_budget_cents, burn_budget_cents, ops_budget_cents,
+          total_credits_retired, total_spent_cents, payment_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        data.subscriberId, data.regenAddress, data.grossAmountCents,
+        data.netAmountCents, data.creditsBudgetCents, data.burnBudgetCents,
+        data.opsBudgetCents, data.totalCreditsRetired, data.totalSpentCents,
+        data.paymentId ?? null
+      );
+      retirementId = result.lastInsertRowid;
+    }
+
+    // Insert per-batch records (fresh for both new and retry)
     for (const batch of data.batches) {
       db.prepare(`
         INSERT INTO subscriber_retirement_batches (

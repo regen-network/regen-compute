@@ -535,6 +535,16 @@ export function creditBalance(
   stripeSubscriptionId?: string
 ): void {
   const txn = db.transaction(() => {
+    // Prevent duplicate transactions from the same Stripe session
+    // (checkout.session.completed and invoice.paid can both fire for initial subscription payment)
+    const existing = db.prepare(
+      "SELECT id FROM transactions WHERE stripe_session_id = ? AND user_id = ?"
+    ).get(stripeSessionId, userId) as { id: number } | undefined;
+    if (existing) {
+      console.log(`Skipping duplicate transaction: session=${stripeSessionId} user=${userId} (already recorded as txn #${existing.id})`);
+      return;
+    }
+
     db.prepare(
       "UPDATE users SET balance_cents = balance_cents + ?, updated_at = datetime('now') WHERE id = ?"
     ).run(amountCents, userId);
