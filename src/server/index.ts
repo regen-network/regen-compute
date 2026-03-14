@@ -143,19 +143,28 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
 </svg>`);
   });
 
+  // Allow all crawlers (Telegram, Twitter, etc.)
+  app.get("/robots.txt", (_req, res) => {
+    res.type("text/plain").send("User-agent: *\nAllow: /\n");
+  });
+
   // OG image for social media previews
-  app.get("/og-preview.jpg", (_req, res) => {
+  app.get("/og-card.jpg", (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=31536000");
-    res.sendFile("og-preview.jpg", { root: process.cwd() });
+    res.sendFile("og-card.jpg", { root: process.cwd() });
   });
   // Legacy fallbacks
+  app.get("/og-preview.jpg", (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.sendFile("og-card.jpg", { root: process.cwd() });
+  });
   app.get("/og-image.png", (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=31536000");
-    res.sendFile("og-preview.jpg", { root: process.cwd() });
+    res.sendFile("og-card.jpg", { root: process.cwd() });
   });
   app.get("/og-image.jpg", (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=31536000");
-    res.sendFile("og-image.jpg", { root: process.cwd() });
+    res.sendFile("og-card.jpg", { root: process.cwd() });
   });
 
   // Always init DB and config — display-only pages need them
