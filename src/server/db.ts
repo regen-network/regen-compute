@@ -467,6 +467,17 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     WHERE type = 'subscription' AND billing_interval IS NULL
   `).run();
 
+  // Migration: add source_type and subscriber_id to burn_accumulator for audit trail (#77)
+  const burnCols = (_db.pragma("table_info(burn_accumulator)") as Array<{ name: string }>).map((c) => c.name);
+  if (!burnCols.includes("source_type")) {
+    _db.exec(`ALTER TABLE burn_accumulator ADD COLUMN source_type TEXT`);
+    console.log("Migration: added source_type column to burn_accumulator");
+  }
+  if (!burnCols.includes("subscriber_id")) {
+    _db.exec(`ALTER TABLE burn_accumulator ADD COLUMN subscriber_id INTEGER`);
+    console.log("Migration: added subscriber_id column to burn_accumulator");
+  }
+
   return _db;
 }
 

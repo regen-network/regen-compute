@@ -587,11 +587,16 @@ function recordSubscriberRetirement(
  * Accumulate burn budget from subscriber retirements.
  * Burns are executed separately (periodically) from the master wallet.
  */
-export function accumulateBurnBudget(db: Database.Database, amountCents: number): void {
+export function accumulateBurnBudget(
+  db: Database.Database,
+  amountCents: number,
+  sourceType?: string,
+  subscriberId?: number
+): void {
   db.prepare(`
-    INSERT INTO burn_accumulator (amount_cents)
-    VALUES (?)
-  `).run(amountCents);
+    INSERT INTO burn_accumulator (amount_cents, source_type, subscriber_id)
+    VALUES (?, ?, ?)
+  `).run(amountCents, sourceType ?? null, subscriberId ?? null);
 }
 
 /** Get total accumulated burn budget that hasn't been executed yet */

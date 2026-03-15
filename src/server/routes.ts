@@ -1831,7 +1831,7 @@ function handleSubscriptionDeleted(db: Database.Database, sub: Stripe.Subscripti
 
           if (unusedBurn > 0) {
             // Insert negative entry to offset the front-loaded burn
-            accumulateBurnBudget(db, -unusedBurn);
+            accumulateBurnBudget(db, -unusedBurn, "yearly_cancel_refund", existing.id);
             console.log(
               `Refunded unused burn budget for cancelled yearly subscriber ${existing.id}: ` +
               `$${(unusedBurn / 100).toFixed(2)} (${monthsUnused} unused months of ${yearlyBurnBudget} total)`
@@ -1936,7 +1936,7 @@ async function handleInvoicePaid(db: Database.Database, invoice: Stripe.Invoice,
         // Monthly retirements will skip burn accumulation since it's already front-loaded.
         const yearlyBurnBudget = Math.floor(netTotal * 0.05); // 5% burn split
         if (yearlyBurnBudget > 0) {
-          accumulateBurnBudget(db, yearlyBurnBudget);
+          accumulateBurnBudget(db, yearlyBurnBudget, "yearly_frontload", existing.id);
           console.log(
             `Front-loaded yearly burn budget: $${(yearlyBurnBudget / 100).toFixed(2)} ` +
             `(5% of $${(netTotal / 100).toFixed(2)} net) for subscriber ${existing.id}`
@@ -2034,7 +2034,7 @@ function executeRetirementAsync(
     });
 
     if (!skipBurnAccumulation && result.burnBudgetCents > 0 && (result.status === "success" || result.status === "partial")) {
-      accumulateBurnBudget(db, result.burnBudgetCents);
+      accumulateBurnBudget(db, result.burnBudgetCents, "monthly_retirement", subscriberId);
       // Check if pending burn budget has reached threshold — trigger auto burn
       maybeExecuteAutoBurn(db).catch(() => {});
     }
@@ -2111,7 +2111,7 @@ async function processScheduledRetirements(db: Database.Database, baseUrl?: stri
 
         if (result.status === "success") {
           if (!isYearlyScheduled && result.burnBudgetCents > 0) {
-            accumulateBurnBudget(db, result.burnBudgetCents);
+            accumulateBurnBudget(db, result.burnBudgetCents, "scheduled_retirement", scheduled.subscriber_id);
             maybeExecuteAutoBurn(db).catch(() => {});
           }
           updateScheduledRetirement(db, scheduled.id, {
@@ -2129,7 +2129,7 @@ async function processScheduledRetirements(db: Database.Database, baseUrl?: stri
         } else if (result.status === "partial") {
           // Some batches succeeded, others failed — mark as partial so it will be retried
           if (!isYearlyScheduled && result.burnBudgetCents > 0) {
-            accumulateBurnBudget(db, result.burnBudgetCents);
+            accumulateBurnBudget(db, result.burnBudgetCents, "scheduled_retirement", scheduled.subscriber_id);
             maybeExecuteAutoBurn(db).catch(() => {});
           }
           updateScheduledRetirement(db, scheduled.id, {
