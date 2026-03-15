@@ -47,7 +47,7 @@ import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { retireForSubscriber, accumulateBurnBudget, getPendingBurnBudget, markBurnExecuted, calculateNetAfterStripe, type SubscriberRetirementResult } from "../services/retire-subscriber.js";
 import { swapAndBurn, checkOsmosisReadiness } from "../services/swap-and-burn.js";
 import { getProjectForBatch } from "./project-metadata.js";
-import { checkAndSendMonthlyReminder, checkTradableStock } from "../services/admin-telegram.js";
+import { checkAndSendMonthlyReminder, checkTradableStock, sendTelegram } from "../services/admin-telegram.js";
 import { updateRegistryProfile } from "../services/registry-profile.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 
@@ -1032,6 +1032,29 @@ ${betaBannerJS()}
       // Note: handleInvoicePaid triggers retirement asynchronously (fire-and-forget)
       // so the webhook responds quickly. We still await the synchronous part (period updates).
       await handleInvoicePaid(db, invoice, baseUrl);
+    } else if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subDetails = invoice.parent?.subscription_details;
+      const subRef = subDetails?.subscription;
+      const subId = typeof subRef === "string" ? subRef : subRef?.id;
+      if (subId) {
+        const existing = getSubscriberByStripeId(db, subId);
+        if (existing) {
+          console.warn(`Payment failed for subscriber ${existing.id} (${subId}): ${invoice.id}`);
+          sendTelegram(
+            `\u26a0\ufe0f *Payment Failed*\nSubscriber ${existing.id} (${subId})\nInvoice: ${invoice.id}`
+          ).catch(() => {});
+        }
+      }
+    } else if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const amountRefunded = charge.amount_refunded ?? 0;
+      console.warn(`Charge refunded: ${charge.id}, amount=$${(amountRefunded / 100).toFixed(2)}`);
+      // Note: Credits already retired on-chain cannot be reversed.
+      // This is logged for accounting reconciliation.
+      sendTelegram(
+        `\ud83d\udcb8 *Charge Refunded*\nCharge: ${charge.id}\nAmount: $${(amountRefunded / 100).toFixed(2)}\n_Credits retired on-chain cannot be reversed._`
+      ).catch(() => {});
     }
 
     res.json({ received: true });

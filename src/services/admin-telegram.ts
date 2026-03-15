@@ -19,7 +19,7 @@ import { listSellOrders } from "./ledger.js";
 const ADMIN_BOT_TOKEN = process.env.ADMIN_TELEGRAM_BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.ADMIN_TELEGRAM_CHAT_ID;
 
-async function sendTelegram(text: string, parseMode: string = "Markdown"): Promise<boolean> {
+export async function sendTelegram(text: string, parseMode: string = "Markdown"): Promise<boolean> {
   if (!ADMIN_BOT_TOKEN || !ADMIN_CHAT_ID) {
     console.warn("Admin Telegram not configured (ADMIN_TELEGRAM_BOT_TOKEN / ADMIN_TELEGRAM_CHAT_ID)");
     return false;
