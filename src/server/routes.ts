@@ -2061,12 +2061,13 @@ async function processScheduledRetirements(db: Database.Database, baseUrl?: stri
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      db.prepare("UPDATE scheduled_retirements SET retry_count = retry_count + 1 WHERE id = ?").run(scheduled.id);
       updateScheduledRetirement(db, scheduled.id, {
         status: "failed",
         error: msg,
         executed_at: new Date().toISOString(),
       });
-      console.error(`Scheduled retirement error: id=${scheduled.id} ${msg}`);
+      console.error(`Scheduled retirement error: id=${scheduled.id} retry_count=${(scheduled.retry_count ?? 0) + 1} ${msg}`);
     }
   }
 }

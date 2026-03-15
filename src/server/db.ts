@@ -387,6 +387,14 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     console.log("Migration: updated scheduled_retirements CHECK constraint to include 'partial'");
   }
 
+  // Migration: add retry_count column to scheduled_retirements
+  try {
+    _db.prepare("ALTER TABLE scheduled_retirements ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0").run();
+    console.log("Migration: added retry_count column to scheduled_retirements");
+  } catch (e) {
+    // Column already exists
+  }
+
   // Backfill referral codes for users that don't have one
   const usersWithoutCodes = _db.prepare(
     "SELECT id FROM users WHERE referral_code IS NULL"
@@ -874,6 +882,7 @@ export interface ScheduledRetirement {
   status: "pending" | "running" | "completed" | "partial" | "failed";
   retirement_id: number | null;
   error: string | null;
+  retry_count: number;
   created_at: string;
   executed_at: string | null;
 }
@@ -894,7 +903,7 @@ export function createScheduledRetirement(
 
 export function getDueScheduledRetirements(db: Database.Database): ScheduledRetirement[] {
   return db.prepare(
-    "SELECT sr.* FROM scheduled_retirements sr JOIN subscribers s ON sr.subscriber_id = s.id WHERE sr.status IN ('pending', 'partial') AND sr.scheduled_date <= datetime('now') AND s.status = 'active' ORDER BY sr.scheduled_date ASC"
+    "SELECT sr.* FROM scheduled_retirements sr JOIN subscribers s ON sr.subscriber_id = s.id WHERE (sr.status IN ('pending', 'partial') OR (sr.status = 'failed' AND sr.retry_count < 3)) AND sr.scheduled_date <= datetime('now') AND s.status = 'active' ORDER BY sr.scheduled_date ASC"
   ).all() as ScheduledRetirement[];
 }
 
