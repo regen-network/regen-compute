@@ -8,6 +8,7 @@
 
 import { Router, Request, Response } from "express";
 import { getDb } from "./db.js";
+import { PROJECTS } from "./project-metadata.js";
 
 export function createAgentViewRoutes(baseUrl: string): Router {
   const router = Router();
@@ -165,15 +166,37 @@ export function createAgentViewRoutes(baseUrl: string): Router {
     </div>
 
     <div class="section">
-      <div class="section-header">Credit Types</div>
-      <table>
-        <tr><th>Code</th><th>Type</th><th>Example Project</th></tr>
-        <tr><td class="bright">C</td><td>Carbon</td><td>Harvey Manning Park Expansion (Washington, USA)</td></tr>
-        <tr><td class="bright">BT</td><td>Biodiversity</td><td>El Globo Habitat Bank (Santander, Colombia)</td></tr>
-        <tr><td class="bright">USS</td><td>Umbrella Species</td><td>Biocultural Jaguar Credits (Pastaza, Ecuador)</td></tr>
-        <tr><td class="bright">KSH</td><td>Regenerative Grazing</td><td>Grgich Hills Estate (Napa Valley, USA)</td></tr>
-        <tr><td class="bright">MBS</td><td>Marine Biodiversity</td><td>(Coming soon)</td></tr>
-      </table>
+      <div class="section-header">Available Ecological Credits (${PROJECTS.length} projects)</div>
+${PROJECTS.map(p => `
+      <div style="margin: 16px 0; padding: 16px; background: #0d1117; border: 1px solid #1e3a2a; border-radius: 6px;">
+        <div style="margin-bottom: 8px;">
+          <span class="bright" style="font-size: 15px; font-weight: 700;">${p.name}</span>
+          <span class="dim" style="margin-left: 8px;">${p.location}</span>
+        </div>
+        <div class="kv"><span class="key" style="min-width: 180px;">project_id</span><span class="val">${p.projectId}</span></div>
+        <div class="kv"><span class="key" style="min-width: 180px;">credit_class</span><span class="val">${p.creditClassId} — ${p.creditTypeLabel} (${p.creditType})</span></div>
+        <div class="kv"><span class="key" style="min-width: 180px;">description</span><span class="val" style="max-width: 600px;">${p.description.length > 160 ? p.description.slice(0, 160) + '...' : p.description}</span></div>
+        <div style="margin-top: 8px;">
+          <span class="dim">links:</span>
+          <a href="${p.projectPageUrl}" style="margin-left: 8px;">project page</a>
+          <span class="dim"> | </span>
+          <a href="https://app.regen.network/credit-classes/${p.creditClassId}">credit class</a>
+          <span class="dim"> | </span>
+          <a href="https://lcd-regen.keplr.app/regen/ecocredit/marketplace/v1/sell-orders-by-batch/${p.projectId}">sell orders (LCD)</a>
+          <span class="dim"> | </span>
+          <a href="https://api.regen.network/indexer/v1/graphql">query indexer</a>
+        </div>
+      </div>`).join('')}
+
+      <div style="margin-top: 16px;">
+        <div class="section-header" style="font-size: 11px;">Audit & Verification</div>
+        <div class="kv"><span class="key" style="min-width: 180px;">all_credit_classes</span><span class="val"><a href="https://lcd-regen.keplr.app/regen/ecocredit/v1/classes">lcd-regen.keplr.app/regen/ecocredit/v1/classes</a></span></div>
+        <div class="kv"><span class="key" style="min-width: 180px;">all_projects</span><span class="val"><a href="https://lcd-regen.keplr.app/regen/ecocredit/v1/projects">lcd-regen.keplr.app/regen/ecocredit/v1/projects</a></span></div>
+        <div class="kv"><span class="key" style="min-width: 180px;">all_batches</span><span class="val"><a href="https://lcd-regen.keplr.app/regen/ecocredit/v1/batches">lcd-regen.keplr.app/regen/ecocredit/v1/batches</a></span></div>
+        <div class="kv"><span class="key" style="min-width: 180px;">all_sell_orders</span><span class="val"><a href="https://lcd-regen.keplr.app/regen/ecocredit/marketplace/v1/sell-orders">lcd-regen.keplr.app/.../sell-orders</a></span></div>
+        <div class="kv"><span class="key" style="min-width: 180px;">marketplace</span><span class="val"><a href="https://app.regen.network">app.regen.network</a> (browse all projects)</span></div>
+        <div class="kv"><span class="key" style="min-width: 180px;">registry</span><span class="val"><a href="https://registry.regen.network">registry.regen.network</a> (methodology docs)</span></div>
+      </div>
     </div>
 
     <div class="section">
