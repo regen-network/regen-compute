@@ -1987,15 +1987,27 @@ function executeRetirementAsync(
       // Send retirement notification email (fire-and-forget)
       sendRetirementNotificationEmail(db, subscriberId, result, baseUrl).catch(() => {});
     } else if (result.status === "partial" && paymentId) {
-      // Some batches failed — schedule a retry in 1 hour
-      console.warn(
-        `Retirement partial: subscriber=${subscriberId} credits=${result.totalCreditsRetired.toFixed(6)} ` +
-        `errors=${result.errors.length} — scheduling retry in 1 hour`
+      // Auto-retry partial retirements after 60 seconds
+      const failedBatches = result.batches.filter(b => b.error !== null);
+      console.log(
+        `Partial retirement for subscriber ${subscriberId}: ${failedBatches.length} failed batches. ` +
+        `Auto-retrying in 60s with payment_id=${paymentId}`
       );
-      setTimeout(() => {
-        console.log(`Retrying partial retirement for subscriber=${subscriberId} payment=${paymentId}`);
-        executeRetirementAsync(db, subscriberId, grossAmountCents, billingInterval, baseUrl, precomputedNetCents, paymentId, skipBurnAccumulation);
-      }, 60 * 60 * 1000);
+      setTimeout(async () => {
+        try {
+          console.log(`Auto-retry: re-executing retirement for subscriber ${subscriberId} (payment_id=${paymentId})`);
+          const retryResult = await retireForSubscriber({
+            subscriberId,
+            grossAmountCents,
+            billingInterval,
+            precomputedNetCents,
+            paymentId,
+          });
+          console.log(`Auto-retry result: subscriber ${subscriberId} status=${retryResult.status} credits=${retryResult.totalCreditsRetired}`);
+        } catch (err) {
+          console.error(`Auto-retry failed for subscriber ${subscriberId}:`, err instanceof Error ? err.message : err);
+        }
+      }, 60_000);
     } else if (result.status === "partial") {
       console.warn(
         `Retirement partial: subscriber=${subscriberId} credits=${result.totalCreditsRetired.toFixed(6)} ` +
