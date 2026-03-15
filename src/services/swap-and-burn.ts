@@ -284,14 +284,29 @@ export async function swapAndBurn(options: {
     return result;
   }
 
+  // Sanity check: if SQS quote is wildly inflated, cap it and warn
+  const quotedRegen = Number(swapRoute.amount_out) / 1_000_000;
+  if (quotedRegen > targetRegen * 2) {
+    result.errors.push(
+      `SQS quote looks wrong: quoted ${quotedRegen.toFixed(2)} REGEN but target is ` +
+      `${targetRegen.toFixed(2)} REGEN (${(quotedRegen / targetRegen).toFixed(1)}x). ` +
+      `Using target-based amount instead.`
+    );
+    // Fall back to target with 20% buffer for slippage
+    swapRoute.amount_out = Math.floor(targetRegen * 1.2 * 1_000_000).toString();
+  }
+
   // Build swap message using poolmanager
   const routes = swapRoute.route[0].pools.map((pool) => ({
     poolId: BigInt(pool.id),
     tokenOutDenom: pool.token_out_denom,
   }));
 
-  // Allow 3% slippage
-  const minAmountOut = (BigInt(swapRoute.amount_out) * 97n / 100n).toString();
+  // Use the lower of: 97% of quote OR 80% of target
+  // This prevents inflated quotes from setting an unreachable minAmountOut
+  const quoteBased = BigInt(swapRoute.amount_out) * 97n / 100n;
+  const targetBased = BigInt(Math.floor(targetRegen * 0.8 * 1_000_000));
+  const minAmountOut = (quoteBased < targetBased ? quoteBased : targetBased).toString();
 
   const swapMsg = osmosis.poolmanager.v1beta1.MessageComposer.withTypeUrl.swapExactAmountIn({
     sender: osmoAddress,
