@@ -25,6 +25,7 @@ import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
 import { createAboutRoutes } from "./about.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
+import { createAgentViewRoutes } from "./agent-view.js";
 import { loadConfig } from "../config.js";
 import { regenLogoSVG, regenLogoPNG } from "./brand.js";
 
@@ -35,6 +36,10 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   const baseUrl = process.env.REGEN_SERVER_URL ?? `http://localhost:${port}`;
 
   const app = express();
+
+  // Agent view middleware — intercepts ?view=agent on any page, mount first
+  const agentViewRoutes = createAgentViewRoutes(baseUrl);
+  app.use(agentViewRoutes);
 
   // Certificate routes — no Stripe dependency, mount first
   const certificateRoutes = createCertificateRoutes(baseUrl);
