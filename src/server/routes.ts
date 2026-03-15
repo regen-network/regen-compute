@@ -354,6 +354,27 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
       .basket-grid { grid-template-columns: 1fr; }
     }
   </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Regenerative Compute",
+  "applicationCategory": "DeveloperApplication",
+  "description": "Ecological accountability for AI compute — retire verified ecocredits on Regen Network. MCP server for Claude, Cursor, and any MCP-compatible AI tool.",
+  "operatingSystem": "Any",
+  "url": "https://compute.regen.network",
+  "offers": [
+    { "@type": "Offer", "name": "Dabbler", "price": "1.25", "priceCurrency": "USD", "billingDuration": "P1M", "description": "For casual AI users" },
+    { "@type": "Offer", "name": "Builder", "price": "2.50", "priceCurrency": "USD", "billingDuration": "P1M", "description": "For regular AI developers" },
+    { "@type": "Offer", "name": "Agent", "price": "50.00", "priceCurrency": "USD", "billingDuration": "P1Y", "description": "For AI-native teams and autonomous agents" }
+  ],
+  "provider": {
+    "@type": "Organization",
+    "name": "Regen Network Development",
+    "url": "https://regen.network"
+  }
+}
+</script>
 </head>
 <body>
   ${betaBannerHTML()}

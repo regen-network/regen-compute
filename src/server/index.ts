@@ -143,6 +143,109 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
 </svg>`);
   });
 
+  // --- Machine-readable discovery endpoints for autonomous AI agents ---
+
+  // MCP Server Card — describes this MCP server's capabilities and tools
+  app.get("/.well-known/mcp/server-card.json", (_req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.json({
+      name: "regen-compute",
+      version: "0.3.4",
+      description: "Ecological accountability for AI compute — retire verified ecocredits on Regen Network",
+      transport: ["stdio"],
+      install: "npx regen-compute",
+      homepage: "https://compute.regen.network",
+      repository: "https://github.com/regen-network/regen-compute",
+      npm: "https://www.npmjs.com/package/regen-compute",
+      capabilities: {
+        tools: true,
+        prompts: true,
+        resources: false,
+      },
+      tools: [
+        "estimate_session_footprint",
+        "estimate_monthly_footprint",
+        "browse_available_credits",
+        "retire_credits",
+        "get_retirement_certificate",
+        "get_impact_summary",
+        "check_subscription_status",
+      ],
+      credit_types: ["carbon", "biodiversity", "umbrella_species", "marine_biodiversity", "regenerative_grazing"],
+    });
+  });
+
+  // Google A2A Agent Card — describes agent capabilities for A2A protocol
+  app.get("/.well-known/agent.json", (_req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.json({
+      name: "Regenerative Compute",
+      description: "Retire verified ecological credits on behalf of AI compute usage on Regen Network",
+      url: "https://compute.regen.network",
+      version: "1.0",
+      provider: {
+        organization: "Regen Network Development",
+        url: "https://regen.network",
+      },
+      capabilities: {
+        streaming: false,
+        pushNotifications: false,
+      },
+      skills: [
+        { id: "estimate_footprint", name: "Estimate AI Footprint", description: "Estimate the ecological footprint of an AI session based on duration and tool calls" },
+        { id: "browse_credits", name: "Browse Ecological Credits", description: "View available carbon, biodiversity, and species stewardship credits with live pricing" },
+        { id: "retire_credits", name: "Retire Ecological Credits", description: "Permanently retire verified ecological credits on Regen Ledger" },
+        { id: "get_certificate", name: "Get Retirement Certificate", description: "Retrieve on-chain proof of credit retirement with verifiable transaction hash" },
+        { id: "check_subscription", name: "Check Subscription Status", description: "Check subscriber status, cumulative impact, and referral link" },
+      ],
+      authentication: {
+        schemes: ["bearer"],
+        credentials_url: "https://compute.regen.network",
+        description: "API key obtained via subscription. Install MCP server for key-free access.",
+      },
+      defaultInputModes: ["application/json"],
+      defaultOutputModes: ["application/json"],
+    });
+  });
+
+  // Multi-step agent flows — describes API workflows for orchestration agents
+  app.get("/.well-known/agents.json", (_req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.json({
+      version: "1.0",
+      name: "Regenerative Compute",
+      description: "Ecological accountability for AI compute via verified credit retirement on Regen Network",
+      api_base: "https://compute.regen.network/api/v1",
+      openapi: "https://compute.regen.network/api/v1/openapi.json",
+      authentication: { type: "bearer", header: "Authorization" },
+      flows: [
+        {
+          id: "offset_ai_session",
+          name: "Offset AI Session",
+          description: "Estimate footprint, browse credits, retire, get certificate",
+          steps: [
+            { method: "GET", path: "/footprint?session_minutes={minutes}&tool_calls={calls}", description: "Estimate session footprint" },
+            { method: "GET", path: "/credits?type=all", description: "Browse available credits" },
+            { method: "POST", path: "/retire", body: { credit_class: "string", quantity: "number" }, description: "Retire ecological credits" },
+            { method: "GET", path: "/certificates/{nodeId}", description: "Get retirement certificate" },
+          ],
+        },
+        {
+          id: "check_impact",
+          name: "Check Ecological Impact",
+          description: "View subscription status and network-wide impact",
+          steps: [
+            { method: "GET", path: "/subscription", description: "Check subscription and cumulative impact" },
+            { method: "GET", path: "/impact", description: "View Regen Network aggregate stats" },
+          ],
+        },
+      ],
+    });
+  });
+
   // Allow all crawlers (Telegram, Twitter, etc.)
   app.get("/robots.txt", (_req, res) => {
     res.type("text/plain").send("User-agent: *\nAllow: /\n");
