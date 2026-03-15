@@ -1762,6 +1762,39 @@ function handleSubscriptionUpdated(db: Database.Database, sub: Stripe.Subscripti
       current_period_start: periodStart,
       current_period_end: periodEnd,
     });
+
+    // If a yearly subscriber's amount changed, recalculate scheduled retirements
+    if (existing.billing_interval === "yearly" && amountCents !== existing.amount_cents) {
+      // Cancel existing pending scheduled retirements
+      const cancelled = db.prepare(
+        "UPDATE scheduled_retirements SET status = 'failed', error = 'plan_changed' WHERE subscriber_id = ? AND status = 'pending'"
+      ).run(existing.id);
+
+      if (cancelled.changes > 0) {
+        // Recalculate with new amount
+        const newNetTotal = calculateNetAfterStripe(amountCents);
+        const newMonthlyNet = Math.floor(newNetTotal / 12);
+        const newMonthlyGross = Math.floor(amountCents / 12);
+
+        // Recreate scheduled retirements for remaining months
+        const now = new Date();
+        for (let i = 0; i < cancelled.changes; i++) {
+          const scheduledDate = new Date(now);
+          scheduledDate.setMonth(scheduledDate.getMonth() + i + 1);
+          createScheduledRetirement(
+            db, existing.id, newMonthlyGross, newMonthlyNet,
+            scheduledDate.toISOString().split("T")[0],
+            "yearly"
+          );
+        }
+
+        console.log(
+          `Recalculated ${cancelled.changes} scheduled retirements for subscriber ${existing.id} ` +
+          `after plan change: $${(existing.amount_cents / 100).toFixed(2)} → $${(amountCents / 100).toFixed(2)}`
+        );
+      }
+    }
+
     console.log(`Subscription updated: ${stripeSubId} plan=${plan} interval=${billingInterval} status=${status}`);
   } catch (err) {
     console.error("Error handling subscription.updated:", err instanceof Error ? err.message : err);
