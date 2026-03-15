@@ -49,6 +49,26 @@ import { checkAndSendMonthlyReminder, checkTradableStock } from "../services/adm
 import { updateRegistryProfile } from "../services/registry-profile.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 
+/** Per-subscriber lock to prevent concurrent retirement execution */
+const _subscriberLocks = new Map<number, Promise<void>>();
+
+async function withSubscriberLock<T>(subscriberId: number, fn: () => Promise<T>): Promise<T> {
+  const existing = _subscriberLocks.get(subscriberId) ?? Promise.resolve();
+  let resolve: () => void;
+  const next = new Promise<void>((r) => { resolve = r; });
+  _subscriberLocks.set(subscriberId, next);
+
+  await existing; // Wait for any prior retirement to finish
+  try {
+    return await fn();
+  } finally {
+    resolve!();
+    if (_subscriberLocks.get(subscriberId) === next) {
+      _subscriberLocks.delete(subscriberId);
+    }
+  }
+}
+
 // 5-minute in-memory cache for network stats
 let statsCache: { data: NetworkStats; fetchedAt: number } | null = null;
 const STATS_CACHE_TTL = 300_000;
@@ -1913,13 +1933,15 @@ function executeRetirementAsync(
   paymentId?: string,
   skipBurnAccumulation = false
 ): void {
-  retireForSubscriber({
-    subscriberId,
-    grossAmountCents,
-    billingInterval,
-    precomputedNetCents,
-    paymentId,
-  }).then((result) => {
+  withSubscriberLock(subscriberId, async () => {
+    const result = await retireForSubscriber({
+      subscriberId,
+      grossAmountCents,
+      billingInterval,
+      precomputedNetCents,
+      paymentId,
+    });
+
     if (!skipBurnAccumulation && result.burnBudgetCents > 0 && (result.status === "success" || result.status === "partial")) {
       accumulateBurnBudget(db, result.burnBudgetCents);
       // Check if pending burn budget has reached threshold — trigger auto burn
@@ -1971,61 +1993,63 @@ async function processScheduledRetirements(db: Database.Database, baseUrl?: stri
     updateScheduledRetirement(db, scheduled.id, { status: "running" });
 
     try {
-      const result = await retireForSubscriber({
-        subscriberId: scheduled.subscriber_id,
-        grossAmountCents: scheduled.gross_amount_cents,
-        billingInterval: scheduled.billing_interval as "monthly" | "yearly",
-        precomputedNetCents: scheduled.net_amount_cents || undefined,
-        paymentId: `scheduled-${scheduled.id}`,
+      await withSubscriberLock(scheduled.subscriber_id, async () => {
+        const result = await retireForSubscriber({
+          subscriberId: scheduled.subscriber_id,
+          grossAmountCents: scheduled.gross_amount_cents,
+          billingInterval: scheduled.billing_interval as "monthly" | "yearly",
+          precomputedNetCents: scheduled.net_amount_cents || undefined,
+          paymentId: `scheduled-${scheduled.id}`,
+        });
+
+        // Yearly burn budget is front-loaded at payment time — skip per-month accumulation.
+        // Only accumulate burn for monthly scheduled retirements (currently none, but future-proof).
+        const isYearlyScheduled = scheduled.billing_interval === "yearly";
+
+        if (result.status === "success") {
+          if (!isYearlyScheduled && result.burnBudgetCents > 0) {
+            accumulateBurnBudget(db, result.burnBudgetCents);
+            maybeExecuteAutoBurn(db).catch(() => {});
+          }
+          updateScheduledRetirement(db, scheduled.id, {
+            status: "completed",
+            executed_at: new Date().toISOString(),
+          });
+          console.log(
+            `Scheduled retirement completed: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
+            `credits=${result.totalCreditsRetired.toFixed(6)}`
+          );
+          // Send retirement notification email
+          if (baseUrl) {
+            sendRetirementNotificationEmail(db, scheduled.subscriber_id, result, baseUrl).catch(() => {});
+          }
+        } else if (result.status === "partial") {
+          // Some batches succeeded, others failed — mark as partial so it will be retried
+          if (!isYearlyScheduled && result.burnBudgetCents > 0) {
+            accumulateBurnBudget(db, result.burnBudgetCents);
+            maybeExecuteAutoBurn(db).catch(() => {});
+          }
+          updateScheduledRetirement(db, scheduled.id, {
+            status: "partial",
+            error: result.errors.join("; "),
+            executed_at: new Date().toISOString(),
+          });
+          console.warn(
+            `Scheduled retirement partial: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
+            `credits=${result.totalCreditsRetired.toFixed(6)} — will retry failed batches`
+          );
+        } else {
+          updateScheduledRetirement(db, scheduled.id, {
+            status: "failed",
+            error: result.errors.join("; "),
+            executed_at: new Date().toISOString(),
+          });
+          console.error(
+            `Scheduled retirement failed: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
+            `errors=${JSON.stringify(result.errors)}`
+          );
+        }
       });
-
-      // Yearly burn budget is front-loaded at payment time — skip per-month accumulation.
-      // Only accumulate burn for monthly scheduled retirements (currently none, but future-proof).
-      const isYearlyScheduled = scheduled.billing_interval === "yearly";
-
-      if (result.status === "success") {
-        if (!isYearlyScheduled && result.burnBudgetCents > 0) {
-          accumulateBurnBudget(db, result.burnBudgetCents);
-          maybeExecuteAutoBurn(db).catch(() => {});
-        }
-        updateScheduledRetirement(db, scheduled.id, {
-          status: "completed",
-          executed_at: new Date().toISOString(),
-        });
-        console.log(
-          `Scheduled retirement completed: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
-          `credits=${result.totalCreditsRetired.toFixed(6)}`
-        );
-        // Send retirement notification email
-        if (baseUrl) {
-          sendRetirementNotificationEmail(db, scheduled.subscriber_id, result, baseUrl).catch(() => {});
-        }
-      } else if (result.status === "partial") {
-        // Some batches succeeded, others failed — mark as partial so it will be retried
-        if (!isYearlyScheduled && result.burnBudgetCents > 0) {
-          accumulateBurnBudget(db, result.burnBudgetCents);
-          maybeExecuteAutoBurn(db).catch(() => {});
-        }
-        updateScheduledRetirement(db, scheduled.id, {
-          status: "partial",
-          error: result.errors.join("; "),
-          executed_at: new Date().toISOString(),
-        });
-        console.warn(
-          `Scheduled retirement partial: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
-          `credits=${result.totalCreditsRetired.toFixed(6)} — will retry failed batches`
-        );
-      } else {
-        updateScheduledRetirement(db, scheduled.id, {
-          status: "failed",
-          error: result.errors.join("; "),
-          executed_at: new Date().toISOString(),
-        });
-        console.error(
-          `Scheduled retirement failed: id=${scheduled.id} subscriber=${scheduled.subscriber_id} ` +
-          `errors=${JSON.stringify(result.errors)}`
-        );
-      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       updateScheduledRetirement(db, scheduled.id, {
