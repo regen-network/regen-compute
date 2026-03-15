@@ -627,6 +627,8 @@ Then estimate my AI usage footprint and recommend a tier ($1.25, $2.50, or $5/mo
     { label: "GitHub", href: "https://github.com/regen-network/regen-compute" },
   ] })}
 
+  <button onclick="window.location.href='/?view=agent'" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:#1a1a2e;color:#4FB573;border:1px solid #4FB573;border-radius:8px;padding:10px 18px;cursor:pointer;font-family:monospace;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.2s;" onmouseover="this.style.background='#2a2a4e'" onmouseout="this.style.background='#1a1a2e'">&#129302; Agent View</button>
+
   <script>
     function fundCustom() {
       var input = document.getElementById('custom-amount');

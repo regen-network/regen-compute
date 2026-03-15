@@ -541,5 +541,5 @@ export function brandFooter(opts?: FooterOptions): string {
       ${opts?.showInstall ? `<div class="regen-footer__install">claude mcp add -s user regen-compute -- npx regen-compute</div>` : ""}
       <div class="regen-footer__note">Credits are permanently retired on a public ledger. Powered by Regen Network.</div>
     </footer>
-    <button onclick="window.location.href=window.location.pathname+'?view=agent'" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:#1a1a2e;color:#4FB573;border:1px solid #4FB573;border-radius:8px;padding:10px 18px;cursor:pointer;font-family:monospace;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.2s;" onmouseover="this.style.background='#2a2a4e'" onmouseout="this.style.background='#1a1a2e'">&#129302; Agent View</button>`;
+    `;
 }
