@@ -56,6 +56,7 @@ import { getProjectForBatch, PROJECTS } from "./project-metadata.js";
 import { checkAndSendMonthlyReminder, checkTradableStock, sendTelegram } from "../services/admin-telegram.js";
 import { updateRegistryProfile } from "../services/registry-profile.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
+import { t, SUPPORTED_LANGS, LANG_NAMES, type LangCode } from "./translations.js";
 
 /** Per-subscriber lock to prevent concurrent retirement execution */
 const _subscriberLocks = new Map<number, Promise<void>>();
@@ -104,10 +105,11 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   // --- Public routes ---
 
   /**
-   * GET /
+   * GET / and GET /:lang
    * Subscription landing page with live impact stats.
+   * Supports 21 languages via /:lang (e.g. /es, /fr, /zh).
    */
-  router.get("/", async (_req: Request, res: Response) => {
+  async function serveLandingPage(_req: Request, res: Response, lang: LangCode = "en") {
     const dabblerUrl = config?.stripePaymentLinkSeedling ?? process.env.STRIPE_PAYMENT_LINK_SEEDLING ?? "#";
     const builderUrl = config?.stripePaymentLinkGrove ?? process.env.STRIPE_PAYMENT_LINK_GROVE ?? "#";
     const agentUrl = config?.stripePaymentLinkForest ?? process.env.STRIPE_PAYMENT_LINK_FOREST ?? "#";
@@ -128,14 +130,14 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
 
     res.setHeader("Content-Type", "text/html");
     res.send(`<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regenerative Compute — Fund Ecological Regeneration from Your AI Sessions</title>
-  <meta name="description" content="Your AI has an ecological footprint. Regenerative Compute channels a small monthly amount into verified forests, soil, and biodiversity projects — with permanent, auditable proof.">
-  <meta property="og:title" content="Regenerative Compute — Fund Ecological Regeneration from Your AI Sessions">
-  <meta property="og:description" content="Your AI has an ecological footprint. Regenerative Compute channels a small monthly amount into verified forests, soil, and biodiversity projects — with permanent, auditable proof.">
+  <title>${t(lang, "page_title")}</title>
+  <meta name="description" content="${t(lang, "page_description")}">
+  <meta property="og:title" content="${t(lang, "page_title")}">
+  <meta property="og:description" content="${t(lang, "page_description")}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}">
   <meta property="og:image" content="${baseUrl}/og-card.jpg">
@@ -144,9 +146,10 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@RegenCompute">
-  <meta name="twitter:title" content="Regenerative Compute — Fund Ecological Regeneration from Your AI Sessions">
-  <meta name="twitter:description" content="Your AI has an ecological footprint. Fund verified forests, soil, and biodiversity projects with permanent proof.">
+  <meta name="twitter:title" content="${t(lang, "page_title")}">
+  <meta name="twitter:description" content="${t(lang, "page_description")}">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
+${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${baseUrl}/${l === 'en' ? '' : l}">`).join('\n')}
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -388,47 +391,47 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
 <body>
   ${betaBannerHTML()}
 
-  ${referralValid ? `<div class="regen-ref-banner"><span>Your friend invited you</span> — first month free!</div>` : ""}
+  ${referralValid ? `<div class="regen-ref-banner"><span>${t(lang, "referral_banner_prefix")}</span> ${t(lang, "referral_banner_suffix")}</div>` : ""}
 
-  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Dashboard", href: "/dashboard/login" }] })}
+  ${brandHeader({ nav: [{ label: t(lang, "nav_ai_plugin"), href: "/ai-plugin" }, { label: t(lang, "nav_research"), href: "/research" }, { label: t(lang, "nav_about"), href: "/about" }, { label: t(lang, "nav_dashboard"), href: "/dashboard/login" }] })}
 
   <!-- Hero -->
   <section class="regen-hero">
     <div class="regen-container">
-      <div class="regen-hero__label">For Claude, Cursor &amp; ChatGPT Users</div>
-      <h1>Your AI Has a Footprint. <span>Fund Ecological Regeneration</span> to Balance It.</h1>
-      <p>Every AI session uses energy. Regenerative Compute channels a small monthly amount into verified ecological projects — forests, soil, biodiversity — with permanent, auditable proof.</p>
-      <a class="regen-btn regen-btn--solid" href="#pricing">Choose Your Plan</a>
+      <div class="regen-hero__label">${t(lang, "hero_label")}</div>
+      <h1>${t(lang, "hero_title")} <span>${t(lang, "hero_title_highlight")}</span> ${t(lang, "hero_title_suffix")}</h1>
+      <p>${t(lang, "hero_desc")}</p>
+      <a class="regen-btn regen-btn--solid" href="#pricing">${t(lang, "hero_cta")}</a>
     </div>
   </section>
 
   <!-- Impact callout -->
   <div style="text-align:center; padding: 18px 24px; background: linear-gradient(135deg, rgba(79,181,115,0.08), rgba(121,198,170,0.08)); border-top: 1px solid rgba(79,181,115,0.15); border-bottom: 1px solid rgba(79,181,115,0.15);">
     <p style="margin:0; font-family: 'Inter', Arial, sans-serif; font-size: 15px; color: #374151; font-weight: 500;">
-      A daily AI user generates <strong style="color:#101570;">2–10 kg CO&#8322;/year</strong>. Agentic workflows: <strong style="color:#101570;">up to 335 kg</strong>.
-      <a href="/research" style="color:#4FB573; font-weight:600; margin-left:6px;">See the research &rarr;</a>
+      ${t(lang, "impact_prefix")} <strong style="color:#101570;">${t(lang, "impact_co2_daily")}</strong>. ${t(lang, "impact_middle")} <strong style="color:#101570;">${t(lang, "impact_co2_agentic")}</strong>.
+      <a href="/research" style="color:#4FB573; font-weight:600; margin-left:6px;">${t(lang, "impact_link")} &rarr;</a>
     </p>
   </div>
 
   <!-- How it works -->
   <section class="hiw-section">
     <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">How It Works</h2>
+      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "hiw_title")}</h2>
       <div class="hiw-steps">
         <div class="hiw-step">
           <div class="hiw-num">1</div>
-          <h3>Subscribe</h3>
-          <p>Pick a plan — monthly or yearly. Your payment funds verified ecological projects around the world.</p>
+          <h3>${t(lang, "hiw_step1_title")}</h3>
+          <p>${t(lang, "hiw_step1_desc")}</p>
         </div>
         <div class="hiw-step">
           <div class="hiw-num">2</div>
-          <h3>Connect</h3>
-          <p>Add Regenerative Compute to your AI assistant with one command. Works with Claude Code, Cursor, and more.</p>
+          <h3>${t(lang, "hiw_step2_title")}</h3>
+          <p>${t(lang, "hiw_step2_desc")}</p>
         </div>
         <div class="hiw-step">
           <div class="hiw-num">3</div>
-          <h3>Track Your Impact</h3>
-          <p>See exactly which projects you support. Every credit retirement is publicly recorded and verifiable.</p>
+          <h3>${t(lang, "hiw_step3_title")}</h3>
+          <p>${t(lang, "hiw_step3_desc")}</p>
         </div>
       </div>
     </div>
@@ -437,85 +440,85 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- Pricing -->
   <section class="pricing-section" id="pricing">
     <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">Choose Your Plan</h2>
+      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "pricing_title")}</h2>
 
       <!-- Monthly / Yearly toggle -->
       <div style="display:flex;justify-content:center;margin-bottom:28px;">
         <div id="interval-toggle" style="display:inline-flex;background:var(--regen-gray-100);border-radius:10px;padding:4px;">
-          <button id="toggle-monthly" onclick="setInterval('monthly')" class="interval-btn interval-btn--active">Monthly</button>
-          <button id="toggle-yearly" onclick="setInterval('yearly')" class="interval-btn interval-btn--yearly">Yearly <span style="font-size:11px;font-weight:700;color:var(--regen-green);">Save 17%</span></button>
+          <button id="toggle-monthly" onclick="setInterval('monthly')" class="interval-btn interval-btn--active">${t(lang, "toggle_monthly")}</button>
+          <button id="toggle-yearly" onclick="setInterval('yearly')" class="interval-btn interval-btn--yearly">${t(lang, "toggle_yearly")} <span style="font-size:11px;font-weight:700;color:var(--regen-green);">${t(lang, "toggle_save")}</span></button>
         </div>
       </div>
 
       <div class="regen-tiers">
         <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('dabbler')" : `window.location.href='${dabblerUrl}'`}">
-          <div class="regen-tier__name">Dabbler</div>
+          <div class="regen-tier__name">${t(lang, "tier_dabbler")}</div>
           <div class="regen-tier__price price-monthly">$1.25<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$12.50<span>/yr</span></div>
-          <div class="regen-tier__effective price-yearly" style="display:none;">$1.25/mo + 2 months free</div>
-          <div class="regen-tier__desc">You use AI a few times a week. This covers your share and funds real ecological projects.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
-          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">Subscribe</div>
+          <div class="regen-tier__effective price-yearly" style="display:none;">$1.25/mo + ${t(lang, "tier_yearly_bonus")}</div>
+          <div class="regen-tier__desc">${t(lang, "tier_dabbler_desc")}${referralValid ? `<br><strong>${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
+          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">${t(lang, "tier_cta")}</div>
         </div>
         <div class="regen-tier tier-featured regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('builder')" : `window.location.href='${builderUrl}'`}">
-          <div class="tier-featured-badge">Most Popular</div>
-          <div class="regen-tier__name">Builder</div>
+          <div class="tier-featured-badge">${t(lang, "tier_builder_badge")}</div>
+          <div class="regen-tier__name">${t(lang, "tier_builder")}</div>
           <div class="regen-tier__price price-monthly">$2.50<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$25<span>/yr</span></div>
-          <div class="regen-tier__effective price-yearly" style="display:none;">$2.50/mo + 2 months free</div>
-          <div class="regen-tier__desc">AI is part of your daily workflow. Full ecological accountability for regular use.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
-          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">Subscribe</div>
+          <div class="regen-tier__effective price-yearly" style="display:none;">$2.50/mo + ${t(lang, "tier_yearly_bonus")}</div>
+          <div class="regen-tier__desc">${t(lang, "tier_builder_desc")}${referralValid ? `<br><strong>${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
+          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">${t(lang, "tier_cta")}</div>
         </div>
         <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('agent')" : `window.location.href='${agentUrl}'`}">
-          <div class="regen-tier__name">Agent</div>
+          <div class="regen-tier__name">${t(lang, "tier_agent")}</div>
           <div class="regen-tier__price price-monthly">$5<span>/mo</span></div>
           <div class="regen-tier__price price-yearly" style="display:none;">$50<span>/yr</span></div>
-          <div class="regen-tier__effective price-yearly" style="display:none;">$5/mo + 2 months free</div>
-          <div class="regen-tier__desc">For autonomous agents and power users — maximum autonomy, maximum impact.${referralValid ? "<br><strong>First month free!</strong>" : ""}</div>
-          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">Subscribe</div>
+          <div class="regen-tier__effective price-yearly" style="display:none;">$5/mo + ${t(lang, "tier_yearly_bonus")}</div>
+          <div class="regen-tier__desc">${t(lang, "tier_agent_desc")}${referralValid ? `<br><strong>${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
+          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">${t(lang, "tier_cta")}</div>
         </div>
       </div>
 
       <!-- Team plan CTA -->
       <div id="org-cta" style="background:var(--regen-white);border:2px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px 28px;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;cursor:pointer;transition:border-color 0.2s;" onclick="showOrgForm()" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--regen-gray-200)'">
-        <span style="font-weight:700;font-size:15px;color:var(--regen-navy);white-space:nowrap;">Subscribing for your whole team?</span>
-        <span style="font-size:14px;color:var(--regen-gray-500);">Build a custom plan based on your team size and AI usage.</span>
-        <span class="regen-btn regen-btn--solid regen-btn--sm" style="white-space:nowrap;">Get Started</span>
+        <span style="font-weight:700;font-size:15px;color:var(--regen-navy);white-space:nowrap;">${t(lang, "org_cta_heading")}</span>
+        <span style="font-size:14px;color:var(--regen-gray-500);">${t(lang, "org_cta_desc")}</span>
+        <span class="regen-btn regen-btn--solid regen-btn--sm" style="white-space:nowrap;">${t(lang, "org_cta_btn")}</span>
       </div>
 
       <!-- Organization form (revealed on click) -->
       <div id="org-form" style="display:none;margin-top:16px;">
         <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:28px 32px;max-width:560px;margin:0 auto;">
-          <h3 style="margin:0 0 4px;font-size:18px;color:var(--regen-navy);font-weight:700;">Team Plan</h3>
-          <p style="color:var(--regen-gray-500);font-size:14px;margin:0 0 20px;">Tell us about your team and we'll suggest a monthly amount.</p>
+          <h3 style="margin:0 0 4px;font-size:18px;color:var(--regen-navy);font-weight:700;">${t(lang, "org_title")}</h3>
+          <p style="color:var(--regen-gray-500);font-size:14px;margin:0 0 20px;">${t(lang, "org_desc")}</p>
           <div style="margin-bottom:18px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">Company name</label>
-            <input id="org-name" type="text" placeholder="e.g. Acme Corp" style="width:100%;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;box-sizing:border-box;">
+            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_name")}</label>
+            <input id="org-name" type="text" placeholder="${t(lang, "org_placeholder_name")}" style="width:100%;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;box-sizing:border-box;">
           </div>
           <div style="margin-bottom:18px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">Full-time developers <span style="font-weight:400;color:var(--regen-gray-500);">— heavy AI usage</span></label>
+            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_devs")} <span style="font-weight:400;color:var(--regen-gray-500);">${t(lang, "org_hint_devs")}</span></label>
             <input id="org-devs" type="number" min="0" value="0" style="width:100px;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;text-align:center;">
           </div>
           <div style="margin-bottom:18px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">Autonomous agents <span style="font-weight:400;color:var(--regen-gray-500);">— always-on bots, CI pipelines</span></label>
+            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_agents")} <span style="font-weight:400;color:var(--regen-gray-500);">${t(lang, "org_hint_agents")}</span></label>
             <input id="org-agents" type="number" min="0" value="0" style="width:100px;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;text-align:center;">
           </div>
           <div style="margin-bottom:24px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">Part-time AI users <span style="font-weight:400;color:var(--regen-gray-500);">— occasional use for writing, research</span></label>
+            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_parttime")} <span style="font-weight:400;color:var(--regen-gray-500);">${t(lang, "org_hint_parttime")}</span></label>
             <input id="org-parttime" type="number" min="0" value="0" style="width:100px;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;text-align:center;">
           </div>
 
           <!-- Calculated estimate -->
           <div id="org-estimate" style="display:none;background:linear-gradient(135deg, rgba(79,181,115,0.06), rgba(16,21,112,0.04));border:1px solid rgba(79,181,115,0.2);border-radius:10px;padding:20px 24px;margin-bottom:20px;">
-            <div style="font-size:13px;color:var(--regen-gray-500);margin-bottom:4px;">Suggested monthly subscription</div>
+            <div style="font-size:13px;color:var(--regen-gray-500);margin-bottom:4px;">${t(lang, "org_estimate_label")}</div>
             <div style="display:flex;align-items:baseline;gap:8px;">
               <span id="org-price" style="font-size:32px;font-weight:800;color:var(--regen-navy);">$0</span>
-              <span style="font-size:14px;color:var(--regen-gray-500);">/month</span>
+              <span style="font-size:14px;color:var(--regen-gray-500);">${t(lang, "org_estimate_unit")}</span>
             </div>
             <div id="org-breakdown" style="margin-top:10px;font-size:13px;color:var(--regen-gray-600);line-height:1.6;"></div>
-            <div style="margin-top:12px;font-size:12px;color:var(--regen-gray-400);">You can adjust the amount up or down at checkout.</div>
+            <div style="margin-top:12px;font-size:12px;color:var(--regen-gray-400);">${t(lang, "org_estimate_note")}</div>
           </div>
 
-          <button id="org-subscribe-btn" onclick="subscribeOrg()" class="regen-btn regen-btn--solid regen-btn--block" style="font-size:16px;padding:14px;">Subscribe Your Team</button>
+          <button id="org-subscribe-btn" onclick="subscribeOrg()" class="regen-btn regen-btn--solid regen-btn--block" style="font-size:16px;padding:14px;">${t(lang, "org_submit")}</button>
           <p id="org-error" style="color:#c33;font-size:13px;margin:8px 0 0;display:none;text-align:center;"></p>
         </div>
       </div>
@@ -526,20 +529,20 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- Live Stats -->
   <section class="stats-section">
     <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">Real Impact, Publicly Verified</h2>
-      <p class="regen-section-subtitle" style="text-align:center;">All credit retirements happen on Regen Network, a public ecological ledger. These numbers update in real time.</p>
+      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "stats_title")}</h2>
+      <p class="regen-section-subtitle" style="text-align:center;">${t(lang, "stats_desc")}</p>
       <div class="stats-bar">
         <div>
           <div class="stats-bar__num">${totalRetirements}</div>
-          <div class="stats-bar__label">Credits Retired On-Chain</div>
+          <div class="stats-bar__label">${t(lang, "stats_credits")}</div>
         </div>
         <div>
           <div class="stats-bar__num">9+</div>
-          <div class="stats-bar__label">Countries</div>
+          <div class="stats-bar__label">${t(lang, "stats_countries")}</div>
         </div>
         <div>
           <div class="stats-bar__num">5</div>
-          <div class="stats-bar__label">Ecological Credit Types</div>
+          <div class="stats-bar__label">${t(lang, "stats_credit_types")}</div>
         </div>
       </div>
     </div>
@@ -548,8 +551,8 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- What Your Subscription Funds — Credit Basket -->
   <section class="basket-section">
     <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">What Your Subscription Funds</h2>
-      <p class="regen-section-subtitle" style="text-align:center;">Each month, verified ecological credits from these projects are permanently retired on your behalf on Regen Ledger. Every retirement is on-chain, auditable, and yours.</p>
+      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "basket_title")}</h2>
+      <p class="regen-section-subtitle" style="text-align:center;">${t(lang, "basket_desc")}</p>
       <div class="basket-grid">
         ${PROJECTS.map(p => `
         <div class="basket-card">
@@ -564,8 +567,8 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
               <span class="basket-meta-tag">${p.projectId}</span>
             </div>
             <div class="basket-links">
-              <a class="basket-link" href="${p.projectPageUrl}" target="_blank" rel="noopener">View project &rarr;</a>
-              <a class="basket-link" href="https://app.regen.network/credit-classes/${p.creditClassId}" target="_blank" rel="noopener">Credit class</a>
+              <a class="basket-link" href="${p.projectPageUrl}" target="_blank" rel="noopener">${t(lang, "basket_view_project")} &rarr;</a>
+              <a class="basket-link" href="https://app.regen.network/credit-classes/${p.creditClassId}" target="_blank" rel="noopener">${t(lang, "basket_credit_class")}</a>
             </div>
           </div>
         </div>`).join('')}
@@ -576,19 +579,19 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- Trust -->
   <section class="trust-section">
     <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">Why Regenerative Compute</h2>
+      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "trust_title")}</h2>
       <div class="trust-grid">
         <div class="trust-item">
-          <h3>Publicly Auditable</h3>
-          <p>Every credit retirement is recorded on a public ledger. Anyone can verify. No double-counting, no greenwashing.</p>
+          <h3>${t(lang, "trust_auditable_title")}</h3>
+          <p>${t(lang, "trust_auditable_desc")}</p>
         </div>
         <div class="trust-item">
-          <h3>Beyond Carbon Offsets</h3>
-          <p>Regenerative contribution funds real ecological projects — carbon removal, biodiversity protection, and soil health.</p>
+          <h3>${t(lang, "trust_beyond_title")}</h3>
+          <p>${t(lang, "trust_beyond_desc")}</p>
         </div>
         <div class="trust-item">
-          <h3>Open Source &amp; Transparent</h3>
-          <p>The code is public. The retirements are public. The projects are public. Inspect anything, anytime.</p>
+          <h3>${t(lang, "trust_open_title")}</h3>
+          <p>${t(lang, "trust_open_desc")}</p>
         </div>
       </div>
     </div>
@@ -598,8 +601,8 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- Organizations committed to Regenerative AI -->
   <section class="hiw-section">
     <div class="regen-container" style="text-align:center;">
-      <h2 class="regen-section-title">Organizations Committed to Regenerative AI</h2>
-      <p class="regen-section-subtitle">These teams are funding real ecological regeneration alongside their AI usage.</p>
+      <h2 class="regen-section-title">${t(lang, "orgs_title")}</h2>
+      <p class="regen-section-subtitle">${t(lang, "orgs_desc")}</p>
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin-top:24px;">
         ${publicOrgs.map(o => `<div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:10px;padding:16px 24px;font-weight:600;color:var(--regen-navy);font-size:15px;">${o.name.replace(/</g, "&lt;")}</div>`).join("")}
       </div>
@@ -610,11 +613,15 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- One-time purchase -->
   <section class="hiw-section" style="background:var(--regen-gray-50);">
     <div class="regen-container" style="max-width:640px;text-align:center;">
-      <h2 class="regen-section-title">Prefer a one-time purchase?</h2>
-      <p style="color:var(--regen-gray-500);margin-bottom:24px;">Browse verified ecological credits on the Regen Marketplace and choose exactly which projects to support — pay with a credit card.</p>
-      <a class="regen-btn regen-btn--primary" href="https://app.regen.network/projects/1?buying_options_filters=credit_card" target="_blank" rel="noopener">Let Me Choose</a>
+      <h2 class="regen-section-title">${t(lang, "onetime_title")}</h2>
+      <p style="color:var(--regen-gray-500);margin-bottom:24px;">${t(lang, "onetime_desc")}</p>
+      <a class="regen-btn regen-btn--primary" href="https://app.regen.network/projects/1?buying_options_filters=credit_card" target="_blank" rel="noopener">${t(lang, "onetime_cta")}</a>
     </div>
   </section>
+
+  <div style="text-align:center;padding:16px 0 8px;">
+  ${SUPPORTED_LANGS.map(l => `<a href="${l === 'en' ? '/' : '/' + l}" style="display:inline-block;margin:4px 6px;font-size:13px;color:${l === lang ? 'var(--regen-green)' : 'var(--regen-gray-500)'};font-weight:${l === lang ? '700' : '400'};text-decoration:none;">${LANG_NAMES[l]}</a>`).join('')}
+  </div>
 
   ${brandFooter({ showInstall: false, links: [
     { label: "Regen Network", href: "https://regen.network" },
@@ -719,18 +726,18 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <!-- Annual nudge modal -->
   <div class="nudge-overlay" id="nudge-overlay" onclick="if(event.target===this)closeNudge()">
     <div class="nudge-box">
-      <h3>Consider going yearly</h3>
+      <h3>${t(lang, "nudge_title")}</h3>
       <div class="nudge-reason">
         <div class="nudge-reason-icon">1</div>
-        <p><strong>Save money</strong> — the yearly plan is like getting two months free.</p>
+        <p><strong>${t(lang, "nudge_reason1_title")}</strong> — ${t(lang, "nudge_reason1_desc")}</p>
       </div>
       <div class="nudge-reason">
         <div class="nudge-reason-icon">2</div>
-        <p><strong>More ecological impact</strong> — with fewer transactions, less goes to payment processing fees and more funds verified ecological regeneration.</p>
+        <p><strong>${t(lang, "nudge_reason2_title")}</strong> — ${t(lang, "nudge_reason2_desc")}</p>
       </div>
       <div class="nudge-btns">
-        <button class="nudge-btn-yearly" id="nudge-btn-yearly" onclick="switchToYearly()">Switch to Yearly & Save</button>
-        <button class="nudge-btn-monthly" id="nudge-btn-monthly" onclick="continueMonthly()">Continue with Monthly</button>
+        <button class="nudge-btn-yearly" id="nudge-btn-yearly" onclick="switchToYearly()">${t(lang, "nudge_cta_yearly")}</button>
+        <button class="nudge-btn-monthly" id="nudge-btn-monthly" onclick="continueMonthly()">${t(lang, "nudge_cta_monthly")}</button>
       </div>
     </div>
   </div>
@@ -785,6 +792,22 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
 ${betaBannerJS()}
 </body>
 </html>`);
+  }
+
+  // Language routes: GET / and GET /:lang
+  router.get("/", async (req: Request, res: Response) => {
+    // Auto-detect language from Accept-Language header
+    const acceptLang = req.headers["accept-language"] || "";
+    const preferred = acceptLang.split(",")[0]?.split("-")[0]?.toLowerCase() as LangCode;
+    const lang: LangCode = SUPPORTED_LANGS.includes(preferred) ? preferred : "en";
+    await serveLandingPage(req, res, lang);
+  });
+
+  // Explicit language routes — must be registered before Stripe routes to avoid conflicts
+  const langPattern = SUPPORTED_LANGS.filter(l => l !== "en").join("|");
+  router.get(`/:lang(${langPattern})`, async (req: Request, res: Response) => {
+    const lang = req.params.lang as LangCode;
+    await serveLandingPage(req, res, lang);
   });
 
   // --- Stripe-dependent routes (only registered when Stripe is configured) ---
