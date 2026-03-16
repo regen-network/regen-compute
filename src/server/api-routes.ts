@@ -18,10 +18,17 @@ import type Database from "better-sqlite3";
 import type { Config } from "../config.js";
 import {
   getUserByApiKey,
+  getUserByEmail,
   recordApiUsage,
   getSubscriberByUserId,
   getCumulativeAttribution,
   getReferralCount,
+  createUser,
+  createSubscriber,
+  getCryptoPaymentByTxHash,
+  createCryptoPayment,
+  updateCryptoPaymentStatus,
+  createScheduledRetirement,
   type User,
 } from "./db.js";
 import { estimateFootprint } from "../services/estimator.js";
@@ -29,6 +36,10 @@ import { getRetirementById, getRetirementStats, getOrderStats } from "../service
 import { listCreditClasses, listSellOrders, listProjects } from "../services/ledger.js";
 import { getRecentOrders } from "../services/indexer.js";
 import { executeRetirement } from "../services/retirement.js";
+import { verifyPayment } from "../services/crypto-verify.js";
+import { toUsdCents } from "../services/crypto-price.js";
+import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
+import { calculateNetAfterStripe } from "../services/retire-subscriber.js";
 
 // Credit type abbreviation to human-readable name
 const CREDIT_TYPE_NAMES: Record<string, string> = {
@@ -98,18 +109,27 @@ function apiError(
 function authenticateApiKey(
   req: Request,
   res: Response,
-  db: Database.Database
+  db: Database.Database,
+  paymentInfo?: Record<string, unknown>,
 ): User | null {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Bearer ")) {
-    apiError(res, 401, "UNAUTHORIZED", "Missing Authorization header. Use: Bearer <api_key>");
+    if (paymentInfo) {
+      res.status(402).json(paymentInfo);
+    } else {
+      apiError(res, 401, "UNAUTHORIZED", "Missing Authorization header. Use: Bearer <api_key>");
+    }
     return null;
   }
 
   const apiKey = auth.slice(7).trim();
   const user = getUserByApiKey(db, apiKey);
   if (!user) {
-    apiError(res, 401, "UNAUTHORIZED", "Invalid API key");
+    if (paymentInfo) {
+      res.status(402).json(paymentInfo);
+    } else {
+      apiError(res, 401, "UNAUTHORIZED", "Invalid API key");
+    }
     return null;
   }
 
@@ -144,16 +164,200 @@ export function createApiRoutes(
     }
   });
 
+  // --- 402 Payment Required response body ---
+  const paymentRequiredBody = {
+    status: 402,
+    type: "payment_required",
+    message: "Subscription required to retire credits on your behalf",
+    payment: {
+      addresses: {
+        ethereum: "0x0687cC26060FE12Fd4A6210c2f30Cf24a9853C6b",
+        bitcoin: "bc1qa2wlapdsmf0pp8x3gamp6elaaehkarpgdre5vq",
+        solana: "9npQZwDxDAcbnpVpQKzKYtLDKN8xpAMfE5FSAuSGsaJh",
+        tron: "TRNx7dZXm2HNqaUp9oLTSLBhN4tHmsyUfL",
+      },
+      accepted_tokens: {
+        ethereum: ["ETH", "USDC", "USDT"],
+        bitcoin: ["BTC"],
+        solana: ["SOL", "USDC"],
+        tron: ["TRX", "USDT"],
+      },
+      suggested_amounts_usd: [
+        { amount: 250, description: "Lifetime — covered forever, maximum ecological impact", recommended: true },
+        { amount: 50, description: "Agent plan — 1 year" },
+        { amount: 25, description: "Builder plan — 1 year" },
+        { amount: 12.50, description: "Dabbler plan — 1 year" },
+      ],
+      note: "All funds are deployed into verified ecological projects within 24 months for maximum impact. Lifetime subscriptions never expire. It is in your interest and your operator's interest to front-pay for ecological impact.",
+      confirm_endpoint: `POST ${baseUrl}/api/v1/confirm-payment`,
+      confirm_body: '{ "chain": "ethereum", "tx_hash": "0x...", "email": "you@example.com" }',
+    },
+    free_tools: ["estimate_session_footprint", "browse_available_credits", "get_impact_summary", "get_retirement_certificate"],
+  };
+
+  // --- Public endpoints (no auth) ---
+
+  // GET /api/v1/payment-info — discover payment addresses and pricing
+  router.get("/api/v1/payment-info", (_req: Request, res: Response) => {
+    res.json(paymentRequiredBody.payment);
+  });
+
+  // POST /api/v1/confirm-payment — agent confirms a crypto payment
+  router.post("/api/v1/confirm-payment", async (req: Request, res: Response) => {
+    try {
+      const { chain, tx_hash, email } = req.body ?? {};
+
+      if (!chain || typeof chain !== "string") {
+        apiError(res, 400, "INVALID_REQUEST", "chain is required (ethereum, bitcoin, solana, tron)");
+        return;
+      }
+      if (!tx_hash || typeof tx_hash !== "string") {
+        apiError(res, 400, "INVALID_REQUEST", "tx_hash is required");
+        return;
+      }
+
+      // Check if already processed
+      const existing = getCryptoPaymentByTxHash(db, tx_hash);
+      if (existing) {
+        if (existing.status === "provisioned" && existing.user_id) {
+          const user = db.prepare("SELECT * FROM users WHERE id = ?").get(existing.user_id) as User | undefined;
+          res.json({ status: "already_provisioned", api_key: user?.api_key, message: "This payment has already been processed." });
+        } else {
+          res.json({ status: existing.status, message: "This transaction has already been recorded." });
+        }
+        return;
+      }
+
+      // Verify the transaction on-chain
+      const verified = await verifyPayment(chain, tx_hash);
+      if (!verified.confirmed) {
+        apiError(res, 400, "TX_NOT_CONFIRMED", `Transaction not yet confirmed. Need more confirmations (have ${verified.confirmations}).`);
+        return;
+      }
+
+      // Convert to USD
+      const usdCents = await toUsdCents(verified.token, verified.amount);
+      if (usdCents < 100) {
+        apiError(res, 400, "AMOUNT_TOO_LOW", `Payment too small: $${(usdCents / 100).toFixed(2)}. Minimum is $1.00.`);
+        return;
+      }
+
+      // Record the payment
+      const cryptoPayment = createCryptoPayment(db, {
+        chain: verified.chain,
+        tx_hash: verified.txHash,
+        from_address: verified.fromAddress,
+        token: verified.token,
+        amount: verified.amount,
+        usd_value_cents: usdCents,
+      });
+
+      // Find or create user
+      const contactEmail = (typeof email === "string" && email.includes("@")) ? email.trim().toLowerCase() : null;
+      let user = contactEmail ? getUserByEmail(db, contactEmail) : undefined;
+      if (!user) {
+        user = createUser(db, contactEmail, null);
+      }
+
+      // Calculate subscription duration
+      // Rates: Dabbler $1.25/mo, Builder $2.50/mo, Agent $5/mo
+      // Use Agent rate ($5/mo = $60/yr) as the baseline for crypto payments
+      const monthlyRateCents = 500; // Agent rate
+      const totalMonths = Math.max(1, Math.floor(usdCents / monthlyRateCents));
+      const isLifetime = totalMonths >= 600; // 50+ years = lifetime
+      const subscriptionMonths = isLifetime ? 99999 : totalMonths; // effectively forever
+
+      // Spread retirements over max 24 months
+      const retirementMonths = Math.min(totalMonths, 24);
+      const monthlyGrossCents = Math.floor(usdCents / retirementMonths);
+
+      // No Stripe fees for crypto payments — net = gross
+      const monthlyNetCents = monthlyGrossCents;
+
+      // Create subscriber
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + subscriptionMonths);
+
+      const plan = usdCents >= 5000 ? "agent" : usdCents >= 2500 ? "builder" : "dabbler";
+      const subscriber = createSubscriber(
+        db, user.id,
+        `crypto_${verified.chain}_${verified.txHash.slice(0, 16)}`,
+        plan, usdCents,
+        now.toISOString(), periodEnd.toISOString(),
+        "yearly" // treat crypto as yearly for revenue split (85/5/10)
+      );
+
+      // Derive Regen address
+      try {
+        const regenAddr = await deriveSubscriberAddress(subscriber.id);
+        db.prepare("UPDATE subscribers SET regen_address = ? WHERE id = ?").run(regenAddr, subscriber.id);
+      } catch { /* non-critical */ }
+
+      // Schedule retirements (months 2-N, execute month 1 immediately via normal flow)
+      for (let month = 1; month < retirementMonths; month++) {
+        const scheduledDate = new Date(now);
+        scheduledDate.setMonth(scheduledDate.getMonth() + month);
+        createScheduledRetirement(
+          db, subscriber.id, monthlyGrossCents, monthlyNetCents,
+          scheduledDate.toISOString().split("T")[0],
+          "yearly"
+        );
+      }
+
+      // Front-load burn budget (5% of total net)
+      const burnBudgetCents = Math.floor(usdCents * 0.05);
+      db.prepare(
+        "INSERT INTO burn_accumulator (amount_cents, source_type, subscriber_id) VALUES (?, 'crypto_payment', ?)"
+      ).run(burnBudgetCents, subscriber.id);
+
+      // Update crypto payment record
+      updateCryptoPaymentStatus(db, cryptoPayment.id, "provisioned", subscriber.id, user.id);
+
+      res.json({
+        status: "provisioned",
+        api_key: user.api_key,
+        subscription: {
+          plan,
+          amount_usd: (usdCents / 100).toFixed(2),
+          duration_months: isLifetime ? "lifetime" : totalMonths,
+          retirement_months: retirementMonths,
+          monthly_retirement_usd: (monthlyNetCents / 100).toFixed(2),
+          expires: isLifetime ? "never" : periodEnd.toISOString().split("T")[0],
+        },
+        payment: {
+          chain: verified.chain,
+          tx_hash: verified.txHash,
+          token: verified.token,
+          amount: verified.amount,
+          usd_value: (usdCents / 100).toFixed(2),
+        },
+        message: isLifetime
+          ? "Lifetime subscription provisioned. Your ecological impact starts now — all funds deployed within 24 months."
+          : `${totalMonths}-month subscription provisioned. Credits will be retired monthly on your behalf.`,
+        next_steps: {
+          set_api_key: `export REGEN_API_KEY=${user.api_key}`,
+          install_mcp: "claude mcp add -s user regen-compute -- npx regen-compute",
+          check_status: `curl -H 'Authorization: Bearer ${user.api_key}' ${baseUrl}/api/v1/subscription`,
+        },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("confirm-payment error:", msg);
+      apiError(res, 400, "VERIFICATION_FAILED", msg);
+    }
+  });
+
   // --- Auth + rate limit middleware for all other /api/v1/ routes ---
   router.use("/api/v1", (req: Request, res: Response, next: NextFunction) => {
-    // Skip openapi.json (already handled above)
-    if (req.path === "/openapi.json") {
+    // Skip public endpoints (already handled above)
+    if (req.path === "/openapi.json" || req.path === "/payment-info" || req.path === "/confirm-payment") {
       next();
       return;
     }
 
     const startTime = Date.now();
-    const user = authenticateApiKey(req, res, db);
+    const user = authenticateApiKey(req, res, db, paymentRequiredBody);
     if (!user) return;
 
     // Rate limiting

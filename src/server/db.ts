@@ -287,6 +287,23 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS crypto_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      chain TEXT NOT NULL,
+      tx_hash TEXT UNIQUE NOT NULL,
+      from_address TEXT,
+      token TEXT NOT NULL,
+      amount TEXT NOT NULL,
+      usd_value_cents INTEGER NOT NULL,
+      subscriber_id INTEGER REFERENCES subscribers(id),
+      user_id INTEGER REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'confirmed' CHECK(status IN ('confirmed', 'provisioned', 'failed')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_crypto_payments_tx_hash ON crypto_payments(tx_hash);
+    CREATE INDEX IF NOT EXISTS idx_crypto_payments_subscriber ON crypto_payments(subscriber_id);
+
     CREATE TABLE IF NOT EXISTS organizations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -1477,4 +1494,39 @@ export function getPublicOrganizations(db: Database.Database): Organization[] {
   return db.prepare(
     "SELECT o.* FROM organizations o JOIN subscribers s ON s.org_id = o.id WHERE o.publicity_opt_in = 1 AND s.status = 'active' ORDER BY o.created_at ASC"
   ).all() as Organization[];
+}
+
+// --- Crypto payment helpers (#99) ---
+
+export interface CryptoPayment {
+  id: number;
+  chain: string;
+  tx_hash: string;
+  from_address: string | null;
+  token: string;
+  amount: string;
+  usd_value_cents: number;
+  subscriber_id: number | null;
+  user_id: number | null;
+  status: string;
+  created_at: string;
+}
+
+export function getCryptoPaymentByTxHash(db: Database.Database, txHash: string): CryptoPayment | undefined {
+  return db.prepare("SELECT * FROM crypto_payments WHERE tx_hash = ?").get(txHash) as CryptoPayment | undefined;
+}
+
+export function createCryptoPayment(
+  db: Database.Database,
+  payment: { chain: string; tx_hash: string; from_address: string | null; token: string; amount: string; usd_value_cents: number; user_id?: number; subscriber_id?: number },
+): CryptoPayment {
+  const result = db.prepare(
+    `INSERT INTO crypto_payments (chain, tx_hash, from_address, token, amount, usd_value_cents, user_id, subscriber_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')`
+  ).run(payment.chain, payment.tx_hash, payment.from_address, payment.token, payment.amount, payment.usd_value_cents, payment.user_id ?? null, payment.subscriber_id ?? null);
+  return db.prepare("SELECT * FROM crypto_payments WHERE id = ?").get(result.lastInsertRowid) as CryptoPayment;
+}
+
+export function updateCryptoPaymentStatus(db: Database.Database, id: number, status: string, subscriberId?: number, userId?: number): void {
+  db.prepare("UPDATE crypto_payments SET status = ?, subscriber_id = COALESCE(?, subscriber_id), user_id = COALESCE(?, user_id) WHERE id = ?")
+    .run(status, subscriberId ?? null, userId ?? null, id);
 }
