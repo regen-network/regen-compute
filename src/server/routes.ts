@@ -803,12 +803,12 @@ ${betaBannerJS()}
     await serveLandingPage(req, res, lang);
   });
 
-  // Explicit language routes — must be registered before Stripe routes to avoid conflicts
-  const langPattern = SUPPORTED_LANGS.filter(l => l !== "en").join("|");
-  router.get(`/:lang(${langPattern})`, async (req: Request, res: Response) => {
-    const lang = req.params.lang as LangCode;
-    await serveLandingPage(req, res, lang);
-  });
+  // Explicit language routes
+  for (const langCode of SUPPORTED_LANGS.filter(l => l !== "en")) {
+    router.get(`/${langCode}`, async (req: Request, res: Response) => {
+      await serveLandingPage(req, res, langCode);
+    });
+  }
 
   // --- Stripe-dependent routes (only registered when Stripe is configured) ---
   if (stripe) {
