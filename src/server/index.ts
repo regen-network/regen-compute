@@ -253,7 +253,24 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
 
   // Allow all crawlers (Telegram, Twitter, etc.)
   app.get("/robots.txt", (_req, res) => {
-    res.type("text/plain").send("User-agent: *\nAllow: /\n");
+    res.type("text/plain").send(`User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`);
+  });
+
+  app.get("/sitemap.xml", (_req, res) => {
+    const langs = ["", "es", "pt", "fr", "de", "zh", "ja", "ko", "hi", "ar", "ru", "id", "tr", "vi", "th", "it", "nl", "pl", "ms", "sw", "uk", "ur"];
+    const pages = ["", "research", "about", "ai-plugin"];
+    const urls: string[] = [];
+    for (const page of pages) {
+      if (page === "") {
+        for (const lang of langs) {
+          urls.push(`${baseUrl}/${lang}`);
+        }
+      } else {
+        urls.push(`${baseUrl}/${page}`);
+      }
+    }
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${u}</loc></url>`).join("\n")}\n</urlset>`;
+    res.type("application/xml").send(xml);
   });
 
   // OG image for social media previews
