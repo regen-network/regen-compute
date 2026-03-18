@@ -945,5 +945,112 @@ export async function sendRetirementReceiptEmail(
   );
 }
 
+/**
+ * Send a referral bonus thank-you email to the referrer.
+ */
+export async function sendReferralBonusEmail(
+  email: string,
+  dashboardUrl: string,
+  referralLink: string,
+  totalCredits: number,
+  batchSummaries: { projectName: string; credits: number; creditType: string }[],
+): Promise<void> {
+  const config = loadConfig();
+  if (!config.postmarkServerToken || !config.emailEnabled) return;
+
+  const batchRows = batchSummaries.map((b) =>
+    `<tr>
+      <td style="padding:8px 12px;font-family:Arial,sans-serif;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6;">${escapeHtml(b.projectName)}</td>
+      <td style="padding:8px 12px;font-family:Arial,sans-serif;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6;">${escapeHtml(b.creditType)}</td>
+      <td style="padding:8px 12px;font-family:Arial,sans-serif;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6;text-align:right;">${b.credits.toFixed(4)}</td>
+    </tr>`
+  ).join("\n");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+
+          ${emailHeader()}
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 32px;">
+              <h1 style="margin:0 0 16px;font-family:'Mulish',Arial,sans-serif;font-size:22px;font-weight:700;color:#101570;">
+                Thank you for spreading the word!
+              </h1>
+
+              <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.6;">
+                Someone signed up through your referral link, and as a thank you, we've retired bonus ecocredits in your name. These credits are now permanently attributed to your on-chain portfolio.
+              </p>
+
+              ${batchRows ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+                <tr style="background:#f0fdf4;">
+                  <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#166534;text-align:left;">Project</th>
+                  <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#166534;text-align:left;">Credit Type</th>
+                  <th style="padding:10px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#166534;text-align:right;">Credits Retired</th>
+                </tr>
+                ${batchRows}
+                <tr style="background:#f9fafb;">
+                  <td colspan="2" style="padding:10px 12px;font-family:Arial,sans-serif;font-size:14px;font-weight:600;color:#101570;">Total</td>
+                  <td style="padding:10px 12px;font-family:Arial,sans-serif;font-size:14px;font-weight:600;color:#101570;text-align:right;">${totalCredits.toFixed(4)}</td>
+                </tr>
+              </table>
+              ` : ""}
+
+              <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.6;">
+                Together, we're protecting jaguar habitat, supporting indigenous conservation efforts, and sequestering carbon. Every referral multiplies our collective impact.
+              </p>
+
+              <!-- Dashboard CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${escapeHtml(dashboardUrl)}" style="display:inline-block;padding:14px 32px;background:#4FB573;color:#fff;font-family:Arial,sans-serif;font-size:15px;font-weight:600;text-decoration:none;border-radius:8px;">
+                      View Your Impact Dashboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Referral link -->
+              <div style="margin:0 0 24px;padding:20px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+                <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:14px;font-weight:600;color:#166534;">
+                  Keep sharing — every referral grows the impact:
+                </p>
+                <p style="margin:0;font-family:'Courier New',monospace;font-size:14px;color:#101570;word-break:break-all;">
+                  <a href="${escapeHtml(referralLink)}" style="color:#101570;text-decoration:underline;">${escapeHtml(referralLink)}</a>
+                </p>
+                <p style="margin:8px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#6b7280;">
+                  Your friend gets their first month free. You earn bonus retirements.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          ${emailFooter(dashboardUrl.replace("/login", ""))}
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  await sendViaPostmark(
+    config.postmarkServerToken,
+    config.emailFromAddress,
+    email,
+    "Your referral bonus — ecocredits retired in your name!",
+    html,
+    dashboardUrl.replace("/login", ""),
+  );
+}
+
 // Export for testing
 export { renderEmailHtml, type EmailData };

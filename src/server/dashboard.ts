@@ -38,6 +38,8 @@ import {
   type CommunityStats,
   type CommunityGoal,
   type Subscriber,
+  getReferralCount,
+  getMedianReferralCount,
 } from "./db.js";
 import { PROJECTS, getProjectForBatch, type ProjectInfo } from "./project-metadata.js";
 import { createSessionToken, getSessionEmail } from "./magic-link.js";
@@ -250,12 +252,15 @@ function renderDashboardPage(opts: {
   batchDenomMap: Map<string, string>;
   totalRetiredCents: number;
   subscriptions: Array<{ plan: string; amountCents: number; billingInterval: "monthly" | "yearly" }>;
+  referralCode: string;
+  referralCount: number;
+  isTopReferrer: boolean;
 }): string {
   const {
     email, plan, memberSince, cumulative, monthly, badges, manageUrl,
     amountCents, billingInterval, baseUrl, nextRetirementDate, transactions, communityStats,
     regenAddress, projectCards, communityGoal, communityTotalCredits, communitySubscriberCount,
-    batchDenomMap, totalRetiredCents, subscriptions,
+    batchDenomMap, totalRetiredCents, subscriptions, referralCode, referralCount, isTopReferrer,
   } = opts;
   const isYearly = billingInterval === "yearly";
 
@@ -264,11 +269,6 @@ function renderDashboardPage(opts: {
   const retiredCents = totalRetiredCents > 0
     ? totalRetiredCents
     : (cumulative.total_contribution_cents > 0 ? cumulative.total_contribution_cents : 0);
-  const shareText = encodeURIComponent(
-    `I'm funding ecological regeneration through my AI usage with @RegenCompute by @regen_network. Join the community and make your AI sessions count.`
-  );
-  const shareUrl = encodeURIComponent(baseUrl);
-
   // Profile link
   const profileUrl = regenAddress
     ? `https://app.regen.network/profiles/${regenAddress}/portfolio`
@@ -568,12 +568,13 @@ function renderDashboardPage(opts: {
           <tbody>
             ${transactions.map(t => {
               const date = new Date(t.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-              const typeLabel = t.type === "subscription" ? "Subscription" : t.type === "topup" ? "One-time boost" : "Retirement";
-              const typeColor = t.type === "subscription" ? "var(--regen-teal)" : t.type === "topup" ? "var(--regen-green)" : "var(--regen-navy)";
+              const isReferralBonus = t.type === "referral_bonus";
+              const typeLabel = isReferralBonus ? "Referral bonus" : t.type === "subscription" ? "Subscription" : t.type === "topup" ? "One-time boost" : "Retirement";
+              const typeColor = isReferralBonus ? "#7c3aed" : t.type === "subscription" ? "var(--regen-teal)" : t.type === "topup" ? "var(--regen-green)" : "var(--regen-navy)";
               const hasRetirementTx = !!t.retirement_tx_hash;
-              const statusLabel = hasRetirementTx ? "Retired" : "Paid";
-              const statusBg = hasRetirementTx ? "#f0f7f2" : "#eff6ff";
-              const statusColor = hasRetirementTx ? "#2d6a4f" : "#1e40af";
+              const statusLabel = isReferralBonus ? (hasRetirementTx ? "Executed" : "Pending") : hasRetirementTx ? "Retired" : "Paid";
+              const statusBg = isReferralBonus ? (hasRetirementTx ? "#f5f3ff" : "#fef3c7") : hasRetirementTx ? "#f0f7f2" : "#eff6ff";
+              const statusColor = isReferralBonus ? (hasRetirementTx ? "#5b21b6" : "#92400e") : hasRetirementTx ? "#2d6a4f" : "#1e40af";
               const proofLink = hasRetirementTx
                 ? ` <a href="https://www.mintscan.io/regen/tx/${escapeHtml(t.retirement_tx_hash!)}" target="_blank" rel="noopener" style="font-size:11px;">proof</a>`
                 : "";
@@ -590,16 +591,68 @@ function renderDashboardPage(opts: {
     </div>
     ` : ""}
 
-    <!-- Share -->
+    <!-- Referrals -->
     <div style="margin-bottom:32px;">
-      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:24px;text-align:center;">
-        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 12px;">Invite others to make their AI usage regenerative.</p>
-        <div class="regen-share-btns">
-          <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}" target="_blank" rel="noopener">Post on X</a>
-          <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}" target="_blank" rel="noopener">Share on LinkedIn</a>
+      <h2 class="regen-section-title" style="font-size:20px;">Invite Friends, Protect Wildlife</h2>
+      <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);overflow:hidden;">
+        <div style="padding:24px 24px 0;">
+          <p style="font-size:15px;color:var(--regen-gray-700);margin:0 0 8px;line-height:1.6;">
+            Your referrals directly fund jaguar conservation, support indigenous-led stewardship, and sequester carbon. Every person you invite amplifies your ecological impact.
+          </p>
+          <p style="font-size:15px;color:var(--regen-gray-700);margin:0 0 16px;line-height:1.6;">
+            Your friend gets their <strong>first month free</strong>. You earn a <strong>bonus credit retirement</strong>.
+          </p>
+        </div>
+
+        <!-- Stats + encouragement -->
+        <div style="padding:0 24px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:#f5f3ff;border-radius:50%;font-size:16px;font-weight:800;color:#7c3aed;">${referralCount}</span>
+            <span style="font-size:14px;color:var(--regen-gray-600);font-weight:600;">${referralCount === 1 ? "referral" : "referrals"}</span>
+          </div>
+          ${isTopReferrer ? `
+          <span style="display:inline-block;font-size:12px;font-weight:700;background:#f0fdf4;color:#166534;padding:4px 12px;border-radius:10px;">
+            Top referrer — keep it up!
+          </span>
+          ` : referralCount > 0 ? `
+          <span style="display:inline-block;font-size:12px;font-weight:600;color:var(--regen-gray-500);">
+            Share more to join the top referrers
+          </span>
+          ` : `
+          <span style="display:inline-block;font-size:12px;font-weight:600;color:var(--regen-gray-500);">
+            Share your link below to get started
+          </span>
+          `}
+        </div>
+
+        <!-- Referral link -->
+        <div style="padding:16px 24px;background:#f0fdf4;border-top:1px solid #bbf7d0;">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#166534;">Your referral link</p>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <code id="refLink" style="flex:1;min-width:200px;padding:8px 12px;background:#fff;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:var(--regen-navy);word-break:break-all;">${baseUrl}/r/${escapeHtml(referralCode)}</code>
+            <button onclick="copyRefLink()" style="padding:8px 16px;background:#4FB573;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">Copy</button>
+          </div>
+        </div>
+
+        <!-- Share buttons -->
+        <div style="padding:16px 24px;text-align:center;border-top:1px solid var(--regen-gray-200);">
+          <div class="regen-share-btns">
+            <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("I use @RegenCompute to make my AI sessions fund ecological regeneration. Use my link for a free first month:")}&url=${encodeURIComponent(`${baseUrl}/r/${referralCode}`)}" target="_blank" rel="noopener">Post on X</a>
+            <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${baseUrl}/r/${referralCode}`)}" target="_blank" rel="noopener">Share on LinkedIn</a>
+          </div>
         </div>
       </div>
     </div>
+    <script>
+    function copyRefLink() {
+      var el = document.getElementById('refLink');
+      navigator.clipboard.writeText(el.textContent).then(function() {
+        var orig = el.textContent;
+        el.textContent = 'Copied!';
+        setTimeout(function() { el.textContent = orig; }, 2000);
+      });
+    }
+    </script>
 
     <!-- Community goal / stats -->
     ${goalHtml}
@@ -949,6 +1002,12 @@ export function createDashboardRoutes(
       billingInterval: (s.billing_interval === "yearly" ? "yearly" : "monthly") as "monthly" | "yearly",
     }));
 
+    // Referral stats
+    const referralCode = viewUser?.referral_code ?? user.referral_code;
+    const referralCount = getReferralCount(db, viewUser?.id ?? user.id);
+    const medianReferrals = getMedianReferralCount(db);
+    const isTopReferrer = referralCount > 0 && referralCount >= medianReferrals;
+
     res.setHeader("Content-Type", "text/html");
     res.send(renderDashboardPage({
       email,
@@ -972,6 +1031,9 @@ export function createDashboardRoutes(
       batchDenomMap,
       totalRetiredCents,
       subscriptions,
+      referralCode,
+      referralCount,
+      isTopReferrer,
     }));
   });
 

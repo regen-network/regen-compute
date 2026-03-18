@@ -272,7 +272,7 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
       referrer_user_id INTEGER NOT NULL REFERENCES users(id),
       referred_user_id INTEGER NOT NULL REFERENCES users(id),
       reward_type TEXT NOT NULL DEFAULT 'extra_credit_retirement',
-      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'fulfilled', 'expired')),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'fulfilled', 'expired', 'held')),
       retirement_tx_hash TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       fulfilled_at TEXT
@@ -517,6 +517,54 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     console.log("Migration: added org_id column to subscribers");
   }
 
+  // Migration: add 'referral_bonus' to transactions type CHECK constraint
+  if (tableInfo && !tableInfo.sql.includes("referral_bonus")) {
+    _db.exec(`
+      CREATE TABLE transactions_v3 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        type TEXT NOT NULL CHECK(type IN ('topup', 'subscription', 'retirement', 'referral_bonus')),
+        amount_cents INTEGER NOT NULL,
+        description TEXT,
+        stripe_session_id TEXT,
+        retirement_tx_hash TEXT,
+        credit_class TEXT,
+        credits_retired REAL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        billing_interval TEXT CHECK(billing_interval IN ('monthly', 'yearly')),
+        stripe_subscription_id TEXT
+      );
+      INSERT INTO transactions_v3 SELECT * FROM transactions;
+      DROP TABLE transactions;
+      ALTER TABLE transactions_v3 RENAME TO transactions;
+      CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+    `);
+    console.log("Migration: added 'referral_bonus' type to transactions CHECK constraint");
+  }
+
+  // Migration: add 'held' status to referral_rewards CHECK constraint
+  const rrCheckInfo = _db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='referral_rewards'").get() as { sql: string } | undefined;
+  if (rrCheckInfo?.sql && !rrCheckInfo.sql.includes("held")) {
+    _db.exec(`
+      CREATE TABLE referral_rewards_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        referrer_user_id INTEGER NOT NULL REFERENCES users(id),
+        referred_user_id INTEGER NOT NULL REFERENCES users(id),
+        reward_type TEXT NOT NULL DEFAULT 'extra_credit_retirement',
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'fulfilled', 'expired', 'held')),
+        retirement_tx_hash TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        fulfilled_at TEXT
+      );
+      INSERT INTO referral_rewards_new SELECT * FROM referral_rewards;
+      DROP TABLE referral_rewards;
+      ALTER TABLE referral_rewards_new RENAME TO referral_rewards;
+      CREATE INDEX IF NOT EXISTS idx_referral_rewards_referrer ON referral_rewards(referrer_user_id);
+      CREATE INDEX IF NOT EXISTS idx_referral_rewards_status ON referral_rewards(status);
+    `);
+    console.log("Migration: added 'held' status to referral_rewards CHECK constraint");
+  }
+
   return _db;
 }
 
@@ -544,7 +592,7 @@ export interface User {
 export interface Transaction {
   id: number;
   user_id: number;
-  type: "topup" | "subscription" | "retirement";
+  type: "topup" | "subscription" | "retirement" | "referral_bonus";
   amount_cents: number;
   description: string | null;
   stripe_session_id: string | null;
@@ -653,6 +701,19 @@ export function debitBalance(
   txn();
 
   return result;
+}
+
+export function insertReferralBonusTransaction(
+  db: Database.Database,
+  userId: number,
+  amountCents: number,
+  retirementTxHash: string | null,
+  creditsRetired: number | null,
+  description: string = "Referral bonus retirement",
+): void {
+  db.prepare(
+    "INSERT INTO transactions (user_id, type, amount_cents, description, retirement_tx_hash, credits_retired) VALUES (?, 'referral_bonus', ?, ?, ?, ?)"
+  ).run(userId, amountCents, description, retirementTxHash, creditsRetired);
 }
 
 export function getTransactions(db: Database.Database, userId: number, limit = 20): Transaction[] {
@@ -1409,11 +1470,60 @@ export function fulfillReferralReward(
   ).run(retirementTxHash, rewardId);
 }
 
+export function getPendingReferralRewardForReferred(db: Database.Database, referredUserId: number): ReferralReward | undefined {
+  return db.prepare(
+    "SELECT * FROM referral_rewards WHERE referred_user_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 1"
+  ).get(referredUserId) as ReferralReward | undefined;
+}
+
+export function getTodayReferralCount(db: Database.Database): number {
+  const row = db.prepare(
+    "SELECT COUNT(*) AS count FROM referral_rewards WHERE created_at >= date('now')"
+  ).get() as { count: number } | undefined;
+  return row?.count ?? 0;
+}
+
+export function holdReferralReward(db: Database.Database, rewardId: number): void {
+  db.prepare(
+    "UPDATE referral_rewards SET status = 'held' WHERE id = ?"
+  ).run(rewardId);
+}
+
+export function getHeldReferralRewards(db: Database.Database): ReferralReward[] {
+  return db.prepare(
+    "SELECT * FROM referral_rewards WHERE status = 'held' ORDER BY created_at"
+  ).all() as ReferralReward[];
+}
+
+export function approveReferralReward(db: Database.Database, rewardId: number): void {
+  db.prepare(
+    "UPDATE referral_rewards SET status = 'pending' WHERE id = ? AND status = 'held'"
+  ).run(rewardId);
+}
+
 export function getReferralCount(db: Database.Database, userId: number): number {
   const row = db.prepare(
     "SELECT COUNT(*) AS count FROM users WHERE referred_by = ?"
   ).get(userId) as { count: number } | undefined;
   return row?.count ?? 0;
+}
+
+export function getMedianReferralCount(db: Database.Database): number {
+  // Get all referrer counts (only users who have at least 1 referral)
+  const rows = db.prepare(
+    "SELECT COUNT(*) AS cnt FROM users WHERE referred_by IS NOT NULL GROUP BY referred_by ORDER BY cnt"
+  ).all() as { cnt: number }[];
+  if (rows.length === 0) return 0;
+  const mid = Math.floor(rows.length / 2);
+  return rows.length % 2 === 0
+    ? Math.floor((rows[mid - 1].cnt + rows[mid].cnt) / 2)
+    : rows[mid].cnt;
+}
+
+export function getFulfilledReferralRewardsForUser(db: Database.Database, userId: number): ReferralReward[] {
+  return db.prepare(
+    "SELECT * FROM referral_rewards WHERE referrer_user_id = ? AND status = 'fulfilled' ORDER BY fulfilled_at DESC"
+  ).all(userId) as ReferralReward[];
 }
 
 // --- Magic link helpers ---

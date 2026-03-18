@@ -29,7 +29,17 @@ import {
   getUserByReferralCode,
   setUserReferredBy,
   createReferralReward,
+  fulfillReferralReward,
+  getPendingReferralRewardForReferred,
+  getTodayReferralCount,
+  holdReferralReward,
+  getHeldReferralRewards,
+  approveReferralReward,
   getReferralCount,
+  getMedianReferralCount,
+  getFulfilledReferralRewardsForUser,
+  insertReferralBonusTransaction,
+  type ReferralReward,
   setSubscriberRegenAddress,
   createScheduledRetirement,
   getDueScheduledRetirements,
@@ -48,7 +58,7 @@ import {
   getPublicOrganizations,
 } from "./db.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
-import { sendWelcomeEmail, sendFirstRetirementEmail, sendRetirementReceiptEmail } from "../services/email.js";
+import { sendWelcomeEmail, sendFirstRetirementEmail, sendRetirementReceiptEmail, sendReferralBonusEmail } from "../services/email.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { retireForSubscriber, accumulateBurnBudget, getPendingBurnBudget, markBurnExecuted, calculateNetAfterStripe, type SubscriberRetirementResult } from "../services/retire-subscriber.js";
 import { swapAndBurn, checkOsmosisReadiness } from "../services/swap-and-burn.js";
@@ -1892,7 +1902,58 @@ ${betaBannerJS()}
     processScheduledRetirements(db, baseUrl).catch((err) => {
       console.error("Scheduled retirement processor error (startup):", err instanceof Error ? err.message : err);
     });
+    // Backfill any subscribers missing regen_address from their retirement records
+    backfillSubscriberRegenAddresses(db);
   }, 10_000);
+
+  // --- Admin: approve held referral rewards ---
+  // POST /admin/referrals/approve { reward_id: number } or { all: true }
+  // Auth: Bearer SESSION_SECRET
+  router.post("/admin/referrals/approve", async (req: Request, res: Response) => {
+    const auth = req.headers.authorization;
+    if (!auth || auth !== `Bearer ${config?.sessionSecret}`) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const { reward_id, all } = body ?? {};
+
+    const held = getHeldReferralRewards(db);
+    if (held.length === 0) {
+      res.json({ message: "No held referral rewards", approved: 0 });
+      return;
+    }
+
+    const REFERRAL_BONUS_CAP_CENTS = 250;
+    const toApprove = all ? held : held.filter(r => r.id === reward_id);
+    let approved = 0;
+
+    for (const reward of toApprove) {
+      // Look up the referred subscriber to get their plan amount for the bonus calculation
+      const referredSub = getSubscriberByUserId(db, reward.referred_user_id);
+      const effectiveAmount = Math.min(referredSub?.amount_cents ?? 500, 500); // cap at $5
+      approveReferralReward(db, reward.id);
+      const updatedReward = getPendingReferralRewardForReferred(db, reward.referred_user_id);
+      if (updatedReward) {
+        await executeReferralBonus(db, updatedReward, effectiveAmount, REFERRAL_BONUS_CAP_CENTS, baseUrl);
+      }
+      approved++;
+    }
+
+    res.json({ message: `Approved ${approved} referral reward(s)`, approved, held_remaining: held.length - approved });
+  });
+
+  // GET /admin/referrals/held — list held referral rewards
+  router.get("/admin/referrals/held", (req: Request, res: Response) => {
+    const auth = req.headers.authorization;
+    if (!auth || auth !== `Bearer ${config?.sessionSecret}`) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    const held = getHeldReferralRewards(db);
+    res.json({ held, count: held.length });
+  });
 
   return router;
 }
@@ -2184,7 +2245,22 @@ async function handleInvoicePaid(db: Database.Database, invoice: Stripe.Invoice,
     );
 
     // Trigger per-subscriber retirement (fire-and-forget, don't block webhook response)
-    if (amountCents > 0 && existing.status === "active") {
+    // For free-month referrals ($0 invoice), retire as if the subscriber paid their plan amount.
+    // Apply Stripe fee deduction to match what they'll see on paid months (consistency).
+    // The full cost is funded from the Operations budget.
+    const FREE_MONTH_CAP_CENTS = 500; // Cap free-month retirement at $5
+    const REFERRAL_BONUS_CAP_CENTS = 250; // Cap referral bonus at $2.50
+    let effectiveAmountCents = amountCents;
+    const isFreeMonth = amountCents === 0 && existing.status === "active" && existing.amount_cents > 0;
+    if (isFreeMonth) {
+      effectiveAmountCents = Math.min(existing.amount_cents, FREE_MONTH_CAP_CENTS);
+      console.log(
+        `Free-month referral: subscriber=${existing.id} plan=${existing.plan} — ` +
+        `retiring as if paid $${(effectiveAmountCents / 100).toFixed(2)} (capped at $${(FREE_MONTH_CAP_CENTS / 100).toFixed(2)}, funded from ops budget)`
+      );
+    }
+
+    if (effectiveAmountCents > 0 && existing.status === "active") {
       // Derive and store regen address if not yet set
       if (!existing.regen_address) {
         try {
@@ -2197,11 +2273,11 @@ async function handleInvoicePaid(db: Database.Database, invoice: Stripe.Invoice,
 
       if (existing.billing_interval === "yearly") {
         // Yearly: deduct Stripe fees ONCE on the full payment, then divide net by 12.
-        const netTotal = calculateNetAfterStripe(amountCents);
+        const netTotal = calculateNetAfterStripe(effectiveAmountCents);
         const monthlyNet = Math.floor(netTotal / 12);
         const firstMonthNet = netTotal - (monthlyNet * 11); // remainder goes to first month
-        const monthlyGross = Math.floor(amountCents / 12);
-        const firstMonthGross = amountCents - (monthlyGross * 11);
+        const monthlyGross = Math.floor(effectiveAmountCents / 12);
+        const firstMonthGross = effectiveAmountCents - (monthlyGross * 11);
 
         // Schedule months 2-12 (store gross for display, but net is pre-computed at execution)
         const now = new Date();
@@ -2216,7 +2292,7 @@ async function handleInvoicePaid(db: Database.Database, invoice: Stripe.Invoice,
         }
         console.log(
           `Scheduled 11 future retirements for yearly subscriber ${existing.id} ` +
-          `(net $${(monthlyNet / 100).toFixed(2)}/mo from $${(amountCents / 100).toFixed(2)} yearly)`
+          `(net $${(monthlyNet / 100).toFixed(2)}/mo from $${(effectiveAmountCents / 100).toFixed(2)} yearly)`
         );
 
         // Accumulate FULL year's burn budget upfront (5% of entire net payment).
@@ -2236,7 +2312,33 @@ async function handleInvoicePaid(db: Database.Database, invoice: Stripe.Invoice,
         executeRetirementAsync(db, existing.id, firstMonthGross, existing.billing_interval, baseUrl, firstMonthNet, invoice.id, true);
       } else {
         // Monthly: execute immediately (Stripe fees deducted inside retireForSubscriber)
-        executeRetirementAsync(db, existing.id, amountCents, existing.billing_interval, baseUrl, undefined, invoice.id);
+        executeRetirementAsync(db, existing.id, effectiveAmountCents, existing.billing_interval, baseUrl, undefined, invoice.id);
+      }
+
+      // Referral bonus: triggered immediately when a free-month referral signs up.
+      // The referrer gets rewarded right away — caps and daily rate limits prevent abuse.
+      if (isFreeMonth) {
+        const referralReward = getPendingReferralRewardForReferred(db, existing.user_id);
+        if (referralReward) {
+          // Rate-limit: if more than 10 referrals today, hold for admin review
+          const todayCount = getTodayReferralCount(db);
+          if (todayCount > 10) {
+            holdReferralReward(db, referralReward.id);
+            console.warn(
+              `Referral anomaly: ${todayCount} referrals today — holding reward ${referralReward.id} ` +
+              `(referrer=${referralReward.referrer_user_id} referred=${referralReward.referred_user_id}) for admin review`
+            );
+            sendTelegram(
+              `⚠️ *Referral Anomaly*\n${todayCount} referrals today — exceeds daily limit of 10.\n` +
+              `Reward #${referralReward.id} held for review.\n` +
+              `Referrer: user ${referralReward.referrer_user_id}\n` +
+              `Referred: user ${referralReward.referred_user_id}`
+            ).catch(() => {});
+          } else {
+            const cappedForBonus = Math.min(effectiveAmountCents, FREE_MONTH_CAP_CENTS);
+            executeReferralBonus(db, referralReward, cappedForBonus, REFERRAL_BONUS_CAP_CENTS, baseUrl);
+          }
+        }
       }
     }
   } catch (err) {
@@ -2300,6 +2402,102 @@ async function sendRetirementNotificationEmail(
   }
 }
 
+/**
+ * Execute referral bonus retirement for the referrer.
+ * Retires at half the referred subscriber's effective amount (capped),
+ * plus half the burn credit. Both funded from ops budget.
+ */
+async function executeReferralBonus(
+  db: Database.Database,
+  referralReward: ReferralReward,
+  referredEffectiveAmountCents: number,
+  bonusCapCents: number,
+  baseUrl: string,
+): Promise<void> {
+  const referrerSub = getSubscriberByUserId(db, referralReward.referrer_user_id);
+  if (!referrerSub || referrerSub.status !== "active") {
+    console.warn(
+      `Referral bonus skipped: referrer user=${referralReward.referrer_user_id} has no active subscription`
+    );
+    return;
+  }
+
+  const bonusGross = Math.min(Math.floor(referredEffectiveAmountCents / 2), bonusCapCents);
+
+  // Ensure referrer has a regen address
+  if (!referrerSub.regen_address) {
+    try {
+      const addr = await deriveSubscriberAddress(referrerSub.id);
+      setSubscriberRegenAddress(db, referrerSub.id, addr);
+    } catch (err) {
+      console.error(`Failed to derive regen address for referrer subscriber ${referrerSub.id}:`, err instanceof Error ? err.message : err);
+    }
+  }
+
+  console.log(
+    `Referral bonus: referrer subscriber=${referrerSub.id} (user=${referralReward.referrer_user_id}) — ` +
+    `retiring $${(bonusGross / 100).toFixed(2)} gross (half of $${(referredEffectiveAmountCents / 100).toFixed(2)}, ` +
+    `capped at $${(bonusCapCents / 100).toFixed(2)}) funded from ops budget`
+  );
+
+  // Look up referrer's email and referral code for the bonus notification email
+  const referrerUser = db.prepare(
+    "SELECT email, referral_code FROM users WHERE id = ?"
+  ).get(referralReward.referrer_user_id) as { email: string | null; referral_code: string } | undefined;
+
+  // Execute retirement for the referrer (Stripe fees applied to match normal flow).
+  // skipBurnAccumulation=true — burn is handled separately below at the explicit half rate.
+  executeRetirementAsync(db, referrerSub.id, bonusGross, referrerSub.billing_interval, baseUrl, undefined, `referral-bonus-${referralReward.id}`, true,
+    (result) => {
+      // Record transaction for dashboard contributions table
+      const firstTxHash = result.batches.find(b => b.buyTxHash)?.buyTxHash ?? null;
+      insertReferralBonusTransaction(
+        db, referralReward.referrer_user_id, bonusGross,
+        firstTxHash, result.totalCreditsRetired,
+      );
+
+      // Send referral bonus thank-you email on successful retirement
+      if (referrerUser?.email && result.totalCreditsRetired > 0) {
+        const dashboardUrl = `${baseUrl}/dashboard/login`;
+        const referralLink = `${baseUrl}/r/${referrerUser.referral_code}`;
+        const batchSummaries = result.batches
+          .filter((b) => b.creditsRetired > 0)
+          .map((b) => {
+            const project = getProjectForBatch(b.batchDenom);
+            return {
+              projectName: project?.name ?? b.creditClassId,
+              credits: b.creditsRetired,
+              creditType: project?.creditTypeLabel ?? b.creditTypeAbbrev,
+            };
+          });
+        sendReferralBonusEmail(
+          referrerUser.email, dashboardUrl, referralLink,
+          result.totalCreditsRetired, batchSummaries,
+        ).then(() => {
+          console.log(`Referral bonus email sent to ${referrerUser.email}`);
+        }).catch((err) => {
+          console.error(`Failed to send referral bonus email to ${referrerUser.email}:`, err instanceof Error ? err.message : err);
+        });
+      }
+    },
+  );
+
+  // Credit half the burn amount that the referred subscriber's retirement generates
+  const referredNet = calculateNetAfterStripe(referredEffectiveAmountCents);
+  const referredBurn = Math.floor(referredNet * 0.05);
+  const bonusBurn = Math.floor(referredBurn / 2);
+  if (bonusBurn > 0) {
+    accumulateBurnBudget(db, bonusBurn, "referral_bonus", referrerSub.id);
+    console.log(
+      `Referral bonus burn: $${(bonusBurn / 100).toFixed(2)} credited for referrer subscriber=${referrerSub.id}`
+    );
+    maybeExecuteAutoBurn(db).catch(() => {});
+  }
+
+  // Mark the referral reward as fulfilled
+  fulfillReferralReward(db, referralReward.id, `referral-bonus-${referrerSub.id}`);
+}
+
 /** Fire-and-forget retirement execution with logging */
 function executeRetirementAsync(
   db: Database.Database,
@@ -2309,7 +2507,8 @@ function executeRetirementAsync(
   baseUrl: string,
   precomputedNetCents?: number,
   paymentId?: string,
-  skipBurnAccumulation = false
+  skipBurnAccumulation = false,
+  onSuccess?: (result: SubscriberRetirementResult) => void,
 ): void {
   withSubscriberLock(subscriberId, async () => {
     const result = await retireForSubscriber({
@@ -2332,6 +2531,12 @@ function executeRetirementAsync(
       );
       // Send retirement notification email (fire-and-forget)
       sendRetirementNotificationEmail(db, subscriberId, result, baseUrl).catch(() => {});
+      // Invoke optional success callback (e.g., referral bonus email)
+      if (onSuccess) {
+        try { onSuccess(result); } catch (err) {
+          console.error(`onSuccess callback error for subscriber ${subscriberId}:`, err instanceof Error ? err.message : err);
+        }
+      }
     } else if (result.status === "partial" && paymentId) {
       // Auto-retry partial retirements after 60 seconds
       const failedBatches = result.batches.filter(b => b.error !== null);
@@ -2468,6 +2673,48 @@ function getLastBurnAttempt(db: Database.Database): number {
   ).get() as { last: string | null } | undefined;
   if (!row?.last) return 0;
   return new Date(row.last).getTime();
+}
+
+/**
+ * Backfill subscribers.regen_address from subscriber_retirements for any subscribers
+ * that have had retirements executed but are missing the address on their subscriber record.
+ * Runs once on startup. Also derives addresses for active subscribers with no retirements yet.
+ */
+function backfillSubscriberRegenAddresses(db: Database.Database): void {
+  try {
+    const backfillable = db.prepare(`
+      SELECT sr.subscriber_id, sr.regen_address
+      FROM subscriber_retirements sr
+      JOIN subscribers s ON s.id = sr.subscriber_id
+      WHERE s.regen_address IS NULL
+      GROUP BY sr.subscriber_id
+    `).all() as { subscriber_id: number; regen_address: string }[];
+
+    for (const row of backfillable) {
+      setSubscriberRegenAddress(db, row.subscriber_id, row.regen_address);
+    }
+
+    if (backfillable.length > 0) {
+      console.log(`Backfilled regen_address for ${backfillable.length} subscribers from retirement records`);
+    }
+
+    // Also derive addresses for active subscribers with no retirements and no address
+    const needDerivation = db.prepare(`
+      SELECT s.id FROM subscribers s
+      WHERE s.regen_address IS NULL AND s.status = 'active'
+    `).all() as { id: number }[];
+
+    for (const row of needDerivation) {
+      deriveSubscriberAddress(row.id).then(addr => {
+        setSubscriberRegenAddress(db, row.id, addr);
+        console.log(`Derived regen_address for subscriber ${row.id}: ${addr}`);
+      }).catch(err => {
+        console.error(`Failed to derive regen_address for subscriber ${row.id}:`, err instanceof Error ? err.message : err);
+      });
+    }
+  } catch (err) {
+    console.error("Backfill regen addresses error:", err instanceof Error ? err.message : err);
+  }
 }
 
 /**
