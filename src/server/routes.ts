@@ -850,6 +850,14 @@ ${betaBannerJS()}
     });
   }
 
+  // Common language code redirects for unsupported variants
+  const LANG_REDIRECTS: Record<string, LangCode> = { is: "es", br: "pt", mx: "es", cn: "zh", tw: "zh", in: "hi" };
+  for (const [from, to] of Object.entries(LANG_REDIRECTS)) {
+    router.get(`/${from}`, (_req: Request, res: Response) => {
+      res.redirect(301, `/${to}`);
+    });
+  }
+
   // --- Stripe-dependent routes (only registered when Stripe is configured) ---
   if (stripe) {
 
