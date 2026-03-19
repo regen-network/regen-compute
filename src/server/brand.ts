@@ -64,7 +64,7 @@ export function brandFonts(): string {
   return `<link rel="icon" href="https://app.regen.network/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});
@@ -117,6 +117,18 @@ export function brandCSS(): string {
     }
     a { color: var(--regen-green); text-decoration: none; }
     a:hover { text-decoration: underline; }
+
+    /* ---- Hindi / Devanagari typography ---- */
+    html[lang="hi"] body {
+      font-family: 'Hind', var(--regen-font-primary);
+      font-size: 17px;
+      line-height: 1.9;
+    }
+    html[lang="hi"] p { line-height: 2.0; }
+    html[lang="hi"] h1, html[lang="hi"] h2, html[lang="hi"] h3 {
+      font-family: 'Hind', var(--regen-font-primary);
+      line-height: 1.5;
+    }
 
     /* ---- Layout ---- */
     .regen-container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
