@@ -478,8 +478,8 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       <!-- Monthly / Yearly toggle -->
       <div style="display:flex;justify-content:center;margin-bottom:28px;">
         <div id="interval-toggle" style="display:inline-flex;background:var(--regen-gray-100);border-radius:10px;padding:4px;">
-          <button id="toggle-monthly" onclick="setInterval('monthly')" class="interval-btn interval-btn--active">${t(lang, "toggle_monthly")}</button>
-          <button id="toggle-yearly" onclick="setInterval('yearly')" class="interval-btn interval-btn--yearly">${t(lang, "toggle_yearly")} <span style="font-size:11px;font-weight:700;color:var(--regen-green);">${t(lang, "toggle_save")}</span></button>
+          <button id="toggle-monthly" onclick="setPricingInterval('monthly')" class="interval-btn interval-btn--active">${t(lang, "toggle_monthly")}</button>
+          <button id="toggle-yearly" onclick="setPricingInterval('yearly')" class="interval-btn interval-btn--yearly">${t(lang, "toggle_yearly")} <span style="font-size:11px;font-weight:700;color:var(--regen-green);">${t(lang, "toggle_save")}</span></button>
         </div>
       </div>
 
@@ -752,7 +752,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 
   <script>
     var currentInterval = 'monthly';
-    function setInterval(interval) {
+    function setPricingInterval(interval) {
       currentInterval = interval;
       var monthlyEls = document.querySelectorAll('.price-monthly');
       var yearlyEls = document.querySelectorAll('.price-yearly');
@@ -797,7 +797,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     function switchToYearly() {
       var tier = pendingTier;
       closeNudge();
-      setInterval('yearly');
+      setPricingInterval('yearly');
       doSubscribe(tier, 'yearly');
     }
 
