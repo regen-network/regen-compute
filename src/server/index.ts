@@ -26,6 +26,7 @@ import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
 import { createAboutRoutes } from "./about.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
+import { createUnicornRoutes } from "./unicorns.js";
 import { createAgentViewRoutes } from "./agent-view.js";
 import { loadConfig } from "../config.js";
 import { regenLogoSVG, regenLogoPNG } from "./brand.js";
@@ -357,6 +358,10 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // AI Plugin page (static, no dependencies)
   const aiPluginRoutes = createAiPluginRoutes(baseUrl);
   app.use(aiPluginRoutes);
+
+  // Unicorns & Rainbows campaign page
+  const unicornRoutes = createUnicornRoutes(db, baseUrl, config);
+  app.use(unicornRoutes);
 
   // Dashboard routes (login page works without Stripe; full dashboard needs DB)
   const dashboardRoutes = createDashboardRoutes(db, baseUrl, config);
