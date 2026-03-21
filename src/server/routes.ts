@@ -1144,9 +1144,9 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
             '<div class="crypto-result-icon success">&#10003;</div>' +
             '<h4 style="color:var(--regen-green);">Payment Verified!</h4>' +
             '<p><strong>' + sub.plan + '</strong> plan activated' +
-            (sub.expires_at ? ' until ' + sub.expires_at.slice(0, 10) : ' — lifetime') + '.</p>' +
+            (sub.expires && sub.expires !== 'never' ? ' until ' + sub.expires : ' — lifetime') + '.</p>' +
             '<p style="font-size:13px;color:var(--regen-gray-400);">Your API key has been sent to <strong>' + email + '</strong>.</p>' +
-            '<p style="font-size:13px;">Amount: <strong>$' + (res.data.payment.usd_value_cents / 100).toFixed(2) + '</strong> (' +
+            '<p style="font-size:13px;">Amount: <strong>$' + res.data.payment.usd_value + '</strong> (' +
             res.data.payment.token + ' on ' + res.data.payment.chain + ')</p>' +
             '<button class="regen-btn regen-btn--solid" onclick="closeCryptoCheckout()" style="margin-top:12px;">Done</button>' +
             '</div>';
