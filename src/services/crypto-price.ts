@@ -125,9 +125,13 @@ export async function toUsdCents(
     throw new Error(`Invalid amount: "${amount}"`);
   }
 
-  // Stablecoins are always $1
+  // Stablecoins
   if (normalizedToken === "USDC" || normalizedToken === "USDT" || normalizedToken === "XDAI") {
     return Math.round(parsedAmount * 100);
+  }
+  // AZUSD (Azos) — partner stablecoin, not on CoinGecko, valued at $0.995
+  if (normalizedToken === "AZUSD") {
+    return Math.round(parsedAmount * 0.995 * 100);
   }
 
   // Try known symbols first (native tokens)
