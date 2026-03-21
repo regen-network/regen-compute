@@ -257,13 +257,14 @@ function renderDashboardPage(opts: {
   referralCount: number;
   isTopReferrer: boolean;
   cryptoSubs: Subscriber[];
+  apiKey: string;
 }): string {
   const {
     email, plan, memberSince, cumulative, monthly, badges, manageUrl,
     amountCents, billingInterval, baseUrl, nextRetirementDate, transactions, communityStats,
     regenAddress, projectCards, communityGoal, communityTotalCredits, communitySubscriberCount,
     batchDenomMap, totalRetiredCents, subscriptions, referralCode, referralCount, isTopReferrer,
-    cryptoSubs,
+    cryptoSubs, apiKey,
   } = opts;
   const isYearly = billingInterval === "yearly";
 
@@ -687,6 +688,14 @@ function renderDashboardPage(opts: {
       </div>
     </div>
     <script>
+    function copyApiKey() {
+      var el = document.getElementById('api-key-value');
+      var btn = document.getElementById('api-key-copy-btn');
+      navigator.clipboard.writeText(el.textContent).then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
     function copyRefLink() {
       var el = document.getElementById('refLink');
       navigator.clipboard.writeText(el.textContent).then(function() {
@@ -713,6 +722,34 @@ function renderDashboardPage(opts: {
           <a class="regen-btn regen-btn--outline regen-btn--sm" href="${escapeHtml(manageUrl)}">Manage</a>
         </div>`;
       }).join("\n")}
+    </div>
+
+    <!-- Developer / API Key -->
+    <div style="margin-bottom:32px;">
+      <details>
+        <summary style="font-size:16px;font-weight:700;color:var(--regen-navy);cursor:pointer;padding:8px 0;user-select:none;">Developer &amp; API Access</summary>
+        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius);padding:20px 24px;margin-top:8px;">
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-size:13px;font-weight:600;color:var(--regen-gray-500);margin-bottom:6px;">Your API Key</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <code id="api-key-value" style="flex:1;font-size:13px;background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);border-radius:6px;padding:10px 12px;word-break:break-all;color:var(--regen-navy);cursor:pointer;" onclick="copyApiKey()" title="Click to copy">${escapeHtml(apiKey)}</code>
+              <button onclick="copyApiKey()" style="padding:8px 14px;background:var(--regen-green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" id="api-key-copy-btn">Copy</button>
+            </div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-size:13px;font-weight:600;color:var(--regen-gray-500);margin-bottom:6px;">API Endpoint</label>
+            <code style="display:block;font-size:13px;background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);border-radius:6px;padding:10px 12px;color:var(--regen-navy);">${escapeHtml(baseUrl)}/api/v1/subscription</code>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block;font-size:13px;font-weight:600;color:var(--regen-gray-500);margin-bottom:6px;">Example</label>
+            <pre style="font-size:12px;background:#1a1a2e;color:#a5f3c4;border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0;line-height:1.6;">curl -H "Authorization: Bearer ${escapeHtml(apiKey.slice(0, 12))}..." \\
+  ${escapeHtml(baseUrl)}/api/v1/subscription</pre>
+          </div>
+          <p style="font-size:12px;color:var(--regen-gray-400);margin:12px 0 0;line-height:1.5;">
+            Returns your subscription status, cumulative credits retired, and referral link. Read-only. Full API docs at <a href="${escapeHtml(baseUrl)}/api/v1/openapi.json" target="_blank" rel="noopener" style="color:var(--regen-green);font-weight:600;">OpenAPI spec</a>.
+          </p>
+        </div>
+      </details>
     </div>
   </div>
 
@@ -1265,6 +1302,7 @@ export function createDashboardRoutes(
       referralCount,
       isTopReferrer,
       cryptoSubs,
+      apiKey: user.api_key,
     }));
   });
 
