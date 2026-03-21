@@ -1651,18 +1651,21 @@ export function updateCryptoPaymentStatus(db: Database.Database, id: number, sta
 
 export type RenewalLevel = "30d" | "14d" | "5d" | "expired";
 
-/** Get crypto subscribers approaching expiry that haven't received the given reminder level */
-export function getCryptoSubscribersNeedingRenewal(db: Database.Database, level: RenewalLevel, cutoffDate: string): Array<Subscriber & { email: string }> {
-  // Crypto subscribers have stripe_subscription_id starting with 'crypto_'
+/** Get subscribers needing renewal reminders: crypto subs (always) + cancelled Stripe subs.
+ *  Never reminds active Stripe subs (auto-renew — reminding them may prompt cancellation). */
+export function getSubscribersNeedingRenewal(db: Database.Database, level: RenewalLevel, cutoffDate: string): Array<Subscriber & { email: string }> {
   const rows = db.prepare(`
     SELECT s.*, u.email FROM subscribers s
     JOIN users u ON u.id = s.user_id
-    WHERE s.status = 'active'
-      AND s.stripe_subscription_id LIKE 'crypto_%'
-      AND s.current_period_end IS NOT NULL
+    WHERE s.current_period_end IS NOT NULL
       AND s.current_period_end <= ?
       AND u.email IS NOT NULL
       AND (s.renewal_reminders_sent IS NULL OR s.renewal_reminders_sent NOT LIKE ?)
+      AND (
+        (s.stripe_subscription_id LIKE 'crypto_%' AND s.status = 'active')
+        OR
+        (s.stripe_subscription_id NOT LIKE 'crypto_%' AND s.status = 'cancelled')
+      )
   `).all(cutoffDate, `%${level}%`) as Array<Subscriber & { email: string }>;
   return rows;
 }

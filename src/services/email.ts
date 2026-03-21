@@ -1053,15 +1053,18 @@ export async function sendReferralBonusEmail(
 }
 
 /**
- * Send a crypto subscription renewal reminder email.
+ * Send a subscription renewal reminder email.
+ * For crypto subs: "extend" language with crypto payment option.
+ * For cancelled Stripe subs: "resubscribe" language with link to pricing.
  * Levels: 30d (1 month before), 14d (2 weeks), 5d (5 days), expired (day of)
  */
-export async function sendCryptoRenewalEmail(
+export async function sendRenewalReminderEmail(
   email: string,
   plan: string,
   expiresDate: string,
   level: "30d" | "14d" | "5d" | "expired",
   dashboardUrl: string,
+  isCancelledStripe: boolean = false,
 ): Promise<void> {
   const config = loadConfig();
   if (!config.postmarkServerToken || !config.emailEnabled) return;
@@ -1129,13 +1132,15 @@ export async function sendCryptoRenewalEmail(
               </div>
 
               <p style="margin:0 0 20px;font-family:Arial,sans-serif;font-size:15px;color:#374151;line-height:1.6;">
-                Extending is easy — pay with crypto or credit card from your dashboard.
+                ${isCancelledStripe
+                  ? "Resubscribing takes just a minute — choose a plan and you're back."
+                  : "Extending is easy — pay with crypto or credit card from your dashboard."}
               </p>
 
               <!-- CTA Button -->
               <div style="text-align:center;margin:0 0 24px;">
-                <a href="${escapeHtml(dashboardUrl)}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#4FB573,#79C6AA);color:#ffffff;font-family:'Mulish',Arial,sans-serif;font-size:16px;font-weight:700;text-decoration:none;border-radius:10px;">
-                  Extend My Subscription
+                <a href="${escapeHtml(isCancelledStripe ? dashboardUrl.replace('/dashboard', '/#pricing') : dashboardUrl)}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#4FB573,#79C6AA);color:#ffffff;font-family:'Mulish',Arial,sans-serif;font-size:16px;font-weight:700;text-decoration:none;border-radius:10px;">
+                  ${isCancelledStripe ? "Resubscribe Now" : "Extend My Subscription"}
                 </a>
               </div>
 

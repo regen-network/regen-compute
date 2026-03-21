@@ -29,8 +29,8 @@ import { createAiPluginRoutes } from "./ai-plugin.js";
 import { createAgentViewRoutes } from "./agent-view.js";
 import { loadConfig } from "../config.js";
 import { regenLogoSVG, regenLogoPNG } from "./brand.js";
-import { getCryptoSubscribersNeedingRenewal, markRenewalReminderSent, type RenewalLevel } from "./db.js";
-import { sendCryptoRenewalEmail } from "../services/email.js";
+import { getSubscribersNeedingRenewal, markRenewalReminderSent, type RenewalLevel } from "./db.js";
+import { sendRenewalReminderEmail } from "../services/email.js";
 
 export function startServer(options: { port?: number; dbPath?: string } = {}) {
   const port = options.port ?? parseInt(process.env.REGEN_SERVER_PORT ?? "3141", 10);
@@ -382,15 +382,17 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
       cutoff.setDate(cutoff.getDate() + daysAhead);
       const cutoffStr = cutoff.toISOString();
 
-      const subs = getCryptoSubscribersNeedingRenewal(db, level, cutoffStr);
+      const subs = getSubscribersNeedingRenewal(db, level, cutoffStr);
       for (const sub of subs) {
         try {
-          await sendCryptoRenewalEmail(
+          const isCancelledStripe = !sub.stripe_subscription_id.startsWith("crypto_") && sub.status === "cancelled";
+          await sendRenewalReminderEmail(
             sub.email,
             sub.plan,
             sub.current_period_end!,
             level,
             `${baseUrl}/dashboard`,
+            isCancelledStripe,
           );
           markRenewalReminderSent(db, sub.id, level);
           console.log(`Sent ${level} renewal reminder to ${sub.email} (sub ${sub.id})`);
