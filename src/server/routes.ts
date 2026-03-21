@@ -301,6 +301,136 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     }
     .nudge-btn-monthly:hover { background: var(--regen-gray-50); }
 
+    /* Crypto checkout modal */
+    .crypto-overlay {
+      display: none; position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+    }
+    .crypto-overlay.active { display: flex; }
+    .crypto-box {
+      background: var(--regen-white); border-radius: var(--regen-radius-lg);
+      padding: 32px 28px; max-width: 480px; width: 92%;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25); position: relative;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .crypto-box h3 {
+      font-size: 20px; font-weight: 800; color: var(--regen-navy);
+      margin: 0 0 6px;
+    }
+    .crypto-box .crypto-subtitle {
+      font-size: 14px; color: var(--regen-gray-500); margin: 0 0 20px;
+    }
+    .crypto-close {
+      position: absolute; top: 12px; right: 16px;
+      background: none; border: none; font-size: 22px; color: var(--regen-gray-400);
+      cursor: pointer; line-height: 1; padding: 4px;
+    }
+    .crypto-close:hover { color: var(--regen-navy); }
+    .crypto-step { display: none; }
+    .crypto-step.active { display: block; }
+    .crypto-plans {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .crypto-plan {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border: 2px solid var(--regen-gray-200);
+      border-radius: 10px; cursor: pointer; transition: all 0.15s;
+    }
+    .crypto-plan:hover { border-color: var(--regen-green); background: rgba(79,181,115,0.04); }
+    .crypto-plan-name { font-weight: 700; color: var(--regen-navy); font-size: 15px; }
+    .crypto-plan-price { font-weight: 800; color: var(--regen-green); font-size: 16px; }
+    .crypto-plan-desc { font-size: 12px; color: var(--regen-gray-400); }
+    .crypto-chain-tabs {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .crypto-chain-tab {
+      padding: 6px 14px; border: 1px solid var(--regen-gray-200);
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; background: var(--regen-white); color: var(--regen-gray-500);
+      transition: all 0.15s;
+    }
+    .crypto-chain-tab:hover { border-color: var(--regen-green); }
+    .crypto-chain-tab.active {
+      background: var(--regen-green); color: #fff; border-color: var(--regen-green);
+    }
+    .crypto-addr-box {
+      background: var(--regen-gray-50); border: 1px solid var(--regen-gray-200);
+      border-radius: 10px; padding: 16px; text-align: center;
+    }
+    .crypto-addr-box .qr-container {
+      margin: 0 auto 12px; width: 160px; height: 160px;
+    }
+    .crypto-addr-box .qr-container svg { width: 100%; height: 100%; }
+    .crypto-addr-text {
+      font-family: monospace; font-size: 12px; word-break: break-all;
+      color: var(--regen-navy); background: var(--regen-white);
+      padding: 8px 12px; border-radius: 6px; border: 1px solid var(--regen-gray-200);
+      cursor: pointer; position: relative;
+    }
+    .crypto-addr-text:hover { border-color: var(--regen-green); }
+    .crypto-copied {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: var(--regen-green); color: #fff; border-radius: 6px;
+      font-family: var(--regen-font-primary); font-size: 13px; font-weight: 700;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .crypto-copied.show { opacity: 1; }
+    .crypto-send-amount {
+      font-size: 14px; color: var(--regen-gray-500); margin: 12px 0 0;
+    }
+    .crypto-send-amount strong { color: var(--regen-navy); }
+    .crypto-evm-chain-select {
+      margin-bottom: 12px;
+    }
+    .crypto-evm-chain-select select {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--regen-gray-200);
+      border-radius: 8px; font-size: 14px; color: var(--regen-navy);
+      background: var(--regen-white); cursor: pointer;
+    }
+    .crypto-input {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--regen-gray-200);
+      border-radius: 8px; font-size: 14px; font-family: monospace;
+      box-sizing: border-box;
+    }
+    .crypto-input:focus { outline: none; border-color: var(--regen-green); }
+    .crypto-label {
+      display: block; font-weight: 600; font-size: 14px;
+      color: var(--regen-navy); margin-bottom: 6px;
+    }
+    .crypto-field { margin-bottom: 14px; }
+    .crypto-result {
+      text-align: center; padding: 16px;
+    }
+    .crypto-result-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px; font-size: 28px;
+    }
+    .crypto-result-icon.success { background: rgba(79,181,115,0.12); }
+    .crypto-result-icon.error { background: rgba(204,51,51,0.1); }
+    .crypto-result h4 { font-size: 18px; font-weight: 800; margin: 0 0 8px; }
+    .crypto-result p { font-size: 14px; color: var(--regen-gray-500); margin: 0 0 16px; }
+    .crypto-spinner {
+      width: 32px; height: 32px; border: 3px solid var(--regen-gray-200);
+      border-top-color: var(--regen-green); border-radius: 50%;
+      animation: crypto-spin 0.8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes crypto-spin { to { transform: rotate(360deg); } }
+    .crypto-back {
+      background: none; border: none; color: var(--regen-gray-400);
+      font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 16px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .crypto-back:hover { color: var(--regen-navy); }
+    .crypto-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--regen-gray-500);
+      cursor: pointer; transition: color 0.15s; margin-top: 16px;
+    }
+    .crypto-badge:hover { color: var(--regen-green); }
+    .crypto-badge svg { opacity: 0.6; transition: opacity 0.15s; }
+    .crypto-badge:hover svg { opacity: 1; }
+
     /* Stats section */
     .stats-section { padding: 52px 0; border-top: 1px solid var(--regen-gray-200); }
     .stats-bar {
@@ -516,6 +646,14 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
         <span style="font-weight:700;font-size:15px;color:var(--regen-navy);white-space:nowrap;">${t(lang, "org_cta_heading")}</span>
         <span style="font-size:14px;color:var(--regen-gray-500);">${t(lang, "org_cta_desc")}</span>
         <span class="regen-btn regen-btn--solid regen-btn--sm" style="white-space:nowrap;">${t(lang, "org_cta_btn")}</span>
+      </div>
+
+      <!-- Crypto payment badge -->
+      <div style="text-align:center;">
+        <span class="crypto-badge" onclick="openCryptoCheckout()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5"/></svg>
+          Prefer crypto? Pay with ETH, BTC, SOL, USDC, or any token
+        </span>
       </div>
 
       <!-- Organization form (revealed on click) -->
@@ -760,6 +898,637 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       for (var i = 0; i < yearlyEls.length; i++) yearlyEls[i].style.display = interval === 'yearly' ? '' : 'none';
       document.getElementById('toggle-monthly').className = 'interval-btn' + (interval === 'monthly' ? ' interval-btn--active' : '');
       document.getElementById('toggle-yearly').className = 'interval-btn interval-btn--yearly' + (interval === 'yearly' ? ' interval-btn--active' : '');
+    }
+  </script>
+
+  <!-- Crypto checkout modal -->
+  <div class="crypto-overlay" id="crypto-overlay" onclick="if(event.target===this)closeCryptoCheckout()">
+    <div class="crypto-box">
+      <button class="crypto-close" onclick="closeCryptoCheckout()">&times;</button>
+
+      <!-- Step 1: Choose plan -->
+      <div class="crypto-step active" id="crypto-step-1">
+        <h3>Pay with Crypto</h3>
+        <p class="crypto-subtitle">Choose your plan — pay annually, get more impact per dollar</p>
+        <div class="crypto-plans">
+          <div class="crypto-plan" onclick="selectCryptoPlan('dabbler', 1250, 'Dabbler — 1 year')">
+            <div>
+              <div class="crypto-plan-name">Dabbler</div>
+              <div class="crypto-plan-desc">For casual AI users — 1 year</div>
+            </div>
+            <div class="crypto-plan-price">$12.50</div>
+          </div>
+          <div class="crypto-plan" onclick="selectCryptoPlan('builder', 2500, 'Builder — 1 year')">
+            <div>
+              <div class="crypto-plan-name">Builder</div>
+              <div class="crypto-plan-desc">For regular AI developers — 1 year</div>
+            </div>
+            <div class="crypto-plan-price">$25</div>
+          </div>
+          <div class="crypto-plan" onclick="selectCryptoPlan('agent', 5000, 'Agent — 1 year')">
+            <div>
+              <div class="crypto-plan-name">Agent</div>
+              <div class="crypto-plan-desc">For AI-native teams — 1 year</div>
+            </div>
+            <div class="crypto-plan-price">$50</div>
+          </div>
+          <div class="crypto-plan" onclick="selectCryptoPlan('lifetime', 25000, 'Lifetime')">
+            <div>
+              <div class="crypto-plan-name">Lifetime</div>
+              <div class="crypto-plan-desc">Covered forever — maximum ecological impact</div>
+            </div>
+            <div class="crypto-plan-price">$250</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Send payment -->
+      <div class="crypto-step" id="crypto-step-2">
+        <button class="crypto-back" onclick="cryptoGoStep(1)">&larr; Back to plans</button>
+        <h3>Send Payment</h3>
+        <p class="crypto-subtitle" id="crypto-plan-label">Builder — 1 year</p>
+
+        <div class="crypto-chain-tabs">
+          <div class="crypto-chain-tab active" data-chain="evm" onclick="selectCryptoChain('evm')">EVM</div>
+          <div class="crypto-chain-tab" data-chain="bitcoin" onclick="selectCryptoChain('bitcoin')">Bitcoin</div>
+          <div class="crypto-chain-tab" data-chain="solana" onclick="selectCryptoChain('solana')">Solana</div>
+          <div class="crypto-chain-tab" data-chain="tron" onclick="selectCryptoChain('tron')">Tron</div>
+        </div>
+
+        <div class="crypto-evm-chain-select" id="crypto-evm-select">
+          <select id="crypto-evm-chain" onchange="updateCryptoChainLabel()">
+            <option value="ethereum">Ethereum</option>
+            <option value="base" selected>Base (recommended — low fees)</option>
+            <option value="arbitrum">Arbitrum</option>
+            <option value="polygon">Polygon</option>
+            <option value="optimism">Optimism</option>
+            <option value="avalanche">Avalanche</option>
+            <option value="bnb">BNB Chain</option>
+            <option value="linea">Linea</option>
+            <option value="zksync">zkSync</option>
+            <option value="scroll">Scroll</option>
+            <option value="celo">Celo</option>
+            <option value="gnosis">Gnosis</option>
+          </select>
+        </div>
+
+        <div class="crypto-addr-box">
+          <div class="qr-container" id="crypto-qr"></div>
+          <div class="crypto-addr-text" id="crypto-addr" onclick="copyCryptoAddr()">
+            <span id="crypto-addr-val"></span>
+            <div class="crypto-copied" id="crypto-copied">Copied!</div>
+          </div>
+          <p class="crypto-send-amount">Send <strong id="crypto-amount-label">$25</strong> worth of any token (USDC preferred for exact amounts)</p>
+        </div>
+
+        <div class="crypto-field" style="margin-top:18px;">
+          <label class="crypto-label">After sending, continue below:</label>
+          <button class="regen-btn regen-btn--solid regen-btn--block" onclick="cryptoGoStep(3)" style="font-size:15px;padding:12px;">I've sent the payment</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Confirm tx hash -->
+      <div class="crypto-step" id="crypto-step-3">
+        <button class="crypto-back" onclick="cryptoGoStep(2)">&larr; Back</button>
+        <h3>Confirm Payment</h3>
+        <p class="crypto-subtitle">Paste your transaction hash so we can verify it on-chain</p>
+
+        <div class="crypto-field">
+          <label class="crypto-label">Chain</label>
+          <select id="crypto-confirm-chain" class="crypto-input" style="font-family:inherit;">
+            <option value="ethereum">Ethereum</option>
+            <option value="base" selected>Base</option>
+            <option value="arbitrum">Arbitrum</option>
+            <option value="polygon">Polygon</option>
+            <option value="optimism">Optimism</option>
+            <option value="avalanche">Avalanche</option>
+            <option value="bnb">BNB Chain</option>
+            <option value="linea">Linea</option>
+            <option value="zksync">zkSync</option>
+            <option value="scroll">Scroll</option>
+            <option value="celo">Celo</option>
+            <option value="gnosis">Gnosis</option>
+            <option value="bitcoin">Bitcoin</option>
+            <option value="solana">Solana</option>
+            <option value="tron">Tron</option>
+          </select>
+        </div>
+
+        <div class="crypto-field">
+          <label class="crypto-label">Transaction Hash</label>
+          <input type="text" id="crypto-tx-hash" class="crypto-input" placeholder="0x... or transaction ID">
+        </div>
+
+        <div class="crypto-field">
+          <label class="crypto-label">Email (to receive your API key)</label>
+          <input type="email" id="crypto-email" class="crypto-input" placeholder="you@example.com">
+        </div>
+
+        <p id="crypto-confirm-error" style="color:#c33;font-size:13px;display:none;margin:0 0 12px;"></p>
+
+        <button id="crypto-confirm-btn" class="regen-btn regen-btn--solid regen-btn--block" onclick="confirmCryptoPayment()" style="font-size:15px;padding:12px;">Verify & Activate</button>
+      </div>
+
+      <!-- Step 4: Result -->
+      <div class="crypto-step" id="crypto-step-4">
+        <div id="crypto-result-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Crypto checkout logic ---
+    var cryptoAddresses = {
+      evm: '0x0687cC26060FE12Fd4A6210c2f30Cf24a9853C6b',
+      bitcoin: 'bc1qa2wlapdsmf0pp8x3gamp6elaaehkarpgdre5vq',
+      solana: '9npQZwDxDAcbnpVpQKzKYtLDKN8xpAMfE5FSAuSGsaJh',
+      tron: 'TRNx7dZXm2HNqaUp9oLTSLBhN4tHmsyUfL'
+    };
+    var cryptoSelectedPlan = { id: '', cents: 0, label: '' };
+    var cryptoSelectedChain = 'evm';
+
+    function openCryptoCheckout() {
+      document.getElementById('crypto-overlay').classList.add('active');
+      cryptoGoStep(1);
+    }
+    function closeCryptoCheckout() {
+      document.getElementById('crypto-overlay').classList.remove('active');
+    }
+
+    function cryptoGoStep(n) {
+      var steps = document.querySelectorAll('.crypto-step');
+      for (var i = 0; i < steps.length; i++) steps[i].classList.remove('active');
+      document.getElementById('crypto-step-' + n).classList.add('active');
+    }
+
+    function selectCryptoPlan(id, cents, label) {
+      cryptoSelectedPlan = { id: id, cents: cents, label: label };
+      document.getElementById('crypto-plan-label').textContent = label;
+      document.getElementById('crypto-amount-label').textContent = '$' + (cents / 100);
+      selectCryptoChain('evm');
+      cryptoGoStep(2);
+    }
+
+    function selectCryptoChain(chain) {
+      cryptoSelectedChain = chain;
+      var tabs = document.querySelectorAll('.crypto-chain-tab');
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.toggle('active', tabs[i].getAttribute('data-chain') === chain);
+      }
+      document.getElementById('crypto-evm-select').style.display = chain === 'evm' ? 'block' : 'none';
+
+      var addr = cryptoAddresses[chain];
+      document.getElementById('crypto-addr-val').textContent = addr;
+      renderQR(addr);
+      updateCryptoChainLabel();
+    }
+
+    function updateCryptoChainLabel() {
+      var chain = cryptoSelectedChain;
+      if (chain === 'evm') {
+        chain = document.getElementById('crypto-evm-chain').value;
+      }
+      // Pre-select the confirm chain dropdown
+      var sel = document.getElementById('crypto-confirm-chain');
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === chain) { sel.selectedIndex = i; break; }
+      }
+    }
+
+    function copyCryptoAddr() {
+      var addr = document.getElementById('crypto-addr-val').textContent;
+      navigator.clipboard.writeText(addr).then(function() {
+        var el = document.getElementById('crypto-copied');
+        el.classList.add('show');
+        setTimeout(function() { el.classList.remove('show'); }, 1200);
+      });
+    }
+
+    function confirmCryptoPayment() {
+      var chain = document.getElementById('crypto-confirm-chain').value;
+      var txHash = document.getElementById('crypto-tx-hash').value.trim();
+      var email = document.getElementById('crypto-email').value.trim();
+      var errEl = document.getElementById('crypto-confirm-error');
+      errEl.style.display = 'none';
+
+      if (!txHash) {
+        errEl.textContent = 'Please enter the transaction hash.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (!email || email.indexOf('@') < 1) {
+        errEl.textContent = 'Please enter a valid email address.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      // Show loading
+      var btn = document.getElementById('crypto-confirm-btn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying on-chain...';
+
+      // Show spinner step
+      cryptoGoStep(4);
+      document.getElementById('crypto-result-content').innerHTML =
+        '<div class="crypto-result"><div class="crypto-spinner"></div>' +
+        '<h4 style="color:var(--regen-navy);">Verifying transaction...</h4>' +
+        '<p>Checking on-chain confirmation. This may take a moment.</p></div>';
+
+      fetch('/api/v1/confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chain: chain, tx_hash: txHash, email: email })
+      })
+      .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+      .then(function(res) {
+        if (res.ok && res.data.subscription) {
+          var sub = res.data.subscription;
+          document.getElementById('crypto-result-content').innerHTML =
+            '<div class="crypto-result">' +
+            '<div class="crypto-result-icon success">&#10003;</div>' +
+            '<h4 style="color:var(--regen-green);">Payment Verified!</h4>' +
+            '<p><strong>' + sub.plan + '</strong> plan activated' +
+            (sub.expires_at ? ' until ' + sub.expires_at.slice(0, 10) : ' — lifetime') + '.</p>' +
+            '<p style="font-size:13px;color:var(--regen-gray-400);">Your API key has been sent to <strong>' + email + '</strong>.</p>' +
+            '<p style="font-size:13px;">Amount: <strong>$' + (res.data.payment.usd_value_cents / 100).toFixed(2) + '</strong> (' +
+            res.data.payment.token + ' on ' + res.data.payment.chain + ')</p>' +
+            '<button class="regen-btn regen-btn--solid" onclick="closeCryptoCheckout()" style="margin-top:12px;">Done</button>' +
+            '</div>';
+        } else {
+          var msg = (res.data && res.data.error && res.data.error.message) || 'Verification failed. Please check the transaction hash and try again.';
+          document.getElementById('crypto-result-content').innerHTML =
+            '<div class="crypto-result">' +
+            '<div class="crypto-result-icon error" style="color:#c33;">&#10007;</div>' +
+            '<h4 style="color:#c33;">Verification Failed</h4>' +
+            '<p>' + msg + '</p>' +
+            '<button class="regen-btn regen-btn--outline" onclick="cryptoRetry()" style="margin-top:8px;">Try Again</button>' +
+            '</div>';
+        }
+      })
+      .catch(function(e) {
+        document.getElementById('crypto-result-content').innerHTML =
+          '<div class="crypto-result">' +
+          '<div class="crypto-result-icon error" style="color:#c33;">&#10007;</div>' +
+          '<h4 style="color:#c33;">Network Error</h4>' +
+          '<p>' + e.message + '</p>' +
+          '<button class="regen-btn regen-btn--outline" onclick="cryptoRetry()" style="margin-top:8px;">Try Again</button>' +
+          '</div>';
+      });
+    }
+
+    function cryptoRetry() {
+      cryptoGoStep(3);
+      document.getElementById('crypto-confirm-btn').disabled = false;
+      document.getElementById('crypto-confirm-btn').textContent = 'Verify & Activate';
+    }
+
+    // --- Minimal QR Code generator (SVG) ---
+    // Generates a simple QR code using a basic implementation
+    function renderQR(text) {
+      var container = document.getElementById('crypto-qr');
+      // Use a simple approach: generate via an inline canvas-to-SVG
+      // We'll use a lightweight QR encoding algorithm
+      try {
+        var modules = generateQRModules(text);
+        var size = modules.length;
+        var cellSize = Math.floor(160 / (size + 8));
+        var offset = Math.floor((160 - cellSize * size) / 2);
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">';
+        svg += '<rect width="160" height="160" fill="white"/>';
+        for (var y = 0; y < size; y++) {
+          for (var x = 0; x < size; x++) {
+            if (modules[y][x]) {
+              svg += '<rect x="' + (offset + x * cellSize) + '" y="' + (offset + y * cellSize) + '" width="' + cellSize + '" height="' + cellSize + '" fill="#101570"/>';
+            }
+          }
+        }
+        svg += '</svg>';
+        container.innerHTML = svg;
+      } catch(e) {
+        // Fallback: just show the address text, no QR
+        container.innerHTML = '<div style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;background:var(--regen-gray-100);border-radius:8px;font-size:11px;color:var(--regen-gray-400);">QR unavailable</div>';
+      }
+    }
+
+    // Minimal QR Code encoder (Version 1-6, Byte mode, ECC-L)
+    // This is a simplified implementation for address-length strings
+    function generateQRModules(data) {
+      // Use the qrcodegen approach: encode data bytes, add ECC, build matrix
+      var bytes = [];
+      for (var i = 0; i < data.length; i++) {
+        var c = data.charCodeAt(i);
+        if (c < 128) bytes.push(c);
+        else if (c < 2048) { bytes.push(192 | (c >> 6)); bytes.push(128 | (c & 63)); }
+        else { bytes.push(224 | (c >> 12)); bytes.push(128 | ((c >> 6) & 63)); bytes.push(128 | (c & 63)); }
+      }
+
+      // Select version based on data length (ECC-L, byte mode)
+      var capacities = [0, 17, 32, 53, 78, 106, 134, 154, 192, 230, 271]; // v1-v10 byte capacity at ECC-L
+      var version = 1;
+      for (var v = 1; v <= 10; v++) {
+        if (bytes.length <= capacities[v]) { version = v; break; }
+      }
+
+      var size = 17 + version * 4;
+      var matrix = [];
+      var reserved = [];
+      for (var i = 0; i < size; i++) {
+        matrix[i] = [];
+        reserved[i] = [];
+        for (var j = 0; j < size; j++) {
+          matrix[i][j] = false;
+          reserved[i][j] = false;
+        }
+      }
+
+      // Place finder patterns
+      function placeFinder(row, col) {
+        for (var dy = -1; dy <= 7; dy++) {
+          for (var dx = -1; dx <= 7; dx++) {
+            var r = row + dy, c = col + dx;
+            if (r < 0 || r >= size || c < 0 || c >= size) continue;
+            var dark = (dy >= 0 && dy <= 6 && (dx === 0 || dx === 6)) ||
+                       (dx >= 0 && dx <= 6 && (dy === 0 || dy === 6)) ||
+                       (dy >= 2 && dy <= 4 && dx >= 2 && dx <= 4);
+            matrix[r][c] = dark;
+            reserved[r][c] = true;
+          }
+        }
+      }
+      placeFinder(0, 0);
+      placeFinder(0, size - 7);
+      placeFinder(size - 7, 0);
+
+      // Place timing patterns
+      for (var i = 8; i < size - 8; i++) {
+        matrix[6][i] = i % 2 === 0;
+        reserved[6][i] = true;
+        matrix[i][6] = i % 2 === 0;
+        reserved[i][6] = true;
+      }
+
+      // Reserve format info areas
+      for (var i = 0; i < 9; i++) {
+        reserved[8][i] = true;
+        reserved[i][8] = true;
+        if (i < 8) {
+          reserved[8][size - 1 - i] = true;
+          reserved[size - 1 - i][8] = true;
+        }
+      }
+      matrix[size - 8][8] = true; // dark module
+      reserved[size - 8][8] = true;
+
+      // Place alignment patterns for version >= 2
+      if (version >= 2) {
+        var alignPos = getAlignmentPositions(version);
+        for (var ai = 0; ai < alignPos.length; ai++) {
+          for (var aj = 0; aj < alignPos.length; aj++) {
+            var ay = alignPos[ai], ax = alignPos[aj];
+            if (reserved[ay][ax]) continue;
+            for (var dy = -2; dy <= 2; dy++) {
+              for (var dx = -2; dx <= 2; dx++) {
+                var dark = Math.abs(dy) === 2 || Math.abs(dx) === 2 || (dy === 0 && dx === 0);
+                matrix[ay + dy][ax + dx] = dark;
+                reserved[ay + dy][ax + dx] = true;
+              }
+            }
+          }
+        }
+      }
+
+      // Reserve version info for version >= 7
+      if (version >= 7) {
+        for (var i = 0; i < 6; i++) {
+          for (var j = 0; j < 3; j++) {
+            reserved[i][size - 11 + j] = true;
+            reserved[size - 11 + j][i] = true;
+          }
+        }
+      }
+
+      // Encode data
+      var eccBlocks = getEccInfo(version);
+      var totalCodewords = eccBlocks.totalCodewords;
+      var dataCodewords = eccBlocks.dataCodewords;
+
+      // Build data bitstream
+      var bits = [];
+      // Mode: byte (0100)
+      bits.push(0, 1, 0, 0);
+      // Character count (8 bits for v1-9, 16 for v10+)
+      var ccBits = version <= 9 ? 8 : 16;
+      for (var i = ccBits - 1; i >= 0; i--) bits.push((bytes.length >> i) & 1);
+      // Data bytes
+      for (var i = 0; i < bytes.length; i++) {
+        for (var b = 7; b >= 0; b--) bits.push((bytes[i] >> b) & 1);
+      }
+      // Terminator
+      var termLen = Math.min(4, dataCodewords * 8 - bits.length);
+      for (var i = 0; i < termLen; i++) bits.push(0);
+      // Pad to byte boundary
+      while (bits.length % 8 !== 0) bits.push(0);
+      // Pad codewords
+      var padBytes = [236, 17];
+      var padIdx = 0;
+      while (bits.length < dataCodewords * 8) {
+        for (var b = 7; b >= 0; b--) bits.push((padBytes[padIdx] >> b) & 1);
+        padIdx = (padIdx + 1) % 2;
+      }
+
+      // Convert to codeword array
+      var codewords = [];
+      for (var i = 0; i < bits.length; i += 8) {
+        var val = 0;
+        for (var b = 0; b < 8; b++) val = (val << 1) | (bits[i + b] || 0);
+        codewords.push(val);
+      }
+
+      // Generate ECC
+      var allCodewords = generateECC(codewords, eccBlocks);
+
+      // Place data in matrix
+      var bitIdx = 0;
+      var allBits = [];
+      for (var i = 0; i < allCodewords.length; i++) {
+        for (var b = 7; b >= 0; b--) allBits.push((allCodewords[i] >> b) & 1);
+      }
+
+      var right = true;
+      for (var col = size - 1; col >= 0; col -= 2) {
+        if (col === 6) col = 5; // Skip timing column
+        for (var cnt = 0; cnt < size; cnt++) {
+          var row = right ? size - 1 - cnt : cnt;
+          for (var dx = 0; dx >= -1; dx--) {
+            var c = col + dx;
+            if (c < 0 || c >= size) continue;
+            if (reserved[row][c]) continue;
+            matrix[row][c] = bitIdx < allBits.length ? !!allBits[bitIdx] : false;
+            bitIdx++;
+          }
+        }
+        right = !right;
+      }
+
+      // Apply mask (mask 0: (row + col) % 2 === 0) and format info
+      var bestMatrix = applyMaskAndFormat(matrix, reserved, size, 0);
+      return bestMatrix;
+    }
+
+    function getAlignmentPositions(version) {
+      if (version <= 1) return [];
+      var table = [[], [6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54]];
+      return table[version] || [];
+    }
+
+    function getEccInfo(version) {
+      // ECC-L block info: [totalCodewords, dataCodewords, numBlocks, eccPerBlock]
+      var table = {
+        1: { totalCodewords: 26, dataCodewords: 19, blocks: [{count:1, dataPerBlock:19, eccPerBlock:7}] },
+        2: { totalCodewords: 44, dataCodewords: 34, blocks: [{count:1, dataPerBlock:34, eccPerBlock:10}] },
+        3: { totalCodewords: 70, dataCodewords: 55, blocks: [{count:1, dataPerBlock:55, eccPerBlock:15}] },
+        4: { totalCodewords: 100, dataCodewords: 80, blocks: [{count:1, dataPerBlock:80, eccPerBlock:20}] },
+        5: { totalCodewords: 134, dataCodewords: 108, blocks: [{count:1, dataPerBlock:108, eccPerBlock:26}] },
+        6: { totalCodewords: 172, dataCodewords: 136, blocks: [{count:2, dataPerBlock:68, eccPerBlock:18}] },
+        7: { totalCodewords: 196, dataCodewords: 156, blocks: [{count:2, dataPerBlock:78, eccPerBlock:20}] },
+        8: { totalCodewords: 242, dataCodewords: 194, blocks: [{count:2, dataPerBlock:97, eccPerBlock:24}] },
+        9: { totalCodewords: 292, dataCodewords: 232, blocks: [{count:2, dataPerBlock:116, eccPerBlock:30}] },
+        10: { totalCodewords: 346, dataCodewords: 274, blocks: [{count:2, dataPerBlock:68, eccPerBlock:18},{count:2, dataPerBlock:69, eccPerBlock:18}] },
+      };
+      return table[version] || table[3];
+    }
+
+    function generateECC(dataCodewords, eccInfo) {
+      var blocks = eccInfo.blocks;
+      var dataBlocks = [];
+      var eccBlocks = [];
+      var dataIdx = 0;
+
+      for (var bi = 0; bi < blocks.length; bi++) {
+        for (var bc = 0; bc < blocks[bi].count; bc++) {
+          var blockData = dataCodewords.slice(dataIdx, dataIdx + blocks[bi].dataPerBlock);
+          dataIdx += blocks[bi].dataPerBlock;
+          var eccLen = blocks[bi].eccPerBlock;
+          var ecc = rsEncode(blockData, eccLen);
+          dataBlocks.push(blockData);
+          eccBlocks.push(ecc);
+        }
+      }
+
+      // Interleave data blocks then ECC blocks
+      var result = [];
+      var maxDataLen = Math.max.apply(null, dataBlocks.map(function(b) { return b.length; }));
+      for (var i = 0; i < maxDataLen; i++) {
+        for (var j = 0; j < dataBlocks.length; j++) {
+          if (i < dataBlocks[j].length) result.push(dataBlocks[j][i]);
+        }
+      }
+      var maxEccLen = Math.max.apply(null, eccBlocks.map(function(b) { return b.length; }));
+      for (var i = 0; i < maxEccLen; i++) {
+        for (var j = 0; j < eccBlocks.length; j++) {
+          if (i < eccBlocks[j].length) result.push(eccBlocks[j][i]);
+        }
+      }
+      return result;
+    }
+
+    // Reed-Solomon encoding over GF(256)
+    var gfExp = new Array(512);
+    var gfLog = new Array(256);
+    (function initGF() {
+      var x = 1;
+      for (var i = 0; i < 255; i++) {
+        gfExp[i] = x;
+        gfLog[x] = i;
+        x = x << 1;
+        if (x >= 256) x ^= 0x11d;
+      }
+      for (var i = 255; i < 512; i++) gfExp[i] = gfExp[i - 255];
+      gfLog[0] = -1;
+    })();
+
+    function gfMul(a, b) {
+      if (a === 0 || b === 0) return 0;
+      return gfExp[gfLog[a] + gfLog[b]];
+    }
+
+    function rsEncode(data, eccLen) {
+      // Build generator polynomial
+      var gen = [1];
+      for (var i = 0; i < eccLen; i++) {
+        var newGen = new Array(gen.length + 1);
+        for (var j = 0; j < newGen.length; j++) newGen[j] = 0;
+        for (var j = 0; j < gen.length; j++) {
+          newGen[j] ^= gfMul(gen[j], gfExp[i]);
+          newGen[j + 1] ^= gen[j];
+        }
+        gen = newGen;
+      }
+
+      // Divide data by generator
+      var remainder = new Array(eccLen);
+      for (var i = 0; i < eccLen; i++) remainder[i] = 0;
+
+      for (var i = 0; i < data.length; i++) {
+        var coef = data[i] ^ remainder[0];
+        remainder.shift();
+        remainder.push(0);
+        if (coef !== 0) {
+          for (var j = 0; j < remainder.length; j++) {
+            remainder[j] ^= gfMul(gen[j + 1], coef);
+          }
+        }
+      }
+      return remainder;
+    }
+
+    function applyMaskAndFormat(matrix, reserved, size, maskNum) {
+      var result = [];
+      for (var i = 0; i < size; i++) {
+        result[i] = [];
+        for (var j = 0; j < size; j++) {
+          result[i][j] = matrix[i][j];
+        }
+      }
+
+      // Apply mask to data areas
+      for (var row = 0; row < size; row++) {
+        for (var col = 0; col < size; col++) {
+          if (reserved[row][col]) continue;
+          var invert = false;
+          switch (maskNum) {
+            case 0: invert = (row + col) % 2 === 0; break;
+            case 1: invert = row % 2 === 0; break;
+            case 2: invert = col % 3 === 0; break;
+            case 3: invert = (row + col) % 3 === 0; break;
+          }
+          if (invert) result[row][col] = !result[row][col];
+        }
+      }
+
+      // Write format info (ECC-L = 01, mask 0 = 000 → data = 01000 → with BCH = 0x5412 for L/mask0)
+      var formatBits = [
+        0x5412, 0x5125, 0x5E7C, 0x5B4B, 0x45F9, 0x40CE, 0x4F97, 0x4AA0
+      ][maskNum];
+
+      for (var i = 0; i < 15; i++) {
+        var bit = !!((formatBits >> (14 - i)) & 1);
+        // Horizontal
+        if (i < 8) {
+          var col = i < 6 ? i : (i === 6 ? 7 : 8);
+          result[8][col] = bit;
+        } else {
+          result[8][size - 15 + i] = bit;
+        }
+        // Vertical
+        if (i < 8) {
+          result[i < 6 ? i : (i === 6 ? 7 : 8)][8] = bit;
+        } else {
+          result[size - 15 + i][8] = bit;
+        }
+      }
+
+      return result;
     }
   </script>
 
