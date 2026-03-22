@@ -31,6 +31,7 @@ import {
   createScheduledRetirement,
   clearRenewalReminders,
   getExpiringCryptoSubscribers,
+  getAllSubscribersByUserId,
   type User,
 } from "./db.js";
 import { estimateFootprint } from "../services/estimator.js";
@@ -41,7 +42,7 @@ import { executeRetirement } from "../services/retirement.js";
 import { verifyPayment, getEvmChainCoingeckoId } from "../services/crypto-verify.js";
 import { toUsdCents } from "../services/crypto-price.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
-import { calculateNetAfterStripe } from "../services/retire-subscriber.js";
+import { calculateNetAfterStripe, retireForSubscriber } from "../services/retire-subscriber.js";
 
 // Credit type abbreviation to human-readable name
 const CREDIT_TYPE_NAMES: Record<string, string> = {
@@ -330,13 +331,16 @@ export function createApiRoutes(
         "yearly" // treat crypto as yearly for revenue split (85/5/10)
       );
 
-      // Derive Regen address
+      // Derive Regen address — reuse existing address for multi-sub users
+      let regenAddr: string | null = null;
       try {
-        const regenAddr = await deriveSubscriberAddress(subscriber.id);
+        const existingSubs = getAllSubscribersByUserId(db, user.id);
+        const existingAddr = existingSubs.find(s => s.regen_address && s.id !== subscriber.id)?.regen_address;
+        regenAddr = existingAddr ?? await deriveSubscriberAddress(subscriber.id);
         db.prepare("UPDATE subscribers SET regen_address = ? WHERE id = ?").run(regenAddr, subscriber.id);
       } catch { /* non-critical */ }
 
-      // Schedule retirements (months 2-N, execute month 1 immediately via normal flow)
+      // Schedule retirements (months 2-N)
       for (let month = 1; month < retirementMonths; month++) {
         const scheduledDate = new Date(now);
         scheduledDate.setMonth(scheduledDate.getMonth() + month);
@@ -361,6 +365,20 @@ export function createApiRoutes(
       for (const cs of existingCryptoSubs) {
         clearRenewalReminders(db, cs.id);
       }
+
+      // Execute month 1 retirement immediately (fire-and-forget, don't block response)
+      retireForSubscriber({
+        subscriberId: subscriber.id,
+        grossAmountCents: monthlyGrossCents,
+        billingInterval: "yearly",
+        precomputedNetCents: monthlyNetCents,
+        paymentId: `crypto-${verified.chain}-${verified.txHash.slice(0, 16)}-m1`,
+        overrideAddress: regenAddr ?? undefined,
+      }).then(result => {
+        console.log(`Crypto sub ${subscriber.id} month-1 retirement: ${result.status} (${result.totalCreditsRetired} credits)`);
+      }).catch(err => {
+        console.error(`Crypto sub ${subscriber.id} month-1 retirement failed:`, err);
+      });
 
       res.json({
         status: "provisioned",
