@@ -25,6 +25,8 @@ import { createApiRoutes } from "./api-routes.js";
 import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
 import { createAboutRoutes } from "./about.js";
+import { createOutreachRoutes } from "./outreach.js";
+import { createGetStartedRoutes } from "./get-started.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
 import { createUnicornRoutes } from "./unicorns.js";
 import { createRainbowRoutes } from "./rainbows.js";
@@ -355,6 +357,14 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // About page (static, no dependencies)
   const aboutRoutes = createAboutRoutes(baseUrl);
   app.use(aboutRoutes);
+
+  // Public value prop generator
+  const getStartedRoutes = createGetStartedRoutes(baseUrl);
+  app.use(getStartedRoutes);
+
+  // Admin supplier outreach tool
+  const outreachRoutes = createOutreachRoutes(db, baseUrl, config);
+  app.use(outreachRoutes);
 
   // AI Plugin page (static, no dependencies)
   const aiPluginRoutes = createAiPluginRoutes(baseUrl);
