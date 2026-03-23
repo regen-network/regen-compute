@@ -162,7 +162,7 @@ function computeBadges(cumulative: CumulativeAttribution): Badge[] {
 
 // --- HTML rendering ---
 
-function renderApiKeyLoginPage(baseUrl: string): string {
+function renderApiKeyLoginPage(_baseUrl: string): string {
   const nav = [{ label: "Home", href: "/" }, { label: "Developers", href: "/developers" }];
   return `<!DOCTYPE html>
 <html lang="en">
@@ -173,23 +173,18 @@ function renderApiKeyLoginPage(baseUrl: string): string {
   ${brandFonts()}
   <style>
     ${brandCSS()}
-    body { background: #0a140e; color: #e5e7eb; }
     .api-login { max-width: 420px; margin: 80px auto; padding: 0 24px; text-align: center; }
-    .api-login h1 { font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 8px; }
-    .api-login p { font-size: 14px; color: var(--regen-gray-400); margin: 0 0 28px; line-height: 1.6; }
+    .api-login h1 { font-size: 22px; font-weight: 800; color: var(--regen-navy); margin: 0 0 8px; }
+    .api-login p { font-size: 14px; color: var(--regen-gray-500); margin: 0 0 28px; line-height: 1.6; }
     .api-login__form { display: flex; flex-direction: column; gap: 10px; }
     .api-login__input {
       width: 100%; box-sizing: border-box;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 8px; padding: 12px 14px; color: #fff; font-size: 14px;
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: 8px; padding: 12px 14px; color: var(--regen-navy); font-size: 14px;
       font-family: monospace;
     }
-    .api-login__input:focus { outline: none; border-color: rgba(79,181,115,0.5); }
-    .api-login__input::placeholder { color: var(--regen-gray-500); }
-    .api-login__btn {
-      background: var(--regen-green); color: #fff; border: none; border-radius: 8px;
-      padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
-    }
+    .api-login__input:focus { outline: none; border-color: var(--regen-green); box-shadow: 0 0 0 3px rgba(79,181,115,0.15); }
+    .api-login__input::placeholder { color: var(--regen-gray-400); }
     .api-login__hint { font-size: 12px; color: var(--regen-gray-500); margin-top: 16px; }
     .api-login__hint a { color: var(--regen-green); }
   </style>
@@ -201,7 +196,7 @@ ${brandHeader({ nav })}
   <p>Enter your API key to view usage stats. Your key is shown in your <a href="/dashboard" style="color:var(--regen-green);">Dashboard</a>.</p>
   <form class="api-login__form" method="GET" action="/dashboard/api">
     <input class="api-login__input" type="text" name="key" placeholder="rfa_your_api_key_here" autocomplete="off" spellcheck="false"/>
-    <button class="api-login__btn" type="submit">View Dashboard</button>
+    <button class="regen-btn regen-btn--primary" type="submit" style="width:100%;">View Dashboard</button>
   </form>
   <p class="api-login__hint">Don't have an API key? <a href="/#pricing">Subscribe</a> to get one.</p>
 </div>
@@ -227,6 +222,8 @@ function renderApiDashboard(opts: {
   const dayLabels = JSON.stringify(byDay.map(d => d.day.slice(5))); // MM-DD
   const dayCallData = JSON.stringify(byDay.map(d => d.calls));
   const dayErrorData = JSON.stringify(byDay.map(d => d.errors));
+  // Preserve the key param in time-range links so auth persists
+  const keyParam = `&key=${encodeURIComponent(apiKey)}`;
 
   const nav = [
     { label: "Home", href: "/" },
@@ -235,9 +232,9 @@ function renderApiDashboard(opts: {
   ];
 
   function statusBadge(code: number): string {
-    if (code < 300) return `<span style="background:rgba(79,181,115,0.15);color:#4FB573;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
-    if (code < 400) return `<span style="background:rgba(99,102,241,0.15);color:#818cf8;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
-    return `<span style="background:rgba(239,68,68,0.15);color:#f87171;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
+    if (code < 300) return `<span style="background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
+    if (code < 400) return `<span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
+    return `<span style="background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
   }
 
   return `<!DOCTYPE html>
@@ -249,76 +246,74 @@ function renderApiDashboard(opts: {
   ${brandFonts()}
   <style>
     ${brandCSS()}
-    body { background: #0a140e; color: #e5e7eb; }
     .api-dash { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
     .api-dash__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; }
-    .api-dash__title { font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
+    .api-dash__title { font-size: 26px; font-weight: 800; color: var(--regen-navy); margin: 0; }
     .api-dash__sub { font-size: 14px; color: var(--regen-gray-500); margin: 4px 0 0; }
     .api-dash__range { display: flex; gap: 6px; }
     .api-dash__range a {
       font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.1); color: var(--regen-gray-400);
+      border: 1px solid var(--regen-gray-200); color: var(--regen-gray-500);
       text-decoration: none; transition: all 0.15s;
     }
-    .api-dash__range a:hover, .api-dash__range a.active {
-      background: rgba(79,181,115,0.15); border-color: rgba(79,181,115,0.4); color: var(--regen-green);
-    }
+    .api-dash__range a:hover { border-color: var(--regen-green); color: var(--regen-green); }
+    .api-dash__range a.active { background: var(--regen-green-bg); border-color: var(--regen-green); color: var(--regen-green); font-weight: 700; }
 
     /* stat cards */
     .api-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
     .api-stat {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
       border-radius: 12px; padding: 20px 22px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .api-stat__label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--regen-gray-500); margin-bottom: 8px; }
-    .api-stat__value { font-size: 32px; font-weight: 800; color: #fff; line-height: 1; }
+    .api-stat__value { font-size: 32px; font-weight: 800; color: var(--regen-navy); line-height: 1; }
     .api-stat__sub { font-size: 12px; color: var(--regen-gray-500); margin-top: 6px; }
 
     /* key box */
     .api-key-box {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px; padding: 20px 22px; margin-bottom: 32px;
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-    .api-key-box__label { font-size: 12px; font-weight: 700; color: var(--regen-gray-500); flex-shrink: 0; }
+    .api-key-box__label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--regen-gray-500); flex-shrink: 0; }
     .api-key-box__key {
       font-family: monospace; font-size: 13px; color: var(--regen-green);
-      background: rgba(79,181,115,0.08); border: 1px solid rgba(79,181,115,0.2);
+      background: var(--regen-green-bg); border: 1px solid rgba(79,181,115,0.3);
       border-radius: 6px; padding: 6px 12px; flex: 1; min-width: 0;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
-    }
-    .api-key-box__btn {
-      background: var(--regen-green); color: #fff; border: none; border-radius: 6px;
-      padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;
     }
 
     /* chart */
     .api-chart-wrap {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px; padding: 20px 22px; margin-bottom: 32px;
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: 12px; padding: 20px 22px; margin-bottom: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-    .api-chart-wrap h3 { font-size: 14px; font-weight: 700; color: #fff; margin: 0 0 16px; }
+    .api-chart-wrap h3 { font-size: 14px; font-weight: 700; color: var(--regen-navy); margin: 0 0 16px; }
 
     /* tables */
-    .api-section { margin-bottom: 36px; }
-    .api-section h3 { font-size: 16px; font-weight: 700; color: #fff; margin: 0 0 14px; }
-    .api-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .api-section { margin-bottom: 32px; }
+    .api-section h3 { font-size: 16px; font-weight: 700; color: var(--regen-navy); margin: 0 0 12px; }
+    .api-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--regen-white); border: 1px solid var(--regen-gray-200); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .api-table th {
-      text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 700;
+      text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700;
       letter-spacing: 1px; text-transform: uppercase; color: var(--regen-gray-500);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: var(--regen-gray-50); border-bottom: 1px solid var(--regen-gray-200);
     }
     .api-table td {
-      padding: 10px 12px; color: var(--regen-gray-300);
-      border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle;
+      padding: 11px 14px; color: var(--regen-navy);
+      border-bottom: 1px solid var(--regen-gray-100); vertical-align: middle;
     }
     .api-table tr:last-child td { border-bottom: none; }
-    .api-table td code { font-family: monospace; font-size: 12px; color: var(--regen-green); }
-    .api-table .method-get  { color: #4FB573; font-family: monospace; font-size: 11px; font-weight: 700; }
-    .api-table .method-post { color: #818cf8; font-family: monospace; font-size: 11px; font-weight: 700; }
+    .api-table td code { font-family: monospace; font-size: 12px; color: var(--regen-green); background: var(--regen-green-bg); padding: 2px 6px; border-radius: 4px; }
+    .api-table .method-get  { color: #059669; font-family: monospace; font-size: 11px; font-weight: 700; }
+    .api-table .method-post { color: #7c3aed; font-family: monospace; font-size: 11px; font-weight: 700; }
     .empty-state { text-align: center; padding: 48px 24px; color: var(--regen-gray-500); }
-    .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--regen-gray-400); margin: 0 0 8px; }
+    .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--regen-navy); margin: 0 0 8px; }
     .empty-state p { font-size: 14px; margin: 0 0 20px; line-height: 1.6; }
+    .empty-curl { font-family: monospace; font-size: 13px; background: #1a1a2e; color: #a5f3c4; border-radius: 8px; padding: 14px 18px; text-align: left; max-width: 520px; margin: 0 auto; line-height: 1.8; }
     @media (max-width: 600px) {
       .api-dash { padding: 24px 16px 64px; }
       .api-key-box { flex-direction: column; align-items: stretch; }
@@ -335,9 +330,9 @@ ${brandHeader({ nav })}
       <p class="api-dash__sub">${escapeHtml(email)}</p>
     </div>
     <div class="api-dash__range">
-      <a href="/dashboard/api?days=7"  class="${days === 7  ? "active" : ""}">7d</a>
-      <a href="/dashboard/api?days=30" class="${days === 30 ? "active" : ""}">30d</a>
-      <a href="/dashboard/api?days=90" class="${days === 90 ? "active" : ""}">90d</a>
+      <a href="/dashboard/api?days=7${keyParam}"  class="${days === 7  ? "active" : ""}">7d</a>
+      <a href="/dashboard/api?days=30${keyParam}" class="${days === 30 ? "active" : ""}">30d</a>
+      <a href="/dashboard/api?days=90${keyParam}" class="${days === 90 ? "active" : ""}">90d</a>
     </div>
   </div>
 
@@ -350,7 +345,7 @@ ${brandHeader({ nav })}
     </div>
     <div class="api-stat">
       <div class="api-stat__label">Success rate</div>
-      <div class="api-stat__value" style="color:${successRate >= 99 ? "#4FB573" : successRate >= 95 ? "#fbbf24" : "#f87171"}">${successRate}%</div>
+      <div class="api-stat__value" style="color:${successRate >= 99 ? "var(--regen-green)" : successRate >= 95 ? "#d97706" : "#dc2626"}">${successRate}%</div>
       <div class="api-stat__sub">${successTotal.toLocaleString()} ok / ${errorTotal.toLocaleString()} errors</div>
     </div>
     <div class="api-stat">
@@ -372,9 +367,9 @@ ${brandHeader({ nav })}
   <!-- API key -->
   <div class="api-key-box">
     <span class="api-key-box__label">API KEY</span>
-    <code class="api-key-box__key" id="apiKeyVal" onclick="copyKey()">${escapeHtml(apiKey)}</code>
-    <button class="api-key-box__btn" id="copyKeyBtn" onclick="copyKey()">Copy</button>
-    <a href="/developers" style="font-size:12px;color:var(--regen-green);text-decoration:none;padding:7px 14px;border:1px solid rgba(79,181,115,0.3);border-radius:6px;font-weight:600;">Docs</a>
+    <code class="api-key-box__key" id="apiKeyVal" onclick="copyKey()" title="Click to copy">${escapeHtml(apiKey)}</code>
+    <button class="regen-btn regen-btn--primary" id="copyKeyBtn" onclick="copyKey()" style="padding:7px 16px;font-size:12px;">Copy</button>
+    <a href="/developers" class="regen-btn" style="padding:7px 16px;font-size:12px;">Docs</a>
   </div>
 
   ${byDay.length > 0 ? `
@@ -389,7 +384,7 @@ ${brandHeader({ nav })}
   <div class="empty-state">
     <h3>No API calls yet in this period</h3>
     <p>Make your first request using your API key to see usage here.</p>
-    <div style="font-family:monospace;font-size:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px 18px;text-align:left;max-width:520px;margin:0 auto;">
+    <div class="empty-curl">
 curl -H "Authorization: Bearer ${escapeHtml(apiKey)}" \\<br/>
 &nbsp;&nbsp;"${escapeHtml(baseUrl)}/api/v1/impact"
     </div>
@@ -401,10 +396,7 @@ curl -H "Authorization: Bearer ${escapeHtml(apiKey)}" \\<br/>
     <h3>Usage by Endpoint</h3>
     <table class="api-table">
       <thead>
-        <tr>
-          <th>Method</th><th>Endpoint</th><th>Calls</th>
-          <th>Errors</th><th>Avg ms</th><th>Last called</th>
-        </tr>
+        <tr><th>Method</th><th>Endpoint</th><th>Calls</th><th>Errors</th><th>Avg ms</th><th>Last called</th></tr>
       </thead>
       <tbody>
         ${summary.map(r => `
@@ -412,11 +404,11 @@ curl -H "Authorization: Bearer ${escapeHtml(apiKey)}" \\<br/>
           <td><span class="method-${r.method.toLowerCase()}">${escapeHtml(r.method)}</span></td>
           <td><code>${escapeHtml(r.endpoint)}</code></td>
           <td>${r.total_calls.toLocaleString()}</td>
-          <td style="color:${r.error_calls > 0 ? "#f87171" : "var(--regen-gray-500)"}">
+          <td style="color:${r.error_calls > 0 ? "#dc2626" : "var(--regen-gray-400)"}">
             ${r.error_calls > 0 ? r.error_calls.toLocaleString() : "—"}
           </td>
-          <td style="color:var(--regen-gray-400)">${r.avg_response_ms ? Math.round(r.avg_response_ms) + "ms" : "—"}</td>
-          <td style="color:var(--regen-gray-500);font-size:12px;">${r.last_called_at ? r.last_called_at.slice(0, 16).replace("T", " ") : "—"}</td>
+          <td style="color:var(--regen-gray-500)">${r.avg_response_ms ? Math.round(r.avg_response_ms) + "ms" : "—"}</td>
+          <td style="color:var(--regen-gray-400);font-size:12px;">${r.last_called_at ? r.last_called_at.slice(0, 16).replace("T", " ") : "—"}</td>
         </tr>`).join("")}
       </tbody>
     </table>
@@ -436,7 +428,7 @@ curl -H "Authorization: Bearer ${escapeHtml(apiKey)}" \\<br/>
           <td><span class="method-${r.method.toLowerCase()}">${escapeHtml(r.method)}</span></td>
           <td><code>${escapeHtml(r.endpoint)}</code></td>
           <td>${statusBadge(r.status_code)}</td>
-          <td style="color:var(--regen-gray-400)">${r.response_time_ms ?? "—"}</td>
+          <td style="color:var(--regen-gray-500)">${r.response_time_ms ?? "—"}</td>
         </tr>`).join("")}
       </tbody>
     </table>
@@ -456,30 +448,16 @@ ${byDay.length > 0 ? `
     data: {
       labels: ${dayLabels},
       datasets: [
-        {
-          label: 'Calls',
-          data: ${dayCallData},
-          backgroundColor: 'rgba(79,181,115,0.5)',
-          borderColor: 'rgba(79,181,115,0.8)',
-          borderWidth: 1,
-          borderRadius: 4,
-        },
-        {
-          label: 'Errors',
-          data: ${dayErrorData},
-          backgroundColor: 'rgba(239,68,68,0.4)',
-          borderColor: 'rgba(239,68,68,0.7)',
-          borderWidth: 1,
-          borderRadius: 4,
-        }
+        { label: 'Calls', data: ${dayCallData}, backgroundColor: 'rgba(79,181,115,0.6)', borderColor: 'rgba(79,181,115,1)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Errors', data: ${dayErrorData}, backgroundColor: 'rgba(220,38,38,0.4)', borderColor: 'rgba(220,38,38,0.8)', borderWidth: 1, borderRadius: 4 }
       ]
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: '#9ca3af', font: { size: 12 } } } },
+      plugins: { legend: { labels: { color: '#6b7280', font: { size: 12 } } } },
       scales: {
-        x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-        y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+        x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' }, beginAtZero: true }
       }
     }
   });
