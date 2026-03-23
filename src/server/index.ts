@@ -308,11 +308,13 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     res.sendFile(`public/projects/${filename}`, { root: process.cwd() });
   });
 
-  // Badge icon
-  app.get("/public/badge-icon.png", (_req, res) => {
-    res.setHeader("Content-Type", "image/png");
-    res.setHeader("Cache-Control", "public, max-age=31536000");
-    res.sendFile("public/badge-icon.png", { root: process.cwd() });
+  // Badge icons
+  ["badge-icon.png", "badge-icon-1.png", "badge-icon-2.png", "badge-icon-3.png"].forEach(name => {
+    app.get(`/public/${name}`, (_req, res) => {
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Cache-Control", "public, max-age=31536000");
+      res.sendFile(`public/${name}`, { root: process.cwd() });
+    });
   });
 
   // Team photos (served from public/team/ directory)

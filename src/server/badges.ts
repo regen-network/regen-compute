@@ -14,15 +14,25 @@ import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 import { getUserByApiKey, getSubscriberByUserId, getCumulativeAttribution } from "./db.js";
 
-function loadIconBase64(): string {
-  const iconPath = join(process.cwd(), "public", "badge-icon.png");
+function loadIconBase64(filename: string): string {
+  const iconPath = join(process.cwd(), "public", filename);
   if (!existsSync(iconPath)) return "";
   const data = readFileSync(iconPath);
   return `data:image/png;base64,${data.toString("base64")}`;
 }
 
-// Loaded once at startup — embedded directly into SVGs so they are self-contained
-const ICON_DATA_URI = loadIconBase64();
+const ICONS = [
+  { id: "1", file: "badge-icon-1.png", label: "Leaf Swirl",   desc: "Clean & minimal" },
+  { id: "2", file: "badge-icon-2.png", label: "Circuit Leaf", desc: "Bold & distinctive" },
+  { id: "3", file: "badge-icon-3.png", label: "Glossy Badge", desc: "Premium feel" },
+];
+
+const ICON_DATA_URIS: Record<string, string> = Object.fromEntries(
+  ICONS.map(icon => [icon.id, loadIconBase64(icon.file)])
+);
+
+// Default icon used for the static SVG badge assets
+const ICON_DATA_URI = ICON_DATA_URIS["1"] || "";
 
 // ---------------------------------------------------------------------------
 // Static badge SVGs (compact horizontal, three themes)
@@ -238,6 +248,13 @@ function badgesPageHTML(baseUrl: string): string {
     }
     .download-btn:hover { background: #d1fae5; }
 
+    .icon-pick-btn {
+      padding: 14px 18px; border-radius: 10px; border: 2px solid var(--regen-gray-200);
+      background: var(--regen-white); cursor: pointer; text-align: center;
+      min-width: 100px; transition: all 0.15s; font-family: inherit;
+    }
+    .icon-pick-btn:hover { border-color: #4fb573; background: #f0faf4; }
+
     /* Usage badge section */
     .usage-explainer {
       background: linear-gradient(135deg, #0a2e1f, #0d4a38);
@@ -376,22 +393,32 @@ function badgesPageHTML(baseUrl: string): string {
         }).join("")}
       </div>
 
-      <!-- Seal -->
+      <!-- Icon picker -->
       <h2>Certified Seal</h2>
-      <p class="section-lead">The full icon on three backgrounds — for websites, footers, and About pages.</p>
+      <p class="section-lead">Choose your icon, then grab the embed code for your preferred background.</p>
 
-      <div class="badge-grid">
+      <!-- Icon selector -->
+      <div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
+        ${ICONS.map(icon => `
+        <button class="icon-pick-btn" id="pick-${icon.id}" onclick="selectIcon('${icon.id}','${baseUrl}/public/${icon.file}')" style="${icon.id === "1" ? "border-color:#4fb573;background:#f0faf4;" : ""}">
+          <img src="data:image/png;base64,${ICON_DATA_URIS[icon.id].replace("data:image/png;base64,","")}" width="64" height="64" style="display:block;margin:0 auto 8px;">
+          <div style="font-size:12px;font-weight:700;color:#0a2e1f">${icon.label}</div>
+          <div style="font-size:11px;color:#64748b">${icon.desc}</div>
+        </button>`).join("")}
+      </div>
+
+      <div class="badge-grid" id="seal-grid">
         ${[["black","#111"],["white","#fff"],["green","linear-gradient(135deg,#1a5c3a,#0d7a5f)"]].map(([bg, _]) => {
-          const sealUrl = `${baseUrl}/public/badge-icon.png`;
+          const sealUrl = `${baseUrl}/public/badge-icon-1.png`;
           const id = `seal-${bg}`;
           return `
         <div class="badge-card">
           <div class="badge-preview badge-preview--seal-${bg}">
-            <img src="${sealUrl}" alt="Regen Compute seal" style="width:120px;height:120px;object-fit:contain;">
+            <img class="seal-preview-img" src="${sealUrl}" alt="Regen Compute seal" style="width:120px;height:120px;object-fit:contain;">
           </div>
           <div class="badge-info">
             <h3>Seal — ${bg.charAt(0).toUpperCase() + bg.slice(1)}</h3>
-            <p>120×120 icon on ${bg} background. Use in footers, sidebars, and About pages.</p>
+            <p>120×120 icon on ${bg} background.</p>
             <div class="snippet-tabs">
               <button class="tab-btn active" onclick="showTab(this,'${id}','html')">HTML</button>
               <button class="tab-btn" onclick="showTab(this,'${id}','markdown')">Markdown</button>
@@ -400,7 +427,7 @@ function badgesPageHTML(baseUrl: string): string {
             <div class="snippet-block visible" id="${id}-html">&lt;a href="${baseUrl}" target="_blank" rel="noopener"&gt;\n  &lt;img src="${sealUrl}" alt="Regen Compute Certified" width="120" height="120"&gt;\n&lt;/a&gt;<button class="copy-btn" onclick="copySnippet(this,'${id}-html')">Copy</button></div>
             <div class="snippet-block" id="${id}-markdown">[![Regen Compute Certified](${sealUrl})](${baseUrl})<button class="copy-btn" onclick="copySnippet(this,'${id}-markdown')">Copy</button></div>
             <div class="snippet-block" id="${id}-url">${sealUrl}<button class="copy-btn" onclick="copySnippet(this,'${id}-url')">Copy</button></div>
-            <a class="download-btn" href="${sealUrl}" download="regen-compute-seal.png">
+            <a class="download-btn seal-download-btn" href="${sealUrl}" download="regen-compute-seal.png">
               <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 5l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Download PNG
             </a>
@@ -484,6 +511,30 @@ function badgesPageHTML(baseUrl: string): string {
 
   ${betaBannerJS()}
   <script>
+    function selectIcon(id, url) {
+      // Update picker button styles
+      document.querySelectorAll('.icon-pick-btn').forEach(b => {
+        b.style.borderColor = '';
+        b.style.background = '';
+      });
+      const picked = document.getElementById('pick-' + id);
+      if (picked) { picked.style.borderColor = '#4fb573'; picked.style.background = '#f0faf4'; }
+
+      // Update all seal preview images
+      document.querySelectorAll('.seal-preview-img').forEach(img => img.src = url);
+
+      // Update all snippet blocks and download links with new URL
+      ['seal-black','seal-white','seal-green'].forEach(prefix => {
+        const htmlEl = document.getElementById(prefix + '-html');
+        const mdEl   = document.getElementById(prefix + '-markdown');
+        const urlEl  = document.getElementById(prefix + '-url');
+        if (htmlEl) htmlEl.childNodes[0].textContent = htmlEl.childNodes[0].textContent.replace(/badge-icon[^"]*\.png/, url.split('/').pop());
+        if (mdEl)   mdEl.childNodes[0].textContent   = mdEl.childNodes[0].textContent.replace(/badge-icon[^)]*\.png/, url.split('/').pop());
+        if (urlEl)  urlEl.childNodes[0].textContent  = url;
+      });
+      document.querySelectorAll('.seal-download-btn').forEach(a => { a.href = url; });
+    }
+
     function showTab(btn, prefix, format) {
       const card = btn.closest('.badge-info');
       card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
