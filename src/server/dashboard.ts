@@ -19,6 +19,7 @@ import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 import {
   getUserByEmail,
+  getUserByApiKey,
   getSubscriberByUserId,
   getAllSubscribersByUserId,
   getCumulativeAttribution,
@@ -160,6 +161,54 @@ function computeBadges(cumulative: CumulativeAttribution): Badge[] {
 }
 
 // --- HTML rendering ---
+
+function renderApiKeyLoginPage(baseUrl: string): string {
+  const nav = [{ label: "Home", href: "/" }, { label: "Developers", href: "/developers" }];
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>API Dashboard — Regenerative Compute</title>
+  ${brandFonts()}
+  <style>
+    ${brandCSS()}
+    body { background: #0a140e; color: #e5e7eb; }
+    .api-login { max-width: 420px; margin: 80px auto; padding: 0 24px; text-align: center; }
+    .api-login h1 { font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 8px; }
+    .api-login p { font-size: 14px; color: var(--regen-gray-400); margin: 0 0 28px; line-height: 1.6; }
+    .api-login__form { display: flex; flex-direction: column; gap: 10px; }
+    .api-login__input {
+      width: 100%; box-sizing: border-box;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 12px 14px; color: #fff; font-size: 14px;
+      font-family: monospace;
+    }
+    .api-login__input:focus { outline: none; border-color: rgba(79,181,115,0.5); }
+    .api-login__input::placeholder { color: var(--regen-gray-500); }
+    .api-login__btn {
+      background: var(--regen-green); color: #fff; border: none; border-radius: 8px;
+      padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .api-login__hint { font-size: 12px; color: var(--regen-gray-500); margin-top: 16px; }
+    .api-login__hint a { color: var(--regen-green); }
+  </style>
+</head>
+<body>
+${brandHeader({ nav })}
+<div class="api-login">
+  <h1>API Dashboard</h1>
+  <p>Enter your API key to view usage stats. Your key is shown in your <a href="/dashboard" style="color:var(--regen-green);">Dashboard</a>.</p>
+  <form class="api-login__form" method="GET" action="/dashboard/api">
+    <input class="api-login__input" type="text" name="key" placeholder="rfa_your_api_key_here" autocomplete="off" spellcheck="false"/>
+    <button class="api-login__btn" type="submit">View Dashboard</button>
+  </form>
+  <p class="api-login__hint">Don't have an API key? <a href="/#pricing">Subscribe</a> to get one.</p>
+</div>
+${brandFooter()}
+</body>
+</html>`;
+}
 
 function renderApiDashboard(opts: {
   email: string;
@@ -1609,11 +1658,26 @@ export function createDashboardRoutes(
   });
 
   // GET /dashboard/api — developer API usage dashboard
+  // Auth: ?key=rfa_xxx (query param) OR Authorization: Bearer rfa_xxx header OR session cookie
   router.get("/dashboard/api", (req: Request, res: Response) => {
-    const email = getSessionEmail(req.headers.cookie, config.sessionSecret);
-    if (!email) { res.redirect("/dashboard/login"); return; }
-    const user = getUserByEmail(db, email);
-    if (!user) { res.redirect("/dashboard/login"); return; }
+    // 1. Try API key from query param or Authorization header
+    let user = getUserByApiKey(db, typeof req.query.key === "string" ? req.query.key : "");
+    if (!user) {
+      const auth = req.headers.authorization ?? "";
+      if (auth.startsWith("Bearer ")) user = getUserByApiKey(db, auth.slice(7).trim());
+    }
+    // 2. Fall back to session cookie (for users who came from main dashboard)
+    if (!user) {
+      const email = getSessionEmail(req.headers.cookie, config.sessionSecret);
+      if (email) user = getUserByEmail(db, email);
+    }
+
+    if (!user) {
+      // Show a simple key-entry form instead of redirecting to subscription login
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.send(renderApiKeyLoginPage(baseUrl));
+      return;
+    }
 
     const days = Math.min(parseInt((req.query.days as string) || "30", 10), 90);
     const summary = getApiUsageSummary(db, user.id, days);
@@ -1625,7 +1689,7 @@ export function createDashboardRoutes(
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(renderApiDashboard({
-      email,
+      email: user.email ?? "",
       apiKey: user.api_key,
       days,
       total,
