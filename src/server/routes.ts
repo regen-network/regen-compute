@@ -547,9 +547,9 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 
   ${referralValid ? `<div class="regen-ref-banner"><span>${t(lang, "referral_banner_prefix")}</span> ${t(lang, "referral_banner_suffix")}</div>` : ""}
 
-  ${brandHeader({ nav: [{ label: t(lang, "nav_ai_plugin"), href: "/ai-plugin" }, { label: t(lang, "nav_research"), href: "/research" }, { label: t(lang, "nav_about"), href: "/about" }, { label: t(lang, "nav_dashboard"), href: "/dashboard/login" }] }).replace('</nav>', `
+  ${brandHeader({ nav: [{ label: t(lang, "nav_ai_plugin"), href: "/ai-plugin" }, { label: t(lang, "nav_research"), href: "/research" }, { label: t(lang, "nav_about"), href: "/about" }, { label: t(lang, "nav_dashboard"), href: "/dashboard/login" }], navSuffix: `
     <div class="lang-picker">
-      <button class="lang-picker__btn" onclick="document.querySelector('.lang-picker__menu').classList.toggle('open')" type="button">
+      <button class="lang-picker__btn" onclick="this.nextElementSibling.classList.toggle('open')" type="button">
         <span class="lang-picker__flag">${LANG_FLAGS[lang]}</span>
         <span class="lang-picker__code">${LANG_SHORT[lang]}</span>
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style="margin-left:2px;"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -557,8 +557,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       <div class="lang-picker__menu">
         ${SUPPORTED_LANGS.map(l => `<a class="lang-picker__item${l === lang ? ' lang-picker__item--active' : ''}" href="${l === 'en' ? '/' : '/' + l}"><span class="lang-picker__flag">${LANG_FLAGS[l]}</span> ${LANG_NAMES[l]}</a>`).join('')}
       </div>
-    </div>
-  </nav>`)}
+    </div>` })}
 
   <!-- Hero -->
   <section class="regen-hero">
@@ -806,11 +805,19 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
   <script>
     // Close language picker when clicking outside
     document.addEventListener('click', function(e) {
-      var menu = document.querySelector('.lang-picker__menu');
-      var btn = document.querySelector('.lang-picker__btn');
-      if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.classList.remove('open');
-      }
+      document.querySelectorAll('.lang-picker__menu').forEach(function(menu) {
+        var btn = menu.previousElementSibling;
+        if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+          menu.classList.remove('open');
+        }
+      });
+    });
+    // Mobile nav: close menu when a link is clicked
+    document.querySelectorAll('.regen-mobile-nav a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobile-nav').classList.remove('open');
+        document.querySelector('.regen-hamburger').classList.remove('active');
+      });
     });
 
     function showOrgForm() {

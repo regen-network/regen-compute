@@ -157,6 +157,33 @@ export function brandCSS(): string {
       letter-spacing: 0.03em;
     }
 
+    /* ---- Hamburger menu (mobile) ---- */
+    .regen-hamburger {
+      display: none; background: none; border: none; cursor: pointer; padding: 8px;
+      color: var(--regen-navy); flex-direction: column; justify-content: center; gap: 5px;
+    }
+    .regen-hamburger span {
+      display: block; width: 22px; height: 2px; background: currentColor;
+      border-radius: 1px; transition: transform 0.2s, opacity 0.2s;
+    }
+    .regen-hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .regen-hamburger.active span:nth-child(2) { opacity: 0; }
+    .regen-hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .regen-mobile-nav {
+      display: none; flex-direction: column; background: var(--regen-white);
+      border-bottom: 1px solid var(--regen-gray-200);
+      padding: 8px 24px 16px;
+    }
+    .regen-mobile-nav.open { display: flex; }
+    .regen-mobile-nav a, .regen-mobile-nav .lang-picker {
+      font-family: var(--regen-font-secondary);
+      font-size: 15px; font-weight: 500; color: var(--regen-gray-500);
+      padding: 12px 0; border-bottom: 1px solid var(--regen-gray-100);
+      text-decoration: none;
+    }
+    .regen-mobile-nav a:last-child, .regen-mobile-nav .lang-picker { border-bottom: none; }
+    .regen-mobile-nav a:hover { color: var(--regen-green); }
+
     /* ---- Brand footer ---- */
     .regen-footer {
       padding: 40px 24px 32px; text-align: center;
@@ -512,6 +539,9 @@ export function brandCSS(): string {
 
     /* ---- Mobile ---- */
     @media (max-width: 640px) {
+      .regen-header__inner { padding: 0 16px; }
+      .regen-header__nav { display: none; }
+      .regen-hamburger { display: flex; }
       .regen-hero h1 { font-size: 28px; }
       .regen-hero p { font-size: 16px; }
       .regen-stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -531,12 +561,16 @@ export function brandCSS(): string {
 export interface HeaderOptions {
   nav?: Array<{ label: string; href: string }>;
   badge?: string;
+  /** Extra HTML appended inside both desktop nav and mobile nav (e.g. language picker) */
+  navSuffix?: string;
 }
 
 export function brandHeader(opts?: HeaderOptions): string {
   const nav = opts?.nav ?? [];
   const badge = opts?.badge ? `<span class="regen-header__badge">${opts.badge}</span>` : "";
+  const suffix = opts?.navSuffix ?? "";
   const navLinks = nav.map(n => `<a href="${n.href}">${n.label}</a>`).join("");
+  const mobileNavLinks = nav.map(n => `<a href="${n.href}">${n.label}</a>`).join("");
   return `
     <header class="regen-header">
       <div class="regen-header__inner">
@@ -544,8 +578,12 @@ export function brandHeader(opts?: HeaderOptions): string {
           <a href="/" class="regen-header__logo">${regenLogoSVG}</a>
           ${badge}
         </div>
-        <nav class="regen-header__nav">${navLinks}</nav>
+        <nav class="regen-header__nav">${navLinks}${suffix}</nav>
+        <button class="regen-hamburger" aria-label="Menu" onclick="this.classList.toggle('active');document.getElementById('mobile-nav').classList.toggle('open')">
+          <span></span><span></span><span></span>
+        </button>
       </div>
+      <nav class="regen-mobile-nav" id="mobile-nav">${mobileNavLinks}${suffix}</nav>
     </header>`;
 }
 
