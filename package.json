@@ -15,6 +15,7 @@
   "scripts": {
     "build": "tsc && cp src/server/openapi.json dist/server/openapi.json && node -e \"const f='dist/index.js';const c=require('fs').readFileSync(f,'utf8');if(!c.startsWith('#!'))require('fs').writeFileSync(f,'#!/usr/bin/env node\\n'+c)\"",
     "dev": "tsx watch src/index.ts",
+    "serve": "tsx watch src/index.ts serve",
     "start": "node dist/index.js",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",

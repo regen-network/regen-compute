@@ -25,6 +25,7 @@ import { createApiRoutes } from "./api-routes.js";
 import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
 import { createAboutRoutes } from "./about.js";
+import { createBadgesRoutes } from "./badges.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
 import { createUnicornRoutes } from "./unicorns.js";
 import { createRainbowRoutes } from "./rainbows.js";
@@ -307,6 +308,13 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     res.sendFile(`public/projects/${filename}`, { root: process.cwd() });
   });
 
+  // Badge icon
+  app.get("/public/badge-icon.png", (_req, res) => {
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.sendFile("public/badge-icon.png", { root: process.cwd() });
+  });
+
   // Team photos (served from public/team/ directory)
   app.get("/team/:filename", (req, res) => {
     const filename = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
@@ -355,6 +363,10 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // About page (static, no dependencies)
   const aboutRoutes = createAboutRoutes(baseUrl);
   app.use(aboutRoutes);
+
+  // Badges & seal pack (static + dynamic usage badge)
+  const badgesRoutes = createBadgesRoutes(baseUrl, db);
+  app.use(badgesRoutes);
 
   // AI Plugin page (static, no dependencies)
   const aiPluginRoutes = createAiPluginRoutes(baseUrl);
