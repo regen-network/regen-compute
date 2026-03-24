@@ -62,39 +62,25 @@ const ICON_DATA_URI = ICON_DATA_URIS["1"] || "";
 // Static badge SVGs (compact horizontal, three themes)
 // ---------------------------------------------------------------------------
 
-function compactBadgeSVG(theme: "dark" | "light" | "green", iconUrl: string = ICON_DATA_URI): string {
+function compactBadgeSVG(theme: "dark" | "light" | "green"): string {
   const themes = {
-    dark: {
-      leftBg: "#0a2e1f", rightBg: "#145433",
-      labelColor: "rgba(255,255,255,0.88)", valueColor: "#a3f0c0",
-      border: "",
-    },
-    light: {
-      leftBg: "#f0faf4", rightBg: "#ffffff",
-      labelColor: "#0a2e1f", valueColor: "#1a5c3a",
-      border: "#c3e8d0",
-    },
-    green: {
-      leftBg: "#1a6640", rightBg: "#4fb573",
-      labelColor: "rgba(255,255,255,0.92)", valueColor: "#ffffff",
-      border: "",
-    },
+    dark:  { bg: "#0a2e1f", label: "rgba(255,255,255,0.88)", mark: "white",    border: "" },
+    light: { bg: "#f0faf4", label: "#0a2e1f",                mark: "#1a5c3a",  border: "#c3e8d0" },
+    green: { bg: "#1a6640", label: "rgba(255,255,255,0.92)", mark: "white",    border: "" },
   };
   const t = themes[theme];
   const borderAttr = t.border ? `stroke="${t.border}" stroke-width="1.5"` : "";
+  const markUri = regenMarkSVGDataURI(t.mark);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="32" viewBox="0 0 240 32" role="img" aria-label="Powered by Regenerative Compute">
   <defs>
     <clipPath id="clip-${theme}"><rect width="240" height="32" rx="5"/></clipPath>
   </defs>
   <g clip-path="url(#clip-${theme})">
-    <rect width="240" height="32" fill="${t.leftBg}" rx="5"/>
-    <rect x="133" width="107" height="32" fill="${t.rightBg}"/>
+    <rect width="240" height="32" fill="${t.bg}" rx="5"/>
     ${t.border ? `<rect width="240" height="32" fill="none" rx="5" ${borderAttr}/>` : ""}
-    <image href="${iconUrl}" x="4" y="4" width="24" height="24"/>
-    <text x="34" y="20" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" font-weight="600" fill="${t.labelColor}" letter-spacing="0.01em">Regen Compute</text>
-    <line x1="133" y1="6" x2="133" y2="26" stroke="${t.border || "rgba(255,255,255,0.2)"}" stroke-width="1"/>
-    <text x="186" y="20" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" font-weight="700" fill="${t.valueColor}" text-anchor="middle" letter-spacing="0.01em">Regenerative AI</text>
+    <image href="${markUri}" x="5" y="4" width="24" height="24"/>
+    <text x="35" y="20" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" font-weight="600" fill="${t.label}" letter-spacing="0.01em">Regen Compute</text>
   </g>
 </svg>`;
 }
