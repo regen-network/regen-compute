@@ -424,6 +424,7 @@ function badgesPageHTML(baseUrl: string): string {
           const iconUrl = icon.file
             ? `${baseUrl}/public/${icon.file}`
             : regenMarkSVGDataURI("white");
+          const iconLightUrl = icon.file ? "" : regenMarkSVGDataURI("#0a2e1f");
           return `
         <button class="icon-pick-btn" id="pick-${icon.id}" onclick="selectIcon('${icon.id}','${iconUrl}')" style="${icon.id === "1" ? "border-color:#4fb573;background:#f0faf4;" : ""}">
           <img src="${previewSrc}" width="64" height="64" style="display:block;margin:0 auto 8px;object-fit:contain;">
@@ -538,7 +539,7 @@ function badgesPageHTML(baseUrl: string): string {
 
   ${betaBannerJS()}
   <script>
-    function selectIcon(id, url) {
+    function selectIcon(id, url, lightUrl) {
       // Update picker button styles
       document.querySelectorAll('.icon-pick-btn').forEach(b => {
         b.style.borderColor = '';
@@ -547,8 +548,11 @@ function badgesPageHTML(baseUrl: string): string {
       const picked = document.getElementById('pick-' + id);
       if (picked) { picked.style.borderColor = '#4fb573'; picked.style.background = '#f0faf4'; }
 
-      // Update all seal preview images
-      document.querySelectorAll('.seal-preview-img').forEach(img => img.src = url);
+      // Update all seal preview images — use lightUrl on white backgrounds
+      document.querySelectorAll('.seal-preview-img').forEach(img => {
+        const isLight = img.closest('.badge-preview--seal-white');
+        img.src = (lightUrl && isLight) ? lightUrl : url;
+      });
 
       // Update all snippet blocks and download links with new URL
       ['seal-black','seal-white','seal-green'].forEach(prefix => {
