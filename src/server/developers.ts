@@ -8,7 +8,11 @@
  */
 
 import { Router, Request, Response } from "express";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const NAV = [
   { label: "AI Plugin", href: "/ai-plugin" },
@@ -34,9 +38,17 @@ function developersPageHTML(baseUrl: string): string {
     .dev-hero {
       padding: 72px 24px 48px;
       text-align: center;
-      background: linear-gradient(160deg, #0a140e 0%, #0f1f12 60%, #0c1a10 100%);
+      background: url('/developers-hero.png') center center / cover no-repeat;
+      position: relative;
       border-bottom: 1px solid rgba(79,181,115,0.15);
     }
+    .dev-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+    }
+    .dev-hero > * { position: relative; z-index: 1; }
     .dev-hero__eyebrow {
       display: inline-block;
       font-size: 11px;
@@ -83,13 +95,13 @@ function developersPageHTML(baseUrl: string): string {
       justify-content: center;
       gap: 4px;
       padding: 32px 24px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid var(--regen-gray-200);
     }
     .dev-tab {
       padding: 10px 22px;
       font-size: 14px;
       font-weight: 600;
-      color: var(--regen-gray-400);
+      color: var(--regen-gray-500);
       border: none;
       background: none;
       border-bottom: 2px solid transparent;
@@ -97,7 +109,7 @@ function developersPageHTML(baseUrl: string): string {
       transition: color 0.2s, border-color 0.2s;
       margin-bottom: -1px;
     }
-    .dev-tab:hover { color: #fff; }
+    .dev-tab:hover { color: var(--regen-navy); }
     .dev-tab.active { color: var(--regen-green); border-bottom-color: var(--regen-green); }
 
     /* ---- content panels ---- */
@@ -108,18 +120,18 @@ function developersPageHTML(baseUrl: string): string {
     .dev-h2 {
       font-size: 24px;
       font-weight: 700;
-      color: #fff;
+      color: var(--regen-navy);
       margin: 48px 0 12px;
     }
     .dev-h2:first-child { margin-top: 0; }
     .dev-h3 {
       font-size: 16px;
       font-weight: 600;
-      color: var(--regen-gray-200);
+      color: var(--regen-navy);
       margin: 32px 0 8px;
     }
     .dev-lead {
-      color: var(--regen-gray-400);
+      color: var(--regen-gray-700);
       line-height: 1.7;
       margin: 0 0 24px;
     }
@@ -162,7 +174,7 @@ function developersPageHTML(baseUrl: string): string {
       gap: 16px;
       align-items: flex-start;
       padding: 16px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid var(--regen-gray-200);
     }
     .dev-steps li:last-child { border-bottom: none; }
     .dev-step-num {
@@ -170,8 +182,8 @@ function developersPageHTML(baseUrl: string): string {
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: rgba(79,181,115,0.15);
-      border: 1px solid rgba(79,181,115,0.3);
+      background: var(--regen-green-bg);
+      border: 1px solid rgba(79,181,115,0.4);
       color: var(--regen-green);
       font-size: 12px;
       font-weight: 700;
@@ -180,16 +192,18 @@ function developersPageHTML(baseUrl: string): string {
       justify-content: center;
       margin-top: 2px;
     }
-    .dev-step-text { color: var(--regen-gray-300); line-height: 1.6; font-size: 15px; }
-    .dev-step-text strong { color: #fff; }
+    .dev-step-text { color: var(--regen-gray-700); line-height: 1.6; font-size: 15px; display: block; flex: 1; min-width: 0; }
+    .dev-step-text strong { color: var(--regen-navy); }
+    .dev-step-text code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--regen-green); background: var(--regen-green-bg); padding: 2px 6px; border-radius: 4px; }
 
     /* ---- endpoint cards ---- */
     .dev-endpoint {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--regen-white);
+      border: 1px solid var(--regen-gray-200);
       border-radius: 10px;
       margin-bottom: 20px;
       overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .dev-endpoint__head {
       display: flex;
@@ -199,7 +213,7 @@ function developersPageHTML(baseUrl: string): string {
       cursor: pointer;
       user-select: none;
     }
-    .dev-endpoint__head:hover { background: rgba(255,255,255,0.03); }
+    .dev-endpoint__head:hover { background: var(--regen-gray-50); }
     .dev-method {
       font-family: monospace;
       font-size: 11px;
@@ -213,10 +227,10 @@ function developersPageHTML(baseUrl: string): string {
     .dev-endpoint__path {
       font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
-      color: #fff;
+      color: var(--regen-navy);
       flex: 1;
     }
-    .dev-endpoint__desc { font-size: 13px; color: var(--regen-gray-500); }
+    .dev-endpoint__desc { font-size: 13px; color: var(--regen-gray-700); }
     .dev-endpoint__auth {
       font-size: 11px;
       font-weight: 600;
@@ -225,14 +239,14 @@ function developersPageHTML(baseUrl: string): string {
       flex-shrink: 0;
     }
     .dev-endpoint__auth--required { background: rgba(251,191,36,0.15); color: #fbbf24; }
-    .dev-endpoint__auth--public    { background: rgba(255,255,255,0.06); color: var(--regen-gray-500); }
+    .dev-endpoint__auth--public    { background: var(--regen-gray-100); color: var(--regen-gray-500); }
     .dev-endpoint__body {
       display: none;
       padding: 0 20px 20px;
-      border-top: 1px solid rgba(255,255,255,0.06);
+      border-top: 1px solid var(--regen-gray-200);
     }
     .dev-endpoint__body.open { display: block; }
-    .dev-endpoint__body p { color: var(--regen-gray-400); font-size: 14px; margin: 12px 0 8px; line-height: 1.6; }
+    .dev-endpoint__body p { color: var(--regen-gray-700); font-size: 14px; margin: 12px 0 8px; line-height: 1.6; }
     .dev-code {
       background: #060d08;
       border: 1px solid rgba(255,255,255,0.08);
@@ -253,38 +267,39 @@ function developersPageHTML(baseUrl: string): string {
     /* ---- path cards (reseller section) ---- */
     .dev-paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
     .dev-path {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--regen-white);
+      border: 1px solid var(--regen-gray-200);
       border-radius: 12px;
       padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .dev-path__icon { font-size: 28px; margin-bottom: 12px; }
-    .dev-path h3 { font-size: 16px; font-weight: 700; color: #fff; margin: 0 0 8px; }
-    .dev-path p { font-size: 14px; color: var(--regen-gray-400); line-height: 1.6; margin: 0; }
+    .dev-path h3 { font-size: 16px; font-weight: 700; color: var(--regen-navy); margin: 0 0 8px; }
+    .dev-path p { font-size: 14px; color: var(--regen-gray-700); line-height: 1.6; margin: 0; }
 
     /* ---- auth box ---- */
     .dev-auth-box {
-      background: rgba(251,191,36,0.06);
-      border: 1px solid rgba(251,191,36,0.2);
+      background: #fffbeb;
+      border: 1px solid #fde68a;
       border-radius: 10px;
       padding: 20px 24px;
       margin: 24px 0;
     }
-    .dev-auth-box h3 { font-size: 15px; font-weight: 700; color: #fbbf24; margin: 0 0 8px; }
-    .dev-auth-box p { font-size: 14px; color: var(--regen-gray-300); margin: 0 0 12px; line-height: 1.6; }
+    .dev-auth-box h3 { font-size: 15px; font-weight: 700; color: #92400e; margin: 0 0 8px; }
+    .dev-auth-box p { font-size: 14px; color: var(--regen-gray-700); margin: 0 0 12px; line-height: 1.6; }
     .dev-auth-box p:last-child { margin-bottom: 0; }
 
     /* ---- CTA ---- */
     .dev-cta {
       text-align: center;
       padding: 48px 24px;
-      background: rgba(79,181,115,0.04);
-      border: 1px solid rgba(79,181,115,0.15);
+      background: var(--regen-green-bg);
+      border: 1px solid rgba(79,181,115,0.3);
       border-radius: 16px;
       margin-top: 48px;
     }
-    .dev-cta h2 { font-size: 24px; font-weight: 700; color: #fff; margin: 0 0 12px; }
-    .dev-cta p { color: var(--regen-gray-400); margin: 0 0 24px; line-height: 1.6; }
+    .dev-cta h2 { font-size: 24px; font-weight: 700; color: var(--regen-navy); margin: 0 0 12px; }
+    .dev-cta p { color: var(--regen-gray-700); margin: 0 0 24px; line-height: 1.6; }
 
     /* ---- table ---- */
     .dev-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0 24px; }
@@ -296,12 +311,12 @@ function developersPageHTML(baseUrl: string): string {
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
     }
     .dev-table td {
       padding: 12px 14px;
-      color: var(--regen-gray-300);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--regen-gray-700);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
       vertical-align: top;
     }
     .dev-table td code {
@@ -331,7 +346,7 @@ function developersPageHTML(baseUrl: string): string {
     /* ---- toggle chevron ---- */
     .dev-chevron {
       width: 16px; height: 16px;
-      color: var(--regen-gray-500);
+      color: var(--regen-gray-700);
       transition: transform 0.2s;
       flex-shrink: 0;
     }
@@ -355,7 +370,6 @@ ${brandHeader({ nav: NAV })}
   <div class="dev-hero__pills">
     <span class="dev-hero__pill">MCP Server</span>
     <span class="dev-hero__pill">REST API</span>
-    <span class="dev-hero__pill">Reseller / White-label</span>
     <span class="dev-hero__pill">Regen Ledger</span>
     <span class="dev-hero__pill">On-chain certificates</span>
   </div>
@@ -365,7 +379,7 @@ ${brandHeader({ nav: NAV })}
 <div class="dev-tabs">
   <button class="dev-tab active" data-tab="mcp">MCP Server</button>
   <button class="dev-tab" data-tab="api">REST API</button>
-  <button class="dev-tab" data-tab="reseller">Reseller</button>
+  <!-- <button class="dev-tab" data-tab="reseller">Reseller</button> -->
   <button class="dev-tab" data-tab="reference">API Reference</button>
 </div>
 
@@ -402,10 +416,10 @@ ${brandHeader({ nav: NAV })}
 
   <h3 class="dev-h3">Typical workflow (Claude will handle this automatically)</h3>
   <ol class="dev-steps">
-    <li><span class="dev-step-num">1</span><span class="dev-step-text"><strong>estimate_session_footprint</strong> — Claude calls this at end of session to calculate ecological cost.</span></li>
-    <li><span class="dev-step-num">2</span><span class="dev-step-text"><strong>browse_available_credits</strong> — Surfaces live credit options with real prices.</span></li>
-    <li><span class="dev-step-num">3</span><span class="dev-step-text"><strong>retire_credits</strong> — Retires credits on-chain (subscribed users) or returns a Marketplace link.</span></li>
-    <li><span class="dev-step-num">4</span><span class="dev-step-text"><strong>get_retirement_certificate</strong> — Returns a permanent, shareable certificate URL on Regen Network.</span></li>
+    <li><span class="dev-step-num">1</span><span class="dev-step-text"><code>estimate_session_footprint</code> — Claude calls this at end of session to calculate ecological cost.</span></li>
+    <li><span class="dev-step-num">2</span><span class="dev-step-text"><code>browse_available_credits</code> — Surfaces live credit options with real prices.</span></li>
+    <li><span class="dev-step-num">3</span><span class="dev-step-text"><code>retire_credits</code> — Retires credits on-chain (subscribed users) or returns a Marketplace link.</span></li>
+    <li><span class="dev-step-num">4</span><span class="dev-step-text"><code>get_retirement_certificate</code> — Returns a permanent, shareable certificate URL on Regen Network.</span></li>
   </ol>
 
   <h3 class="dev-h3">Agent framework integration (non-Claude)</h3>
@@ -502,8 +516,9 @@ curl -X POST -H "Authorization: Bearer $REGEN_API_KEY" \
 </div>
 
 <!-- ================================================================
-     TAB 3 — RESELLER
-================================================================ -->
+     TAB 3 — RESELLER (hidden for now)
+================================================================
+
 <div class="dev-panel" id="tab-reseller">
 
   <h2 class="dev-h2">Become a Reseller</h2>
@@ -602,6 +617,8 @@ SESSION_SECRET=your-random-secret</div>
     <a href="https://t.me/regen_network_pub" target="_blank" rel="noopener" class="regen-btn regen-btn--primary" style="display:inline-block;margin-top:4px;">Contact the team on Telegram</a>
   </div>
 </div>
+
+-->
 
 <!-- ================================================================
      TAB 4 — API REFERENCE
@@ -880,6 +897,11 @@ export function createDevelopersRoutes(baseUrl: string): Router {
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=300");
     res.send(developersPageHTML(baseUrl));
+  });
+
+  router.get("/developers-hero.png", (_req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.sendFile(join(process.cwd(), "public", "developers-hero.png"));
   });
 
   return router;
