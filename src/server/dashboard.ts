@@ -162,7 +162,7 @@ function computeBadges(cumulative: CumulativeAttribution): Badge[] {
 
 // --- HTML rendering ---
 
-function renderApiKeyLoginPage(_baseUrl: string): string {
+function renderApiKeyLoginPage(): string {
   const nav = [{ label: "Home", href: "/" }, { label: "Developers", href: "/developers" }];
   return `<!DOCTYPE html>
 <html lang="en">
@@ -205,6 +205,12 @@ ${brandFooter()}
 </html>`;
 }
 
+function statusBadge(code: number): string {
+  if (code < 300) return `<span class="status-badge status-badge--success">${code}</span>`;
+  if (code < 400) return `<span class="status-badge status-badge--redirect">${code}</span>`;
+  return `<span class="status-badge status-badge--error">${code}</span>`;
+}
+
 function renderApiDashboard(opts: {
   email: string;
   apiKey: string;
@@ -232,11 +238,7 @@ function renderApiDashboard(opts: {
     { label: "Log out", href: "/dashboard/logout" },
   ];
 
-  function statusBadge(code: number): string {
-    if (code < 300) return `<span style="background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
-    if (code < 400) return `<span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
-    return `<span style="background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${code}</span>`;
-  }
+
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -248,6 +250,10 @@ function renderApiDashboard(opts: {
   <style>
     ${brandCSS()}
     .api-dash { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+    .status-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+    .status-badge--success { background: #d1fae5; color: #065f46; }
+    .status-badge--redirect { background: #ede9fe; color: #5b21b6; }
+    .status-badge--error { background: #fee2e2; color: #991b1b; }
     .api-dash__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; }
     .api-dash__title { font-size: 26px; font-weight: 800; color: var(--regen-navy); margin: 0; }
     .api-dash__sub { font-size: 14px; color: var(--regen-gray-500); margin: 4px 0 0; }
@@ -1669,7 +1675,7 @@ export function createDashboardRoutes(
     if (!user) {
       // Show a simple key-entry form instead of redirecting to subscription login
       res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.send(renderApiKeyLoginPage(baseUrl));
+      res.send(renderApiKeyLoginPage());
       return;
     }
 

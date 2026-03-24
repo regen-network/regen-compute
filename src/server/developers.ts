@@ -22,7 +22,7 @@ const NAV = [
   { label: "Dashboard", href: "/dashboard/login" },
 ];
 
-function developersPageHTML(baseUrl: string): string {
+function developersPageHTML(): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -876,8 +876,11 @@ function toggleEndpoint(head) {
 // Copy to clipboard
 function copyCode(id, btn) {
   const el = document.getElementById(id);
-  const text = el ? el.innerText.replace(/^Copy$/m, '').trim() : '';
-  navigator.clipboard.writeText(text).then(() => {
+  if (!el) return;
+  const clone = el.cloneNode(true);
+  const btnEl = clone.querySelector('button');
+  if (btnEl) btnEl.remove();
+  navigator.clipboard.writeText(clone.textContent.trim()).then(() => {
     const orig = btn.textContent;
     btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = orig, 1800);
@@ -896,7 +899,7 @@ export function createDevelopersRoutes(baseUrl: string): Router {
   router.get("/developers", (_req: Request, res: Response) => {
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=300");
-    res.send(developersPageHTML(baseUrl));
+    res.send(developersPageHTML());
   });
 
   router.get("/developers-hero.png", (_req: Request, res: Response) => {
