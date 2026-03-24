@@ -571,6 +571,22 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     console.log("Migration: added renewal_reminders_sent column to subscribers");
   }
 
+  // Migration: add badge_token to users (read-only token for dynamic usage badge — safe to embed in HTML)
+  const userCols = (_db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map(c => c.name);
+  if (!userCols.includes("badge_token")) {
+    _db.exec(`ALTER TABLE users ADD COLUMN badge_token TEXT`);
+    _db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_badge_token ON users(badge_token)`);
+    console.log("Migration: added badge_token column to users");
+  }
+  // Backfill badge tokens for users that don't have one
+  const usersWithoutBadgeToken = _db.prepare("SELECT id FROM users WHERE badge_token IS NULL").all() as { id: number }[];
+  for (const u of usersWithoutBadgeToken) {
+    _db.prepare("UPDATE users SET badge_token = ? WHERE id = ?").run(generateBadgeToken(), u.id);
+  }
+  if (usersWithoutBadgeToken.length > 0) {
+    console.log(`Migration: backfilled ${usersWithoutBadgeToken.length} badge tokens`);
+  }
+
   return _db;
 }
 
@@ -582,9 +598,14 @@ export function generateReferralCode(): string {
   return "ref_" + randomBytes(8).toString("hex");
 }
 
+export function generateBadgeToken(): string {
+  return "rbt_" + randomBytes(16).toString("hex");
+}
+
 export interface User {
   id: number;
   api_key: string;
+  badge_token: string | null;
   email: string | null;
   display_name: string | null;
   balance_cents: number;
@@ -612,6 +633,10 @@ export function getUserByApiKey(db: Database.Database, apiKey: string): User | u
   return db.prepare("SELECT * FROM users WHERE api_key = ?").get(apiKey) as User | undefined;
 }
 
+export function getUserByBadgeToken(db: Database.Database, badgeToken: string): User | undefined {
+  return db.prepare("SELECT * FROM users WHERE badge_token = ?").get(badgeToken) as User | undefined;
+}
+
 export function getUserByEmail(db: Database.Database, email: string): User | undefined {
   return db.prepare("SELECT * FROM users WHERE LOWER(email) = LOWER(?)").get(email) as User | undefined;
 }
@@ -623,12 +648,13 @@ export function createUser(
   referredByUserId?: number
 ): User {
   const apiKey = generateApiKey();
+  const badgeToken = generateBadgeToken();
   const referralCode = generateReferralCode();
   const normalizedEmail = email ? email.toLowerCase() : null;
   const stmt = db.prepare(
-    "INSERT INTO users (api_key, email, stripe_customer_id, referral_code, referred_by) VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO users (api_key, badge_token, email, stripe_customer_id, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?)"
   );
-  const result = stmt.run(apiKey, normalizedEmail, stripeCustomerId, referralCode, referredByUserId ?? null);
+  const result = stmt.run(apiKey, badgeToken, normalizedEmail, stripeCustomerId, referralCode, referredByUserId ?? null);
   return db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid) as User;
 }
 
@@ -1689,4 +1715,83 @@ export function getExpiringCryptoSubscribers(db: Database.Database, userId: numb
     WHERE user_id = ? AND status = 'active' AND stripe_subscription_id LIKE 'crypto_%'
     ORDER BY current_period_end ASC
   `).all(userId) as Subscriber[];
+}
+
+// --- Developer API usage helpers ---
+
+export interface ApiUsageSummary {
+  endpoint: string;
+  method: string;
+  total_calls: number;
+  success_calls: number;
+  error_calls: number;
+  avg_response_ms: number | null;
+  last_called_at: string | null;
+}
+
+export interface ApiUsageRow {
+  id: number;
+  endpoint: string;
+  method: string;
+  status_code: number;
+  response_time_ms: number | null;
+  created_at: string;
+}
+
+/** Aggregate API usage by endpoint for a user */
+export function getApiUsageSummary(db: Database.Database, userId: number, days = 30): ApiUsageSummary[] {
+  return db.prepare(`
+    SELECT
+      endpoint,
+      method,
+      COUNT(*) AS total_calls,
+      SUM(CASE WHEN status_code < 400 THEN 1 ELSE 0 END) AS success_calls,
+      SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) AS error_calls,
+      AVG(response_time_ms) AS avg_response_ms,
+      MAX(created_at) AS last_called_at
+    FROM api_usage
+    WHERE user_id = ?
+      AND created_at >= datetime('now', ? || ' days')
+    GROUP BY endpoint, method
+    ORDER BY total_calls DESC
+  `).all(userId, `-${days}`) as ApiUsageSummary[];
+}
+
+/** Total API calls for a user in the last N days */
+export function getApiUsageTotal(db: Database.Database, userId: number, days = 30): number {
+  const row = db.prepare(`
+    SELECT COUNT(*) AS total FROM api_usage
+    WHERE user_id = ? AND created_at >= datetime('now', ? || ' days')
+  `).get(userId, `-${days}`) as { total: number };
+  return row.total;
+}
+
+/** Recent individual API calls for a user */
+export function getRecentApiCalls(db: Database.Database, userId: number, limit = 20): ApiUsageRow[] {
+  return db.prepare(`
+    SELECT id, endpoint, method, status_code, response_time_ms, created_at
+    FROM api_usage
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+    LIMIT ?
+  `).all(userId, limit) as ApiUsageRow[];
+}
+
+/** API calls per day for a user — for sparkline/chart */
+export interface ApiUsageDay {
+  day: string;
+  calls: number;
+  errors: number;
+}
+export function getApiUsageByDay(db: Database.Database, userId: number, days = 14): ApiUsageDay[] {
+  return db.prepare(`
+    SELECT
+      date(created_at) AS day,
+      COUNT(*) AS calls,
+      SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) AS errors
+    FROM api_usage
+    WHERE user_id = ? AND created_at >= datetime('now', ? || ' days')
+    GROUP BY date(created_at)
+    ORDER BY day ASC
+  `).all(userId, `-${days}`) as ApiUsageDay[];
 }

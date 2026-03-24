@@ -15,6 +15,7 @@
  * API routes require STRIPE_SECRET_KEY (for the DB / API key system).
  */
 
+import { join } from "path";
 import express from "express";
 import helmet from "helmet";
 import Stripe from "stripe";
@@ -25,6 +26,8 @@ import { createApiRoutes } from "./api-routes.js";
 import { createDashboardRoutes } from "./dashboard.js";
 import { createResearchRoutes } from "./research.js";
 import { createAboutRoutes } from "./about.js";
+import { createDevelopersRoutes } from "./developers.js";
+import { createBadgesRoutes } from "./badges.js";
 import { createAiPluginRoutes } from "./ai-plugin.js";
 import { createUnicornRoutes } from "./unicorns.js";
 import { createRainbowRoutes } from "./rainbows.js";
@@ -49,6 +52,9 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // Certificate routes — no Stripe dependency, mount first
   const certificateRoutes = createCertificateRoutes(baseUrl);
   app.use(certificateRoutes);
+
+  // Static public assets (badge icons, hero images, etc.)
+  app.use("/public", express.static(join(process.cwd(), "public"), { maxAge: "1d" }));
 
   // Health check
   app.get("/health", (_req, res) => {
@@ -356,6 +362,10 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   const aboutRoutes = createAboutRoutes(baseUrl);
   app.use(aboutRoutes);
 
+  // Developers page (static, no dependencies)
+  const developersRoutes = createDevelopersRoutes(baseUrl);
+  app.use(developersRoutes);
+
   // AI Plugin page (static, no dependencies)
   const aiPluginRoutes = createAiPluginRoutes(baseUrl);
   app.use(aiPluginRoutes);
@@ -370,6 +380,11 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // Dashboard routes (login page works without Stripe; full dashboard needs DB)
   const dashboardRoutes = createDashboardRoutes(db, baseUrl, config);
   app.use(dashboardRoutes);
+
+  // Badges & seal pack page
+  const badgesRoutes = createBadgesRoutes(baseUrl);
+  app.use(badgesRoutes);
+
 
   if (stripe) {
     // Developer API routes (require Stripe for the full API key system)

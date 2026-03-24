@@ -19,6 +19,7 @@ import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 import {
   getUserByEmail,
+  getUserByApiKey,
   getSubscriberByUserId,
   getAllSubscribersByUserId,
   getCumulativeAttribution,
@@ -41,6 +42,13 @@ import {
   getReferralCount,
   getMedianReferralCount,
   getExpiringCryptoSubscribers,
+  getApiUsageSummary,
+  getApiUsageTotal,
+  getRecentApiCalls,
+  getApiUsageByDay,
+  type ApiUsageSummary,
+  type ApiUsageRow,
+  type ApiUsageDay,
 } from "./db.js";
 import { PROJECTS, getProjectForBatch, type ProjectInfo } from "./project-metadata.js";
 import { createSessionToken, getSessionEmail } from "./magic-link.js";
@@ -153,6 +161,344 @@ function computeBadges(cumulative: CumulativeAttribution): Badge[] {
 }
 
 // --- HTML rendering ---
+
+function renderApiKeyLoginPage(): string {
+  const nav = [{ label: "Home", href: "/" }, { label: "Developers", href: "/developers" }];
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>API Dashboard — Regenerative Compute</title>
+  ${brandFonts()}
+  <style>
+    ${brandCSS()}
+    .api-login { max-width: 420px; margin: 80px auto; padding: 0 24px; text-align: center; }
+    .api-login h1 { font-size: 22px; font-weight: 800; color: var(--regen-navy); margin: 0 0 8px; }
+    .api-login p { font-size: 14px; color: var(--regen-gray-500); margin: 0 0 28px; line-height: 1.6; }
+    .api-login__form { display: flex; flex-direction: column; gap: 10px; }
+    .api-login__input {
+      width: 100%; box-sizing: border-box;
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: 8px; padding: 12px 14px; color: var(--regen-navy); font-size: 14px;
+      font-family: monospace;
+    }
+    .api-login__input:focus { outline: none; border-color: var(--regen-green); box-shadow: 0 0 0 3px rgba(79,181,115,0.15); }
+    .api-login__input::placeholder { color: var(--regen-gray-400); }
+    .api-login__hint { font-size: 12px; color: var(--regen-gray-500); margin-top: 16px; }
+    .api-login__hint a { color: var(--regen-green); }
+  </style>
+</head>
+<body>
+${brandHeader({ nav })}
+<div class="api-login">
+  <h1>API Dashboard</h1>
+  <p>Enter your API key to view usage stats. Your key is shown in your <a href="/dashboard" style="color:var(--regen-green);">Dashboard</a>.</p>
+  <form class="api-login__form" method="GET" action="/dashboard/api">
+    <input class="api-login__input" type="text" name="key" placeholder="rfa_your_api_key_here" autocomplete="off" spellcheck="false"/>
+    <button class="regen-btn regen-btn--primary" type="submit" style="width:100%;">View Dashboard</button>
+  </form>
+  <p class="api-login__hint">Don't have an API key? <a href="/#pricing">Subscribe</a> to get one.</p>
+</div>
+${brandFooter()}
+</body>
+</html>`;
+}
+
+function statusBadge(code: number): string {
+  if (code < 300) return `<span class="status-badge status-badge--success">${code}</span>`;
+  if (code < 400) return `<span class="status-badge status-badge--redirect">${code}</span>`;
+  return `<span class="status-badge status-badge--error">${code}</span>`;
+}
+
+function renderApiDashboard(opts: {
+  email: string;
+  apiKey: string;
+  badgeToken: string | null;
+  days: number;
+  total: number;
+  successTotal: number;
+  errorTotal: number;
+  summary: ApiUsageSummary[];
+  recent: ApiUsageRow[];
+  byDay: ApiUsageDay[];
+  baseUrl: string;
+}): string {
+  const { email, apiKey, badgeToken, days, total, successTotal, errorTotal, summary, recent, byDay, baseUrl } = opts;
+  const successRate = total > 0 ? Math.round((successTotal / total) * 100) : 100;
+  const dayLabels = JSON.stringify(byDay.map(d => d.day.slice(5))); // MM-DD
+  const dayCallData = JSON.stringify(byDay.map(d => d.calls));
+  const dayErrorData = JSON.stringify(byDay.map(d => d.errors));
+  // Preserve the key param in time-range links so auth persists
+  const keyParam = `&key=${encodeURIComponent(apiKey)}`;
+
+  const nav = [
+    { label: "Home", href: "/" },
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Log out", href: "/dashboard/logout" },
+  ];
+
+
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>API Dashboard — Regenerative Compute</title>
+  ${brandFonts()}
+  <style>
+    ${brandCSS()}
+    .api-dash { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+    .status-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+    .status-badge--success { background: #d1fae5; color: #065f46; }
+    .status-badge--redirect { background: #ede9fe; color: #5b21b6; }
+    .status-badge--error { background: #fee2e2; color: #991b1b; }
+    .api-dash__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; }
+    .api-dash__title { font-size: 26px; font-weight: 800; color: var(--regen-navy); margin: 0; }
+    .api-dash__sub { font-size: 14px; color: var(--regen-gray-500); margin: 4px 0 0; }
+    .api-dash__range { display: flex; gap: 6px; }
+    .api-dash__range a {
+      font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px;
+      border: 1px solid var(--regen-gray-200); color: var(--regen-gray-500);
+      text-decoration: none; transition: all 0.15s;
+    }
+    .api-dash__range a:hover { border-color: var(--regen-green); color: var(--regen-green); }
+    .api-dash__range a.active { background: var(--regen-green-bg); border-color: var(--regen-green); color: var(--regen-green); font-weight: 700; }
+
+    /* stat cards */
+    .api-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .api-stat {
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: 12px; padding: 20px 22px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .api-stat__label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--regen-gray-500); margin-bottom: 8px; }
+    .api-stat__value { font-size: 32px; font-weight: 800; color: var(--regen-navy); line-height: 1; }
+    .api-stat__sub { font-size: 12px; color: var(--regen-gray-500); margin-top: 6px; }
+
+    /* key box */
+    .api-key-box {
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .api-key-box__label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--regen-gray-500); flex-shrink: 0; }
+    .api-key-box__key {
+      font-family: monospace; font-size: 13px; color: var(--regen-green);
+      background: var(--regen-green-bg); border: 1px solid rgba(79,181,115,0.3);
+      border-radius: 6px; padding: 6px 12px; flex: 1; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+    }
+
+    /* chart */
+    .api-chart-wrap {
+      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      border-radius: 12px; padding: 20px 22px; margin-bottom: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .api-chart-wrap h3 { font-size: 14px; font-weight: 700; color: var(--regen-navy); margin: 0 0 16px; }
+
+    /* tables */
+    .api-section { margin-bottom: 32px; }
+    .api-section h3 { font-size: 16px; font-weight: 700; color: var(--regen-navy); margin: 0 0 12px; }
+    .api-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--regen-white); border: 1px solid var(--regen-gray-200); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .api-table th {
+      text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--regen-gray-500);
+      background: var(--regen-gray-50); border-bottom: 1px solid var(--regen-gray-200);
+    }
+    .api-table td {
+      padding: 11px 14px; color: var(--regen-navy);
+      border-bottom: 1px solid var(--regen-gray-100); vertical-align: middle;
+    }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table td code { font-family: monospace; font-size: 12px; color: var(--regen-green); background: var(--regen-green-bg); padding: 2px 6px; border-radius: 4px; }
+    .api-table .method-get  { color: #059669; font-family: monospace; font-size: 11px; font-weight: 700; }
+    .api-table .method-post { color: #7c3aed; font-family: monospace; font-size: 11px; font-weight: 700; }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--regen-gray-500); }
+    .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--regen-navy); margin: 0 0 8px; }
+    .empty-state p { font-size: 14px; margin: 0 0 20px; line-height: 1.6; }
+    .empty-curl { font-family: monospace; font-size: 13px; background: #1a1a2e; color: #a5f3c4; border-radius: 8px; padding: 14px 18px; text-align: left; max-width: 520px; margin: 0 auto; line-height: 1.8; }
+    @media (max-width: 600px) {
+      .api-dash { padding: 24px 16px 64px; }
+      .api-key-box { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+${brandHeader({ nav })}
+<div class="api-dash">
+
+  <div class="api-dash__header">
+    <div>
+      <h1 class="api-dash__title">API Dashboard</h1>
+      <p class="api-dash__sub">${escapeHtml(email)}</p>
+    </div>
+    <div class="api-dash__range">
+      <a href="/dashboard/api?days=7${keyParam}"  class="${days === 7  ? "active" : ""}">7d</a>
+      <a href="/dashboard/api?days=30${keyParam}" class="${days === 30 ? "active" : ""}">30d</a>
+      <a href="/dashboard/api?days=90${keyParam}" class="${days === 90 ? "active" : ""}">90d</a>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="api-stats">
+    <div class="api-stat">
+      <div class="api-stat__label">Total calls</div>
+      <div class="api-stat__value">${total.toLocaleString()}</div>
+      <div class="api-stat__sub">last ${days} days</div>
+    </div>
+    <div class="api-stat">
+      <div class="api-stat__label">Success rate</div>
+      <div class="api-stat__value" style="color:${successRate >= 99 ? "var(--regen-green)" : successRate >= 95 ? "#d97706" : "#dc2626"}">${successRate}%</div>
+      <div class="api-stat__sub">${successTotal.toLocaleString()} ok / ${errorTotal.toLocaleString()} errors</div>
+    </div>
+    <div class="api-stat">
+      <div class="api-stat__label">Endpoints used</div>
+      <div class="api-stat__value">${summary.length}</div>
+      <div class="api-stat__sub">unique routes</div>
+    </div>
+    <div class="api-stat">
+      <div class="api-stat__label">Avg latency</div>
+      <div class="api-stat__value" style="font-size:24px;">
+        ${summary.length > 0
+          ? Math.round(summary.reduce((a, r) => a + (r.avg_response_ms ?? 0) * r.total_calls, 0) / total) + "ms"
+          : "—"}
+      </div>
+      <div class="api-stat__sub">weighted avg</div>
+    </div>
+  </div>
+
+  <!-- API key -->
+  <div class="api-key-box">
+    <span class="api-key-box__label">API KEY</span>
+    <code class="api-key-box__key" id="apiKeyVal" onclick="copyKey()" title="Click to copy">${escapeHtml(apiKey)}</code>
+    <button class="regen-btn regen-btn--primary" id="copyKeyBtn" onclick="copyKey()" style="padding:7px 16px;font-size:12px;">Copy</button>
+    <a href="/developers" class="regen-btn" style="padding:7px 16px;font-size:12px;">Docs</a>
+  </div>
+  ${badgeToken ? `
+  <div class="api-key-box" style="margin-top:-12px;">
+    <span class="api-key-box__label">BADGE TOKEN</span>
+    <code class="api-key-box__key" id="badgeTokenVal" onclick="copyBadgeToken()" title="Click to copy" style="cursor:pointer">${escapeHtml(badgeToken)}</code>
+    <button class="regen-btn regen-btn--primary" id="copyBadgeBtn" onclick="copyBadgeToken()" style="padding:7px 16px;font-size:12px;">Copy</button>
+    <a href="/badges" class="regen-btn" style="padding:7px 16px;font-size:12px;">Get Badge</a>
+  </div>` : ""}
+
+  ${byDay.length > 0 ? `
+  <!-- Activity chart -->
+  <div class="api-chart-wrap">
+    <h3>API Calls — Last ${Math.min(days, 14)} Days</h3>
+    <canvas id="usageChart" height="80"></canvas>
+  </div>
+  ` : ""}
+
+  ${total === 0 ? `
+  <div class="empty-state">
+    <h3>No API calls yet in this period</h3>
+    <p>Make your first request using your API key to see usage here.</p>
+    <div class="empty-curl">
+curl -H "Authorization: Bearer ${escapeHtml(apiKey)}" \\<br/>
+&nbsp;&nbsp;"${escapeHtml(baseUrl)}/api/v1/impact"
+    </div>
+    <br/><a href="/developers" class="regen-btn regen-btn--primary" style="display:inline-block;margin-top:8px;">View API docs</a>
+  </div>
+  ` : `
+  <!-- Usage by endpoint -->
+  <div class="api-section">
+    <h3>Usage by Endpoint</h3>
+    <table class="api-table">
+      <thead>
+        <tr><th>Method</th><th>Endpoint</th><th>Calls</th><th>Errors</th><th>Avg ms</th><th>Last called</th></tr>
+      </thead>
+      <tbody>
+        ${summary.map(r => `
+        <tr>
+          <td><span class="method-${r.method.toLowerCase()}">${escapeHtml(r.method)}</span></td>
+          <td><code>${escapeHtml(r.endpoint)}</code></td>
+          <td>${r.total_calls.toLocaleString()}</td>
+          <td style="color:${r.error_calls > 0 ? "#dc2626" : "var(--regen-gray-400)"}">
+            ${r.error_calls > 0 ? r.error_calls.toLocaleString() : "—"}
+          </td>
+          <td style="color:var(--regen-gray-500)">${r.avg_response_ms ? Math.round(r.avg_response_ms) + "ms" : "—"}</td>
+          <td style="color:var(--regen-gray-400);font-size:12px;">${r.last_called_at ? r.last_called_at.slice(0, 16).replace("T", " ") : "—"}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Recent calls -->
+  <div class="api-section">
+    <h3>Recent Calls</h3>
+    <table class="api-table">
+      <thead>
+        <tr><th>Time</th><th>Method</th><th>Endpoint</th><th>Status</th><th>ms</th></tr>
+      </thead>
+      <tbody>
+        ${recent.map(r => `
+        <tr>
+          <td style="color:var(--regen-gray-500);font-size:12px;white-space:nowrap;">${r.created_at.slice(0, 16).replace("T", " ")}</td>
+          <td><span class="method-${r.method.toLowerCase()}">${escapeHtml(r.method)}</span></td>
+          <td><code>${escapeHtml(r.endpoint)}</code></td>
+          <td>${statusBadge(r.status_code)}</td>
+          <td style="color:var(--regen-gray-500)">${r.response_time_ms ?? "—"}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+  </div>
+  `}
+
+</div>
+
+${byDay.length > 0 ? `
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  var ctx = document.getElementById('usageChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ${dayLabels},
+      datasets: [
+        { label: 'Calls', data: ${dayCallData}, backgroundColor: 'rgba(79,181,115,0.6)', borderColor: 'rgba(79,181,115,1)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Errors', data: ${dayErrorData}, backgroundColor: 'rgba(220,38,38,0.4)', borderColor: 'rgba(220,38,38,0.8)', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#6b7280', font: { size: 12 } } } },
+      scales: {
+        x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' }, beginAtZero: true }
+      }
+    }
+  });
+})();
+</script>
+` : ""}
+<script>
+function copyKey() {
+  navigator.clipboard.writeText(document.getElementById('apiKeyVal').textContent.trim()).then(function() {
+    var btn = document.getElementById('copyKeyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1800);
+  });
+}
+function copyBadgeToken() {
+  var el = document.getElementById('badgeTokenVal');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent.trim()).then(function() {
+    var btn = document.getElementById('copyBadgeBtn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = 'Copy'; }, 1800); }
+  });
+}
+</script>
+${brandFooter({ links: [{ label: "Dashboard", href: "/dashboard" }, { label: "API Docs", href: "/developers" }] })}
+</body>
+</html>`;
+}
 
 function renderLoginPage(error?: string, success?: string, info?: string): string {
   return `<!DOCTYPE html>
@@ -745,9 +1091,14 @@ function renderDashboardPage(opts: {
             <pre style="font-size:12px;background:#1a1a2e;color:#a5f3c4;border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0;line-height:1.6;">curl -H "Authorization: Bearer ${escapeHtml(apiKey.slice(0, 12))}..." \\
   ${escapeHtml(baseUrl)}/api/v1/subscription</pre>
           </div>
-          <p style="font-size:12px;color:var(--regen-gray-400);margin:12px 0 0;line-height:1.5;">
-            Returns your subscription status, cumulative credits retired, and referral link. Read-only. Full API docs at <a href="${escapeHtml(baseUrl)}/api/v1/openapi.json" target="_blank" rel="noopener" style="color:var(--regen-green);font-weight:600;">OpenAPI spec</a>.
-          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+            <a href="/dashboard/api" style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,181,115,0.1);border:1px solid rgba(79,181,115,0.3);color:var(--regen-green);font-size:12px;font-weight:700;padding:7px 14px;border-radius:7px;text-decoration:none;">
+              API Usage Dashboard →
+            </a>
+            <a href="/developers" style="display:inline-flex;align-items:center;gap:6px;background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);color:var(--regen-gray-600);font-size:12px;font-weight:600;padding:7px 14px;border-radius:7px;text-decoration:none;">
+              API Docs
+            </a>
+          </div>
         </div>
       </details>
     </div>
@@ -1303,6 +1654,52 @@ export function createDashboardRoutes(
       isTopReferrer,
       cryptoSubs,
       apiKey: user.api_key,
+    }));
+  });
+
+  // GET /dashboard/api — developer API usage dashboard
+  // Auth: ?key=rfa_xxx (query param) OR Authorization: Bearer rfa_xxx header OR session cookie
+  router.get("/dashboard/api", (req: Request, res: Response) => {
+    // 1. Try API key from query param or Authorization header
+    let user = getUserByApiKey(db, typeof req.query.key === "string" ? req.query.key : "");
+    if (!user) {
+      const auth = req.headers.authorization ?? "";
+      if (auth.startsWith("Bearer ")) user = getUserByApiKey(db, auth.slice(7).trim());
+    }
+    // 2. Fall back to session cookie (for users who came from main dashboard)
+    if (!user) {
+      const email = getSessionEmail(req.headers.cookie, config.sessionSecret);
+      if (email) user = getUserByEmail(db, email);
+    }
+
+    if (!user) {
+      // Show a simple key-entry form instead of redirecting to subscription login
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.send(renderApiKeyLoginPage());
+      return;
+    }
+
+    const days = Math.min(parseInt((req.query.days as string) || "30", 10), 90);
+    const summary = getApiUsageSummary(db, user.id, days);
+    const recent = getRecentApiCalls(db, user.id, 25);
+    const byDay = getApiUsageByDay(db, user.id, Math.min(days, 14));
+    const total = getApiUsageTotal(db, user.id, days);
+    const successTotal = summary.reduce((a, r) => a + r.success_calls, 0);
+    const errorTotal = summary.reduce((a, r) => a + r.error_calls, 0);
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(renderApiDashboard({
+      email: user.email ?? "",
+      apiKey: user.api_key,
+      badgeToken: user.badge_token ?? null,
+      days,
+      total,
+      successTotal,
+      errorTotal,
+      summary,
+      recent,
+      byDay,
+      baseUrl,
     }));
   });
 

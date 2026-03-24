@@ -547,7 +547,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 
   ${referralValid ? `<div class="regen-ref-banner"><span>${t(lang, "referral_banner_prefix")}</span> ${t(lang, "referral_banner_suffix")}</div>` : ""}
 
-  ${brandHeader({ nav: [{ label: t(lang, "nav_ai_plugin"), href: "/ai-plugin" }, { label: t(lang, "nav_research"), href: "/research" }, { label: t(lang, "nav_about"), href: "/about" }, { label: t(lang, "nav_dashboard"), href: "/dashboard/login" }], navSuffix: `
+  ${brandHeader({ nav: [{ label: t(lang, "nav_ai_plugin"), href: "/ai-plugin" }, { label: t(lang, "nav_research"), href: "/research" }, { label: t(lang, "nav_about"), href: "/about" }, { label: "Developers", href: "/developers" }, { label: t(lang, "nav_dashboard"), href: "/dashboard/login" }], navSuffix: `
     <div class="lang-picker">
       <button class="lang-picker__btn" onclick="this.nextElementSibling.classList.toggle('open')" type="button">
         <span class="lang-picker__flag">${LANG_FLAGS[lang]}</span>
@@ -2159,7 +2159,7 @@ ${betaBannerJS()}
 </head>
 <body>
   ${betaBannerHTML()}
-  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Dashboard", href: "/dashboard" }] })}
+  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Developers", href: "/developers" }, { label: "Dashboard", href: "/dashboard" }] })}
 
   <div class="regen-container--narrow" style="padding-top:32px;">
     <div style="text-align:center;padding:32px 0 8px;">
@@ -2339,7 +2339,7 @@ ${betaBannerJS()}
 </head>
 <body>
   ${betaBannerHTML()}
-  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Dashboard", href: "/dashboard/login" }] })}
+  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Developers", href: "/developers" }, { label: "Dashboard", href: "/dashboard/login" }] })}
 
   <div class="regen-container--narrow" style="padding-top:40px;padding-bottom:40px;">
     <h1 style="color:var(--regen-navy);font-size:28px;font-weight:800;margin:0 0 8px;">Payment Successful</h1>
@@ -2405,7 +2405,7 @@ ${betaBannerJS()}
 </head>
 <body>
   ${betaBannerHTML()}
-  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Dashboard", href: "/dashboard/login" }] })}
+  ${brandHeader({ nav: [{ label: "AI Plugin", href: "/ai-plugin" }, { label: "Research", href: "/research" }, { label: "About", href: "/about" }, { label: "Developers", href: "/developers" }, { label: "Dashboard", href: "/dashboard/login" }] })}
   <div class="regen-container--narrow" style="padding:60px 24px;text-align:center;max-width:540px;margin:0 auto;">
     <h1 style="color:var(--regen-navy);font-size:24px;font-weight:700;margin:0 0 16px;">No worries!</h1>
     <p style="color:var(--regen-gray-600);font-size:15px;line-height:1.6;margin:0 0 24px;">
