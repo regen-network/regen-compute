@@ -571,11 +571,31 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     console.log("Migration: added renewal_reminders_sent column to subscribers");
   }
 
+  // Migration: add badge_token to users (read-only token for dynamic usage badge — safe to embed in HTML)
+  const userCols = (_db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map(c => c.name);
+  if (!userCols.includes("badge_token")) {
+    _db.exec(`ALTER TABLE users ADD COLUMN badge_token TEXT`);
+    _db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_badge_token ON users(badge_token)`);
+    console.log("Migration: added badge_token column to users");
+  }
+  // Backfill badge tokens for users that don't have one
+  const usersWithoutBadgeToken = _db.prepare("SELECT id FROM users WHERE badge_token IS NULL").all() as { id: number }[];
+  for (const u of usersWithoutBadgeToken) {
+    _db.prepare("UPDATE users SET badge_token = ? WHERE id = ?").run(generateBadgeToken(), u.id);
+  }
+  if (usersWithoutBadgeToken.length > 0) {
+    console.log(`Migration: backfilled ${usersWithoutBadgeToken.length} badge tokens`);
+  }
+
   return _db;
 }
 
 export function generateApiKey(): string {
   return "rfa_" + randomBytes(24).toString("hex");
+}
+
+export function generateBadgeToken(): string {
+  return "rbt_" + randomBytes(16).toString("hex");
 }
 
 export function generateReferralCode(): string {
@@ -585,6 +605,7 @@ export function generateReferralCode(): string {
 export interface User {
   id: number;
   api_key: string;
+  badge_token: string | null;
   email: string | null;
   display_name: string | null;
   balance_cents: number;
@@ -612,6 +633,10 @@ export function getUserByApiKey(db: Database.Database, apiKey: string): User | u
   return db.prepare("SELECT * FROM users WHERE api_key = ?").get(apiKey) as User | undefined;
 }
 
+export function getUserByBadgeToken(db: Database.Database, badgeToken: string): User | undefined {
+  return db.prepare("SELECT * FROM users WHERE badge_token = ?").get(badgeToken) as User | undefined;
+}
+
 export function getUserByEmail(db: Database.Database, email: string): User | undefined {
   return db.prepare("SELECT * FROM users WHERE LOWER(email) = LOWER(?)").get(email) as User | undefined;
 }
@@ -623,12 +648,13 @@ export function createUser(
   referredByUserId?: number
 ): User {
   const apiKey = generateApiKey();
+  const badgeToken = generateBadgeToken();
   const referralCode = generateReferralCode();
   const normalizedEmail = email ? email.toLowerCase() : null;
   const stmt = db.prepare(
-    "INSERT INTO users (api_key, email, stripe_customer_id, referral_code, referred_by) VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO users (api_key, badge_token, email, stripe_customer_id, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?)"
   );
-  const result = stmt.run(apiKey, normalizedEmail, stripeCustomerId, referralCode, referredByUserId ?? null);
+  const result = stmt.run(apiKey, badgeToken, normalizedEmail, stripeCustomerId, referralCode, referredByUserId ?? null);
   return db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid) as User;
 }
 

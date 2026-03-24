@@ -12,7 +12,7 @@ import { join } from "path";
 import type Database from "better-sqlite3";
 import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
-import { getUserByApiKey, getSubscriberByUserId, getCumulativeAttribution } from "./db.js";
+import { getUserByBadgeToken, getSubscriberByUserId, getCumulativeAttribution } from "./db.js";
 
 function loadIconBase64(filename: string): string {
   const iconPath = join(process.cwd(), "public", filename);
@@ -21,15 +21,39 @@ function loadIconBase64(filename: string): string {
   return `data:image/png;base64,${data.toString("base64")}`;
 }
 
+// Regen Network geometric mark (the organic "R" icon — extracted from brand.ts regenLogoSVG,
+// cropped to the left 82×84 area which contains only the mark, not the wordmark).
+function regenMarkSVGDataURI(color = "white"): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 82 84" fill="${color}">
+<path d="M39.83 27.32V27.37L34.98 1.8L30.97.52 28.44 3.92 39.83 27.32Z"/>
+<path d="M42.46 16.65L44.52 26.55 46.73 16.5 44.57 15.05 42.46 16.65Z"/>
+<path d="M57.76 18.4L55.13 18.66 52.04 28.46 58.84 20.78 57.76 18.4Z"/>
+<path d="M80.22 20.47V16.29L76.15 15 57.09 32.89 80.22 20.47Z"/>
+<path d="M33.64 31.03L27.98 22.53 28.08 22.73 27.98 22.53 25.4 22.94 24.99 25.52 33.64 31.03Z"/>
+<path d="M70.12 39.7L59.97 41.71 70.12 43.92 71.67 41.81 70.12 39.7Z"/>
+<path d="M29.11 41.76L3.04 38.46.52 41.86 3.04 45.26 29.11 41.76Z"/>
+<path d="M19.48 47.43L18.7 49.85 20.82 51.4 29.83 46.35 19.48 47.43Z"/>
+<path d="M22.46 54.59L22.36 57.17 24.83 58.05 32.05 50.47 22.46 54.59Z"/>
+<path d="M35.45 53.98L27.77 60.73 28.44 63.2 31.07 63.31 35.45 53.98Z"/>
+<path d="M44.57 56.97L42.51 66.97 44.62 68.46 46.73 66.92 44.57 56.97Z"/>
+<path d="M80.27 63.05L57.09 50.73 76.25 68.51 80.27 67.22V63.05Z"/>
+<path d="M54.72 64.96L49.51 56.24 50.7 66.25 53.17 67.02 54.72 64.96Z"/>
+<path d="M39.88 56.24L28.6 79.7 31.12 83.1 35.14 81.81 39.88 56.24Z"/>
+</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 const ICONS = [
   { id: "1", file: "badge-icon-1.png", label: "Leaf Swirl",   desc: "Clean & minimal" },
   { id: "2", file: "badge-icon-2.png", label: "Circuit Leaf", desc: "Bold & distinctive" },
-  { id: "3", file: "badge-icon-3.png", label: "Glossy Badge", desc: "Premium feel" },
+  { id: "3", file: null,               label: "Regen Mark",   desc: "Official Regen Network logo" },
 ];
 
-const ICON_DATA_URIS: Record<string, string> = Object.fromEntries(
-  ICONS.map(icon => [icon.id, loadIconBase64(icon.file)])
-);
+const ICON_DATA_URIS: Record<string, string> = {
+  "1": loadIconBase64("badge-icon-1.png"),
+  "2": loadIconBase64("badge-icon-2.png"),
+  "3": regenMarkSVGDataURI("white"),
+};
 
 // Default icon used for the static SVG badge assets
 const ICON_DATA_URI = ICON_DATA_URIS["1"] || "";
@@ -399,12 +423,22 @@ function badgesPageHTML(baseUrl: string): string {
 
       <!-- Icon selector -->
       <div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
-        ${ICONS.map(icon => `
-        <button class="icon-pick-btn" id="pick-${icon.id}" onclick="selectIcon('${icon.id}','${baseUrl}/public/${icon.file}')" style="${icon.id === "1" ? "border-color:#4fb573;background:#f0faf4;" : ""}">
-          <img src="data:image/png;base64,${ICON_DATA_URIS[icon.id].replace("data:image/png;base64,","")}" width="64" height="64" style="display:block;margin:0 auto 8px;">
+        ${ICONS.map(icon => {
+          // For the Regen Mark (no PNG file), use the dark SVG data URI for the picker preview
+          const previewSrc = icon.file
+            ? ICON_DATA_URIS[icon.id]
+            : regenMarkSVGDataURI("#0a2e1f");
+          // The URL passed to selectIcon: PNG icons use /public/, SVG icon uses the data URI
+          const iconUrl = icon.file
+            ? `${baseUrl}/public/${icon.file}`
+            : regenMarkSVGDataURI("white");
+          return `
+        <button class="icon-pick-btn" id="pick-${icon.id}" onclick="selectIcon('${icon.id}','${iconUrl}')" style="${icon.id === "1" ? "border-color:#4fb573;background:#f0faf4;" : ""}">
+          <img src="${previewSrc}" width="64" height="64" style="display:block;margin:0 auto 8px;object-fit:contain;">
           <div style="font-size:12px;font-weight:700;color:#0a2e1f">${icon.label}</div>
           <div style="font-size:11px;color:#64748b">${icon.desc}</div>
-        </button>`).join("")}
+        </button>`;
+        }).join("")}
       </div>
 
       <div class="badge-grid" id="seal-grid">
@@ -441,10 +475,11 @@ function badgesPageHTML(baseUrl: string): string {
         <h2>Live Usage Badge</h2>
         <p>
           A dynamic badge that shows your actual credits retired — updated live from your subscription.
-          Paste your API key to preview and get your embed code.
+          Paste your <strong style="color:#a3f0c0">badge token</strong> to preview and get your embed code.
+          Your badge token is read-only and safe to embed in public HTML — find it in your <a href="/dashboard/api" style="color:#a3f0c0">API dashboard</a>.
         </p>
         <div class="usage-key-form">
-          <input class="usage-key-input" id="api-key-input" type="text" placeholder="Paste your API key (from your dashboard)">
+          <input class="usage-key-input" id="api-key-input" type="text" placeholder="Paste your badge token (rbt_...)">
           <button class="usage-preview-btn" onclick="previewUsage()">Preview Badge</button>
         </div>
         <div class="usage-preview-area" id="usage-preview-area">
@@ -556,18 +591,18 @@ function badgesPageHTML(baseUrl: string): string {
     }
 
     async function previewUsage() {
-      const key = document.getElementById('api-key-input').value.trim();
-      if (!key) return;
+      const token = document.getElementById('api-key-input').value.trim();
+      if (!token) return;
       const base = '${baseUrl}';
       const area = document.getElementById('usage-preview-area');
       const snippet = document.getElementById('usage-snippet');
 
       ['dark','light','green'].forEach(theme => {
-        const url = base + '/badges/usage.svg?key=' + encodeURIComponent(key) + '&theme=' + theme + '&t=' + Date.now();
+        const url = base + '/badges/usage.svg?token=' + encodeURIComponent(token) + '&theme=' + theme + '&t=' + Date.now();
         document.getElementById('usage-badge-' + theme).src = url;
       });
 
-      const mdUrl = base + '/badges/usage.svg?key=' + encodeURIComponent(key);
+      const mdUrl = base + '/badges/usage.svg?token=' + encodeURIComponent(token);
       snippet.childNodes[0]?.remove?.();
       snippet.insertBefore(
         Object.assign(document.createTextNode(
@@ -624,22 +659,22 @@ export function createBadgesRoutes(baseUrl: string, db?: Database.Database): Rou
 
   // Dynamic usage badge
   router.get("/badges/usage.svg", (req: Request, res: Response) => {
-    const apiKey = (req.query.key as string) ?? "";
+    const badgeToken = (req.query.token as string) ?? "";
     const theme = (["dark","light","green"].includes(req.query.theme as string)
       ? req.query.theme
       : "dark") as "dark" | "light" | "green";
 
     res.setHeader("Content-Type", "image/svg+xml");
-    res.setHeader("Cache-Control", "no-cache, no-store");
+    res.setHeader("Cache-Control", "public, max-age=300");
     res.setHeader("Access-Control-Allow-Origin", "*");
 
-    if (!apiKey || !db) {
+    if (!badgeToken || !db) {
       return res.send(usageBadgeSVG({
         credits: 0, label: "credits", months: 0, theme,
       }));
     }
 
-    const user = getUserByApiKey(db, apiKey);
+    const user = getUserByBadgeToken(db, badgeToken);
     if (!user) {
       return res.send(usageBadgeSVG({
         credits: 0, label: "credits", months: 0, theme,
