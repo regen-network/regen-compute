@@ -15,6 +15,22 @@
  * API routes require STRIPE_SECRET_KEY (for the DB / API key system).
  */
 
+import { readFileSync, existsSync } from "fs";
+
+// Load .env file if present (dev convenience — production uses real env vars)
+if (existsSync(".env")) {
+  const lines = readFileSync(".env", "utf8").split("\n");
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const val = trimmed.slice(eq + 1).trim();
+    if (key) process.env[key] = val;
+  }
+}
+
 import express from "express";
 import helmet from "helmet";
 import Stripe from "stripe";
