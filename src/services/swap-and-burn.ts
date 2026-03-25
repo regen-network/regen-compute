@@ -16,7 +16,7 @@
  */
 
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
-import { SigningStargateClient, GasPrice } from "@cosmjs/stargate";
+import { SigningStargateClient, GasPrice, calculateFee } from "@cosmjs/stargate";
 import { Registry } from "@cosmjs/proto-signing";
 import {
   getSigningOsmosisClientOptions,
@@ -319,7 +319,9 @@ export async function swapAndBurn(options: {
     console.log(`  [DRY RUN] Would swap ${Number(swapInputAmount) / 1e6} ${swapDenom.toUpperCase()} → ~${Number(swapRoute.amount_out) / 1e6} REGEN`);
   } else {
     try {
-      const swapTx = await osmoClient.signAndBroadcast(osmoAddress, [swapMsg as EncodeObject], "auto");
+      const swapGas = await osmoClient.simulate(osmoAddress, [swapMsg as EncodeObject], undefined);
+      const swapFee = calculateFee(Math.ceil(swapGas * 1.5), GasPrice.fromString(OSMOSIS_GAS_PRICE));
+      const swapTx = await osmoClient.signAndBroadcast(osmoAddress, [swapMsg as EncodeObject], swapFee);
       if (swapTx.code !== 0) {
         result.errors.push(`Swap tx failed (code ${swapTx.code}): ${swapTx.rawLog || "unknown"}`);
         return result;
@@ -368,7 +370,9 @@ export async function swapAndBurn(options: {
     console.log(`  [DRY RUN] Would IBC transfer ${Number(ibcAmount) / 1e6} REGEN to Regen Network`);
   } else {
     try {
-      const ibcTx = await osmoClient.signAndBroadcast(osmoAddress, [ibcMsg as EncodeObject], "auto");
+      const ibcGas = await osmoClient.simulate(osmoAddress, [ibcMsg as EncodeObject], undefined);
+      const ibcFee = calculateFee(Math.ceil(ibcGas * 1.5), GasPrice.fromString(OSMOSIS_GAS_PRICE));
+      const ibcTx = await osmoClient.signAndBroadcast(osmoAddress, [ibcMsg as EncodeObject], ibcFee);
       if (ibcTx.code !== 0) {
         result.errors.push(`IBC transfer failed (code ${ibcTx.code}): ${ibcTx.rawLog || "unknown"}`);
         result.status = "partial"; // swap succeeded but IBC failed
