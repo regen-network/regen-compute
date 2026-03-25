@@ -393,7 +393,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     if (process.env.X402_ENABLED === "true") {
       const x402Middleware = createX402Middleware({ db, baseUrl });
       app.use(x402Middleware);
-      console.log(`  x402 protocol: enabled (facilitator: ${process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator"})`);
+      console.log("  x402 protocol: enabled (self-settling, no facilitator)");
     }
 
     // Developer API routes (require Stripe for the full API key system)
