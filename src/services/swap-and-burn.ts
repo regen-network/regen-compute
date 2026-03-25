@@ -32,7 +32,7 @@ import type { EncodeObject } from "@cosmjs/proto-signing";
 
 const OSMOSIS_RPC = process.env.OSMOSIS_RPC_URL || "https://rpc.osmosis.zone";
 const OSMOSIS_CHAIN_ID = "osmosis-1";
-const OSMOSIS_GAS_PRICE = "0.025uosmo";
+const OSMOSIS_GAS_PRICE = "0.035uosmo"; // base fee is dynamic (~0.03); 0.035 gives headroom
 
 // IBC channels
 const OSMOSIS_TO_REGEN_CHANNEL = "channel-8";    // Osmosis → Regen
@@ -320,7 +320,7 @@ export async function swapAndBurn(options: {
   } else {
     try {
       const swapGas = await osmoClient.simulate(osmoAddress, [swapMsg as EncodeObject], undefined);
-      const swapFee = calculateFee(Math.ceil(swapGas * 2.0), GasPrice.fromString(OSMOSIS_GAS_PRICE));
+      const swapFee = calculateFee(Math.ceil(swapGas * 1.5), GasPrice.fromString(OSMOSIS_GAS_PRICE));
       const swapTx = await osmoClient.signAndBroadcast(osmoAddress, [swapMsg as EncodeObject], swapFee);
       if (swapTx.code !== 0) {
         result.errors.push(`Swap tx failed (code ${swapTx.code}): ${swapTx.rawLog || "unknown"}`);
@@ -371,7 +371,7 @@ export async function swapAndBurn(options: {
   } else {
     try {
       const ibcGas = await osmoClient.simulate(osmoAddress, [ibcMsg as EncodeObject], undefined);
-      const ibcFee = calculateFee(Math.ceil(ibcGas * 2.0), GasPrice.fromString(OSMOSIS_GAS_PRICE));
+      const ibcFee = calculateFee(Math.ceil(ibcGas * 1.5), GasPrice.fromString(OSMOSIS_GAS_PRICE));
       const ibcTx = await osmoClient.signAndBroadcast(osmoAddress, [ibcMsg as EncodeObject], ibcFee);
       if (ibcTx.code !== 0) {
         result.errors.push(`IBC transfer failed (code ${ibcTx.code}): ${ibcTx.rawLog || "unknown"}`);
