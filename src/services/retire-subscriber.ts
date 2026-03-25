@@ -13,6 +13,7 @@ import { initWallet, signAndBroadcast } from "./wallet.js";
 import { deriveSubscriberAddress } from "./subscriber-wallet.js";
 import { listSellOrders, listCreditClasses, getAllowedDenoms, type SellOrder } from "./ledger.js";
 import { sendLowStockAlert, sendNoTradableOrdersAlert } from "./admin-telegram.js";
+import { buildRetirementReason } from "./retirement-reason.js";
 import {
   getDb,
   getSubscriberByStripeId,
@@ -407,14 +408,20 @@ export async function retireForSubscriber(options: {
         retirementReason: "",
       }));
 
+      const currentMonth = new Date().toISOString().slice(0, 7);
       const sendCredits = selectedOrders.map((s) => ({
         batchDenom: s.order.batch_denom,
         tradableAmount: "0",
         retiredAmount: s.quantity,
         retirementJurisdiction: config.defaultJurisdiction,
-        retirementReason: displayName
-          ? `Regenerative Compute — ${displayName}'s monthly ecological contribution`
-          : "Regenerative Compute subscription — ecological accountability for AI",
+        retirementReason: buildRetirementReason({
+          note: displayName
+            ? `${displayName}'s monthly ecological contribution`
+            : "Subscription — ecological accountability for AI",
+          subscriberId,
+          period: currentMonth,
+          source: "subscription",
+        }),
       }));
 
       const msgs = [

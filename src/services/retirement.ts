@@ -12,6 +12,7 @@ import { waitForRetirement } from "./indexer.js";
 import { CryptoPaymentProvider } from "./payment/crypto.js";
 import { StripePaymentProvider } from "./payment/stripe-stub.js";
 import type { PaymentProvider } from "./payment/types.js";
+import { buildRetirementReason } from "./retirement-reason.js";
 
 export interface RetirementParams {
   creditClass?: string;
@@ -150,7 +151,10 @@ export async function executeRetirement(params: RetirementParams): Promise<Retir
   const config = loadConfig();
   const usePrepaid = !!(config.balanceApiKey && config.balanceUrl);
   const retireJurisdiction = params.jurisdiction || config.defaultJurisdiction;
-  const retireReason = params.reason || "Regenerative contribution via Regenerative Compute";
+  const retireReason = params.reason || buildRetirementReason({
+    note: "Regenerative contribution via Regenerative Compute",
+    source: "mcp_tool",
+  });
   const retireQuantity = params.quantity || 1;
 
   try {
