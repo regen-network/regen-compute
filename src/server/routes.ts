@@ -3525,7 +3525,11 @@ async function maybeExecuteAutoBurn(db: Database.Database): Promise<void> {
   try {
     const result = await swapAndBurn({
       allocationCents: pendingCents,
-      swapDenom: readiness.usdcBalance >= pendingCents / 100 ? "usdc" : "osmo",
+      swapDenom: readiness.usdcBalance >= pendingCents / 100
+        ? "usdc"
+        : readiness.atomBalance >= pendingCents / 100 / 10
+          ? "atom"
+          : "osmo",
     });
 
     if (result.status === "completed" || result.status === "partial") {
