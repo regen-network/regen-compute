@@ -43,6 +43,12 @@ import { verifyPayment, getEvmChainCoingeckoId } from "../services/crypto-verify
 import { toUsdCents } from "../services/crypto-price.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { calculateNetAfterStripe, retireForSubscriber } from "../services/retire-subscriber.js";
+import {
+  getActiveCommunityGoal,
+  getCommunityTotalCreditsRetired,
+  getCommunitySubscriberCount,
+  type ScheduledRetirement,
+} from "./db.js";
 
 // Credit type abbreviation to human-readable name
 const CREDIT_TYPE_NAMES: Record<string, string> = {
@@ -728,6 +734,126 @@ export function createApiRoutes(
       subscribe_url: subscribeUrl,
       manage_url: `${baseUrl}/manage?email=${encodeURIComponent(user.email ?? "")}`,
     });
+  });
+
+  // --- GET /api/v1/community/goals ---
+  router.get("/api/v1/community/goals", (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    try {
+      const activeGoal = getActiveCommunityGoal(db);
+      const totalCredits = getCommunityTotalCreditsRetired(db);
+      const subscriberCount = getCommunitySubscriberCount(db);
+
+      const allGoals = db.prepare(
+        "SELECT * FROM community_goals ORDER BY id DESC"
+      ).all() as Array<{
+        id: number; goal_label: string; goal_credits: number;
+        goal_deadline: string | null; active: number; created_at: string;
+      }>;
+
+      let progress: number | null = null;
+      let completed = false;
+      if (activeGoal && activeGoal.goal_credits > 0) {
+        progress = Math.min((totalCredits / activeGoal.goal_credits) * 100, 100);
+        completed = progress >= 100;
+      }
+
+      res.json({
+        active_goal: activeGoal ? {
+          id: activeGoal.id,
+          label: activeGoal.goal_label,
+          target_credits: activeGoal.goal_credits,
+          deadline: activeGoal.goal_deadline,
+          progress_percent: progress !== null ? parseFloat(progress.toFixed(1)) : null,
+          completed,
+          created_at: activeGoal.created_at,
+        } : null,
+        community_stats: {
+          total_credits_retired: totalCredits,
+          active_subscribers: subscriberCount,
+        },
+        goals: allGoals.map((g) => ({
+          id: g.id,
+          label: g.goal_label,
+          target_credits: g.goal_credits,
+          deadline: g.goal_deadline,
+          active: !!g.active,
+          created_at: g.created_at,
+        })),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 500, "INTERNAL_ERROR", `Failed to fetch community goals: ${msg}`);
+    }
+  });
+
+  // --- GET /api/v1/scheduled-retirements ---
+  router.get("/api/v1/scheduled-retirements", (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    const status = (req.query.status as string) || undefined;
+    const limit = Math.min(parseInt((req.query.limit as string) || "50", 10), 200);
+
+    try {
+      let query = "SELECT * FROM scheduled_retirements";
+      const params: unknown[] = [];
+
+      if (status) {
+        query += " WHERE status = ?";
+        params.push(status);
+      }
+
+      query += " ORDER BY scheduled_date DESC LIMIT ?";
+      params.push(limit);
+
+      const retirements = db.prepare(query).all(...params) as ScheduledRetirement[];
+
+      // Summary stats
+      const statsRow = db.prepare(`
+        SELECT
+          COUNT(*) AS total,
+          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+          SUM(CASE WHEN status = 'partial' THEN 1 ELSE 0 END) AS partial,
+          SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
+          SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END) AS running
+        FROM scheduled_retirements
+      `).get() as {
+        total: number; pending: number; completed: number;
+        partial: number; failed: number; running: number;
+      };
+
+      res.json({
+        stats: {
+          total: statsRow.total,
+          pending: statsRow.pending,
+          completed: statsRow.completed,
+          partial: statsRow.partial,
+          failed: statsRow.failed,
+          running: statsRow.running,
+        },
+        retirements: retirements.map((r) => ({
+          id: r.id,
+          subscriber_id: r.subscriber_id,
+          gross_amount_cents: r.gross_amount_cents,
+          net_amount_cents: r.net_amount_cents,
+          billing_interval: r.billing_interval,
+          scheduled_date: r.scheduled_date,
+          status: r.status,
+          retirement_id: r.retirement_id,
+          error: r.error,
+          retry_count: r.retry_count,
+          created_at: r.created_at,
+          executed_at: r.executed_at,
+        })),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 500, "INTERNAL_ERROR", `Failed to fetch scheduled retirements: ${msg}`);
+    }
   });
 
   return router;

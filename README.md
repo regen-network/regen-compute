@@ -252,7 +252,28 @@ cp .env.example .env
 
 See [`.env.example`](.env.example) for all options with inline documentation.
 
-## MCP Prompts
+## Developer Resources
+
+### MCP Tools
+
+| Tool | Description | Auth required |
+|------|-------------|---------------|
+| `estimate_session_footprint` | Estimate AI session energy use and CO2 | No |
+| `estimate_monthly_footprint` | Personalized monthly footprint with location/product multipliers | No |
+| `browse_available_credits` | Live sell orders from Regen Marketplace | No |
+| `retire_credits` | Retire ecocredits on-chain or via marketplace link | Wallet |
+| `get_retirement_certificate` | Retrieve on-chain retirement certificate by nodeId or txHash | No |
+| `get_impact_summary` | Regen Network aggregate impact statistics | No |
+| `check_subscription_status` | Subscriber status, cumulative impact, referral link | API key |
+| `get_regen_price` | REGEN/USD price from CoinGecko with cache status | No |
+| `verify_payment` | Verify on-chain payment across 19 chains (16 EVM + BTC + SOL + TRX) | No |
+| `get_community_goals` | Community retirement goals, progress, subscriber count | No |
+| `browse_ecobridge_tokens`* | Cross-chain tokens and prices via ecoBridge | No |
+| `retire_via_ecobridge`* | Retire credits by sending tokens on any EVM chain | EVM wallet |
+
+*\* Requires `ECOBRIDGE_ENABLED=true`*
+
+### MCP Prompts
 
 Pre-built workflows you can invoke:
 
@@ -260,7 +281,35 @@ Pre-built workflows you can invoke:
 |--------|----------|
 | `offset_my_session` | Estimate footprint → browse credits → retire |
 | `show_regen_impact` | Pull live network stats and summarize |
-| `retire_with_any_token` | Browse ecoBridge tokens → pick chain/token → retire |
+| `retire_with_any_token`* | Browse ecoBridge tokens → pick chain/token → retire |
+
+*\* Requires `ECOBRIDGE_ENABLED=true`*
+
+### CLI Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `npx regen-compute` | Start MCP server (stdio transport) |
+| `npx regen-compute serve` | Start the web server (port 3141) |
+| `npx regen-compute pool-run [--dry-run]` | Execute monthly pool retirement batch |
+
+### REST API Endpoints
+
+All endpoints prefixed with `/api/v1/`. Protected endpoints require `Authorization: Bearer <api_key>`.
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/openapi.json` | GET | No | OpenAPI 3.1 specification |
+| `/payment-info` | GET | No | Payment addresses and pricing tiers |
+| `/confirm-payment` | POST | No | Confirm crypto payment for subscription provisioning |
+| `/retire` | POST | Yes | Retire ecocredits |
+| `/credits` | GET | Yes | Browse available credits |
+| `/footprint` | GET | Yes | Estimate session footprint |
+| `/certificates/:id` | GET | Yes | Get retirement certificate |
+| `/impact` | GET | Yes | Network impact statistics |
+| `/subscription` | GET | Yes | Subscription status and cumulative impact |
+| `/community/goals` | GET | Yes | Community goals, progress, and subscriber stats |
+| `/scheduled-retirements` | GET | Yes | Scheduled retirements with status breakdown |
 
 ## Credit Types
 
