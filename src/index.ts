@@ -7,6 +7,8 @@ import { getRetirementCertificate } from "./tools/certificates.js";
 import { getImpactSummary } from "./tools/impact.js";
 import { retireCredits } from "./tools/retire.js";
 import { checkSubscriptionStatus } from "./tools/subscription.js";
+import { getBurnStatus } from "./tools/burn-status.js";
+import { getPoolHistory } from "./tools/pool-history.js";
 import { loadConfig, isWalletConfigured } from "./config.js";
 import {
   fetchRegistry,
@@ -62,6 +64,13 @@ POOL RETIREMENT:
   Use --dry-run to calculate without broadcasting transactions.
   Requires REGEN_WALLET_MNEMONIC for live runs.
 
+BURN RUN:
+  npx regen-compute burn-run [--dry-run]
+  Executes REGEN buy-back-and-burn from the pending burn accumulator.
+  Swaps USDC/OSMO → REGEN on Osmosis, IBC transfers to Regen, then burns.
+  Use --dry-run to simulate without broadcasting transactions.
+  Requires REGEN_WALLET_MNEMONIC and funded Osmosis wallet.
+
 CONFIGURATION:
   Copy .env.example to .env to customize. The server works without any
   configuration — read-only tools (footprint, browsing, impact) need no keys.
@@ -113,6 +122,49 @@ if (args[0] === "serve") {
       console.error(`Pool run failed: ${msg}`);
       process.exit(1);
     }
+  });
+} else if (args[0] === "burn-run") {
+  // Handle "burn-run" subcommand — execute REGEN buy-back-and-burn
+  const dryRun = args.includes("--dry-run");
+  import("./services/swap-and-burn.js").then(async ({ swapAndBurn, checkOsmosisReadiness, formatSwapAndBurnResult }) => {
+    import("./services/retire-subscriber.js").then(async ({ getPendingBurnBudget }) => {
+      import("./server/db.js").then(async ({ getDb }) => {
+        try {
+          const db = getDb(process.env.REGEN_DB_PATH ?? "data/regen-compute.db");
+          const pendingCents = getPendingBurnBudget(db);
+
+          if (pendingCents <= 0) {
+            console.log("No pending burn budget. Nothing to do.");
+            process.exit(0);
+          }
+
+          console.log(dryRun
+            ? `Burn run (DRY RUN): $${(pendingCents / 100).toFixed(2)} pending`
+            : `Burn run: $${(pendingCents / 100).toFixed(2)} pending`);
+
+          console.log("\nChecking Osmosis readiness...");
+          const readiness = await checkOsmosisReadiness();
+          console.log(`  Osmosis address: ${readiness.osmoAddress}`);
+          console.log(`  OSMO: ${readiness.osmoBalance.toFixed(6)}, USDC: ${readiness.usdcBalance.toFixed(6)}`);
+
+          if (!readiness.ready && !dryRun) {
+            console.error("\nOsmosis wallet not ready:");
+            for (const issue of readiness.issues) console.error(`  - ${issue}`);
+            process.exit(1);
+          }
+
+          const result = await swapAndBurn({ allocationCents: pendingCents, dryRun });
+          console.log("\n" + formatSwapAndBurnResult(result));
+          console.log("\nJSON output:");
+          console.log(JSON.stringify(result, null, 2));
+          process.exit(result.status === "failed" ? 1 : 0);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`Burn run failed: ${msg}`);
+          process.exit(1);
+        }
+      });
+    });
   });
 } else {
 
@@ -372,6 +424,44 @@ server.tool(
   },
   async () => {
     return checkSubscriptionStatus();
+  }
+);
+
+// Tool: REGEN burn status and accumulator
+server.tool(
+  "get_burn_status",
+  "Shows the current REGEN burn accumulator balance, total REGEN burned to date, and recent burn transactions. Use this when the user asks about the REGEN burn flywheel, wants to see how much REGEN has been burned from subscriptions, or is curious about the deflationary mechanism. The 5% burn allocation from each subscription payment buys and burns REGEN tokens on-chain.",
+  {},
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
+  async () => {
+    return getBurnStatus();
+  }
+);
+
+// Tool: Pool run history and attributions
+server.tool(
+  "get_pool_history",
+  "Shows the history of monthly pool retirement runs and per-subscriber credit attributions. Use this when the user asks about past retirement batches, wants to see how subscription revenue was deployed, or needs to understand the pool retirement mechanism. Each pool run aggregates subscriber revenue and retires credits across multiple batches.",
+  {
+    limit: z
+      .number()
+      .optional()
+      .default(5)
+      .describe("Number of recent pool runs to show (default: 5)"),
+  },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
+  async ({ limit }) => {
+    return getPoolHistory(limit);
   }
 );
 
@@ -762,6 +852,94 @@ if (ecoBridgeEnabled) {
     }
   );
 }
+
+// Prompt: Check burn impact
+server.prompt(
+  "check_my_burn_impact",
+  "See how the REGEN burn flywheel works — pending burn budget, total REGEN burned, and recent burn transactions.",
+  async () => {
+    return {
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: [
+              `I'd like to understand the REGEN burn mechanism and see its impact.`,
+              ``,
+              `Please:`,
+              `1. Use get_burn_status to show the current burn accumulator and history`,
+              `2. Explain how the 5% burn allocation works (subscription revenue → buy REGEN → burn on-chain)`,
+              `3. Summarize the total REGEN burned and what that means for the network`,
+              `4. If there's a pending burn budget, mention when the next burn is expected`,
+              ``,
+              `Frame this as the deflationary flywheel that makes every subscription more impactful over time.`,
+            ].join("\n"),
+          },
+        },
+      ],
+    };
+  }
+);
+
+// Prompt: Explore pool history
+server.prompt(
+  "explore_pool_history",
+  "Review the history of monthly pool retirement runs — how subscription revenue was deployed into ecological credits.",
+  async () => {
+    return {
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: [
+              `Show me the history of Regenerative Compute pool retirements.`,
+              ``,
+              `Please:`,
+              `1. Use get_pool_history to pull recent pool runs`,
+              `2. Summarize how much revenue was collected and how many credits were retired`,
+              `3. Show the batch breakdown for the most recent run`,
+              `4. If subscriber attributions are available, explain how individual contributions are tracked`,
+              `5. Use get_impact_summary for broader network context`,
+              ``,
+              `Frame this as transparent accounting — every dollar traceable from subscription to on-chain retirement.`,
+            ].join("\n"),
+          },
+        },
+      ],
+    };
+  }
+);
+
+// Prompt: Check supply and retire
+server.prompt(
+  "check_supply_and_retire",
+  "Check what credits are available on the marketplace, assess supply health, and retire credits to fund regeneration.",
+  async () => {
+    return {
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: [
+              `I'd like to check what ecological credits are available and potentially retire some.`,
+              ``,
+              `Please:`,
+              `1. Use browse_available_credits to show the current marketplace inventory`,
+              `2. Summarize the available credit types and pricing`,
+              `3. Use retire_credits to help me retire credits (on-chain or via marketplace link)`,
+              `4. After retirement, use get_retirement_certificate to retrieve the proof`,
+              ``,
+              `Help me choose based on impact and availability. Frame as funding ecological regeneration.`,
+            ].join("\n"),
+          },
+        },
+      ],
+    };
+  }
+);
 
 async function main() {
   const transport = new StdioServerTransport();

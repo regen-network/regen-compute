@@ -181,6 +181,62 @@
         }
       }
     },
+    "/pool/history": {
+      "get": {
+        "operationId": "getPoolHistory",
+        "summary": "Get pool retirement history",
+        "description": "Returns the history of monthly pool retirement runs with revenue, credit retirements, burn allocations, and per-subscriber attributions for the most recent run.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of pool runs to return (max 50)",
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "maximum": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pool run history with attributions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+    "/burn/history": {
+      "get": {
+        "operationId": "getBurnHistory",
+        "summary": "Get REGEN burn history",
+        "description": "Returns the full burn ledger including pending burn budget, total REGEN burned, and individual burn transaction records.",
+        "responses": {
+          "200": {
+            "description": "Burn history with accumulator status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BurnHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
     "/impact": {
       "get": {
         "operationId": "getImpact",
@@ -368,6 +424,71 @@
               "properties": {
                 "abbreviation": { "type": "string" },
                 "name": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "PoolHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "total_runs": { "type": "integer" },
+          "runs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "run_date": { "type": "string" },
+                "status": { "type": "string" },
+                "dry_run": { "type": "boolean" },
+                "subscriber_count": { "type": "integer" },
+                "total_revenue_cents": { "type": "integer" },
+                "total_spent_cents": { "type": "integer" },
+                "carbon_credits_retired": { "type": "number" },
+                "biodiversity_credits_retired": { "type": "number" },
+                "uss_credits_retired": { "type": "number" },
+                "burn_allocation_cents": { "type": "integer" },
+                "ops_allocation_cents": { "type": "integer" },
+                "carry_forward_cents": { "type": "integer" }
+              }
+            }
+          },
+          "latest_attributions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "subscriber_id": { "type": "integer" },
+                "contribution_cents": { "type": "integer" },
+                "carbon_credits": { "type": "number" },
+                "biodiversity_credits": { "type": "number" },
+                "uss_credits": { "type": "number" }
+              }
+            }
+          }
+        }
+      },
+      "BurnHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "pending_burn_budget_cents": { "type": "integer" },
+          "total_regen_burned": { "type": "number" },
+          "total_allocation_cents": { "type": "integer" },
+          "total_burn_transactions": { "type": "integer" },
+          "burns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "date": { "type": "string" },
+                "allocation_cents": { "type": "integer" },
+                "regen_burned": { "type": "number" },
+                "regen_price_usd": { "type": "number", "nullable": true },
+                "tx_hash": { "type": "string", "nullable": true },
+                "status": { "type": "string" },
+                "source": { "type": "string" }
               }
             }
           }

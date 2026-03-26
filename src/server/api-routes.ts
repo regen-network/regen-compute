@@ -43,6 +43,7 @@ import { verifyPayment, getEvmChainCoingeckoId } from "../services/crypto-verify
 import { toUsdCents } from "../services/crypto-price.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { calculateNetAfterStripe, retireForSubscriber } from "../services/retire-subscriber.js";
+import { getBurnLedger } from "../services/accounting.js";
 
 // Credit type abbreviation to human-readable name
 const CREDIT_TYPE_NAMES: Record<string, string> = {
@@ -728,6 +729,110 @@ export function createApiRoutes(
       subscribe_url: subscribeUrl,
       manage_url: `${baseUrl}/manage?email=${encodeURIComponent(user.email ?? "")}`,
     });
+  });
+
+  // --- GET /api/v1/pool/history ---
+  router.get("/api/v1/pool/history", (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    const limit = Math.min(parseInt((req.query.limit as string) || "10", 10), 50);
+
+    try {
+      const runs = db.prepare(
+        "SELECT * FROM pool_runs ORDER BY id DESC LIMIT ?"
+      ).all(limit) as Array<{
+        id: number; run_date: string; status: string;
+        total_revenue_cents: number; total_spent_cents: number;
+        carbon_credits_retired: number; carbon_tx_hash: string | null;
+        biodiversity_credits_retired: number; biodiversity_tx_hash: string | null;
+        uss_credits_retired: number; uss_tx_hash: string | null;
+        burn_allocation_cents: number; burn_tx_hash: string | null;
+        ops_allocation_cents: number; carry_forward_cents: number;
+        subscriber_count: number; dry_run: number;
+        error_log: string | null; created_at: string; completed_at: string | null;
+      }>;
+
+      // Get attributions for the most recent run
+      let latestAttributions: Array<{
+        subscriber_id: number; contribution_cents: number;
+        carbon_credits: number; biodiversity_credits: number; uss_credits: number;
+      }> = [];
+      if (runs.length > 0) {
+        latestAttributions = db.prepare(
+          "SELECT subscriber_id, contribution_cents, carbon_credits, biodiversity_credits, uss_credits FROM attributions WHERE pool_run_id = ?"
+        ).all(runs[0].id) as typeof latestAttributions;
+      }
+
+      res.json({
+        total_runs: runs.length,
+        runs: runs.map((r) => ({
+          id: r.id,
+          run_date: r.run_date,
+          status: r.status,
+          dry_run: !!r.dry_run,
+          subscriber_count: r.subscriber_count,
+          total_revenue_cents: r.total_revenue_cents,
+          total_spent_cents: r.total_spent_cents,
+          carbon_credits_retired: r.carbon_credits_retired,
+          biodiversity_credits_retired: r.biodiversity_credits_retired,
+          uss_credits_retired: r.uss_credits_retired,
+          burn_allocation_cents: r.burn_allocation_cents,
+          ops_allocation_cents: r.ops_allocation_cents,
+          carry_forward_cents: r.carry_forward_cents,
+          error_log: r.error_log,
+          created_at: r.created_at,
+          completed_at: r.completed_at,
+        })),
+        latest_attributions: latestAttributions,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 500, "INTERNAL_ERROR", `Failed to fetch pool history: ${msg}`);
+    }
+  });
+
+  // --- GET /api/v1/burn/history ---
+  router.get("/api/v1/burn/history", (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    try {
+      const entries = getBurnLedger(db);
+
+      // Pending burn budget
+      const pendingRow = db.prepare(`
+        SELECT COALESCE(SUM(amount_cents), 0) AS total
+        FROM burn_accumulator WHERE executed = 0
+      `).get() as { total: number } | undefined;
+      const pendingCents = pendingRow?.total ?? 0;
+
+      // Totals
+      const totalRegen = entries
+        .filter((e) => e.status === "completed")
+        .reduce((sum, e) => sum + e.regenBurned, 0);
+      const totalAllocationCents = entries.reduce((sum, e) => sum + e.allocationCents, 0);
+
+      res.json({
+        pending_burn_budget_cents: pendingCents,
+        total_regen_burned: totalRegen,
+        total_allocation_cents: totalAllocationCents,
+        total_burn_transactions: entries.filter((e) => e.status === "completed").length,
+        burns: entries.map((e) => ({
+          id: e.id,
+          date: e.date,
+          allocation_cents: e.allocationCents,
+          regen_burned: e.regenBurned,
+          regen_price_usd: e.regenPriceUsd,
+          tx_hash: e.txHash,
+          status: e.status,
+          source: e.source,
+        })),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 500, "INTERNAL_ERROR", `Failed to fetch burn history: ${msg}`);
+    }
   });
 
   return router;
