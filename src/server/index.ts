@@ -263,9 +263,27 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     });
   });
 
-  // Allow all crawlers (Telegram, Twitter, etc.)
+  // Allow all crawlers but block auth/redirect-only paths
   app.get("/robots.txt", (_req, res) => {
-    res.type("text/plain").send(`User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`);
+    res.type("text/plain").send(
+      `User-agent: *\nAllow: /\n\n` +
+      `# Auth-gated pages (redirect to login)\n` +
+      `Disallow: /dashboard\n` +
+      `Disallow: /dashboard/\n` +
+      `Disallow: /manage\n\n` +
+      `# Legacy redirects\n` +
+      `Disallow: /checkout-page\n\n` +
+      `# Language alias redirects\n` +
+      `Disallow: /is\n` +
+      `Disallow: /br\n` +
+      `Disallow: /mx\n` +
+      `Disallow: /cn\n` +
+      `Disallow: /tw\n` +
+      `Disallow: /in\n\n` +
+      `# Referral short links\n` +
+      `Disallow: /r/\n\n` +
+      `Sitemap: ${baseUrl}/sitemap.xml\n`
+    );
   });
 
   app.get("/sitemap.xml", (_req, res) => {

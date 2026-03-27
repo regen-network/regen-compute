@@ -507,6 +507,7 @@ function renderLoginPage(error?: string, success?: string, info?: string): strin
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Login - Regenerative Compute</title>
+  <meta name="robots" content="noindex, nofollow">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
