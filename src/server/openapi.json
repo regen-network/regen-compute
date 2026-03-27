@@ -181,6 +181,29 @@
         }
       }
     },
+    "/accounting": {
+      "get": {
+        "operationId": "getAccounting",
+        "summary": "Get financial accounting summary",
+        "description": "Admin-only endpoint. Returns a complete financial summary including revenue, Stripe fees, credit/burn/ops allocation splits, credit spending, REGEN burns, subscriber stats, and monthly breakdown. Previously CLI-only.",
+        "responses": {
+          "200": {
+            "description": "Financial accounting summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountingResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "description": "Forbidden — admin access required" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
     "/pool/history": {
       "get": {
         "operationId": "getPoolHistory",
@@ -205,6 +228,48 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PoolHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+    "/usage": {
+      "get": {
+        "operationId": "getUsage",
+        "summary": "Get your API usage stats",
+        "description": "Returns API usage statistics for the authenticated user, including per-endpoint breakdown and recent request log. Scoped to the calling API key only.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of recent requests to return (max 500)",
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 500
+            }
+          },
+          {
+            "name": "endpoint",
+            "in": "query",
+            "description": "Filter recent requests by endpoint path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API usage statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageResponse"
                 }
               }
             }
@@ -543,6 +608,86 @@
               "properties": {
                 "abbreviation": { "type": "string" },
                 "name": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "AccountingResponse": {
+        "type": "object",
+        "properties": {
+          "totalGrossRevenueCents": { "type": "integer" },
+          "totalStripeFeesCents": { "type": "integer" },
+          "totalNetRevenueCents": { "type": "integer" },
+          "totalCreditsBudgetCents": { "type": "integer" },
+          "totalBurnBudgetCents": { "type": "integer" },
+          "totalOpsBudgetCents": { "type": "integer" },
+          "totalCreditsSpentCents": { "type": "integer" },
+          "totalCreditsUnspentCents": { "type": "integer" },
+          "totalCreditsRetired": { "type": "number" },
+          "avgCostPerCredit": { "type": "integer", "nullable": true },
+          "totalBurnsPendingCents": { "type": "integer" },
+          "totalBurnsExecutedCents": { "type": "integer" },
+          "totalRegenBurned": { "type": "number" },
+          "totalBurnTxCount": { "type": "integer" },
+          "avgRegenPriceAtBurn": { "type": "number", "nullable": true },
+          "totalOpsAvailableCents": { "type": "integer" },
+          "activeSubscriberCount": { "type": "integer" },
+          "totalRetirementCount": { "type": "integer" },
+          "monthlyRecurringRevenueCents": { "type": "integer" },
+          "monthlyBreakdown": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "month": { "type": "string" },
+                "grossRevenueCents": { "type": "integer" },
+                "netRevenueCents": { "type": "integer" },
+                "creditsBudgetCents": { "type": "integer" },
+                "creditsSpentCents": { "type": "integer" },
+                "burnBudgetCents": { "type": "integer" },
+                "opsBudgetCents": { "type": "integer" },
+                "creditsRetired": { "type": "number" },
+                "retirementCount": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "UsageResponse": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "type": "object",
+            "properties": {
+              "total_requests": { "type": "integer" },
+              "avg_response_ms": { "type": "integer", "nullable": true },
+              "first_request": { "type": "string", "nullable": true },
+              "last_request": { "type": "string", "nullable": true }
+            }
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "endpoint": { "type": "string" },
+                "method": { "type": "string" },
+                "count": { "type": "integer" },
+                "avg_response_ms": { "type": "integer", "nullable": true }
+              }
+            }
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "endpoint": { "type": "string" },
+                "method": { "type": "string" },
+                "status_code": { "type": "integer" },
+                "response_time_ms": { "type": "integer", "nullable": true },
+                "created_at": { "type": "string" }
               }
             }
           }

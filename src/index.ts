@@ -7,6 +7,7 @@ import { getRetirementCertificate } from "./tools/certificates.js";
 import { getImpactSummary } from "./tools/impact.js";
 import { retireCredits } from "./tools/retire.js";
 import { checkSubscriptionStatus } from "./tools/subscription.js";
+import { getRetirementReasonTool } from "./tools/retirement-reason.js";
 import { getBurnStatus } from "./tools/burn-status.js";
 import { getPoolHistory } from "./tools/pool-history.js";
 import { checkSupplyHealth } from "./tools/supply.js";
@@ -485,6 +486,31 @@ server.tool(
   },
   async () => {
     return checkSubscriptionStatus();
+  }
+);
+
+// Tool: Show the JSON-LD structured retirement reason format
+server.tool(
+  "get_retirement_reason",
+  "Shows the structured JSON-LD retirement reason format that gets written on-chain for every credit retirement. Use this when a developer or agent wants to understand the on-chain attribution schema, see example payloads, or build a custom reason string. Includes methodology references, version tracking, and source attribution.",
+  {
+    source: z
+      .enum(["mcp_tool", "subscription"])
+      .optional()
+      .describe("Source context for the retirement reason"),
+    note: z
+      .string()
+      .optional()
+      .describe("Human-readable note to include in the reason"),
+  },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
+  async ({ source, note }) => {
+    return getRetirementReasonTool(source, note);
   }
 );
 

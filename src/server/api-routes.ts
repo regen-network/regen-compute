@@ -43,6 +43,7 @@ import { verifyPayment, getEvmChainCoingeckoId } from "../services/crypto-verify
 import { toUsdCents } from "../services/crypto-price.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { calculateNetAfterStripe, retireForSubscriber } from "../services/retire-subscriber.js";
+import { getFinancialSummary } from "../services/accounting.js";
 import { getBurnLedger } from "../services/accounting.js";
 import { getSupportedTokens, getProjects as getEcoBridgeProjects } from "../services/ecobridge.js";
 import {
@@ -737,6 +738,98 @@ export function createApiRoutes(
       manage_url: `${baseUrl}/manage?email=${encodeURIComponent(user.email ?? "")}`,
     });
   });
+
+  // --- GET /api/v1/accounting ---
+  router.get("/api/v1/accounting", (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    // Admin-only: restrict to known admin email
+    const ADMIN_EMAILS = new Set(["christian@regen.network"]);
+    if (!user.email || !ADMIN_EMAILS.has(user.email)) {
+      return apiError(res, 403, "FORBIDDEN", "This endpoint requires admin access");
+    }
+
+    try {
+      const summary = getFinancialSummary(db);
+      res.json(summary);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 500, "INTERNAL_ERROR", `Failed to generate accounting summary: ${msg}`);
+    }
+  });
+
+  // --- GET /api/v1/usage ---
+  router.get("/api/v1/usage", (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    const limit = Math.min(parseInt((req.query.limit as string) || "100", 10), 500);
+    const endpoint = (req.query.endpoint as string) || undefined;
+
+    try {
+      // Usage for the authenticated user only
+      let query = "SELECT endpoint, method, status_code, response_time_ms, created_at FROM api_usage WHERE user_id = ?";
+      const params: unknown[] = [user.id];
+
+      if (endpoint) {
+        query += " AND endpoint = ?";
+        params.push(endpoint);
+      }
+
+      query += " ORDER BY created_at DESC LIMIT ?";
+      params.push(limit);
+
+      const rows = db.prepare(query).all(...params) as Array<{
+        endpoint: string; method: string; status_code: number;
+        response_time_ms: number | null; created_at: string;
+      }>;
+
+      // Aggregate stats for this user
+      const statsRow = db.prepare(`
+        SELECT
+          COUNT(*) AS total_requests,
+          AVG(response_time_ms) AS avg_response_ms,
+          MIN(created_at) AS first_request,
+          MAX(created_at) AS last_request
+        FROM api_usage WHERE user_id = ?
+      `).get(user.id) as {
+        total_requests: number; avg_response_ms: number | null;
+        first_request: string | null; last_request: string | null;
+      };
+
+      // Per-endpoint breakdown
+      const endpointBreakdown = db.prepare(`
+        SELECT endpoint, method, COUNT(*) AS count, AVG(response_time_ms) AS avg_ms
+        FROM api_usage WHERE user_id = ?
+        GROUP BY endpoint, method ORDER BY count DESC
+      `).all(user.id) as Array<{
+        endpoint: string; method: string; count: number; avg_ms: number | null;
+      }>;
+
+      res.json({
+        stats: {
+          total_requests: statsRow.total_requests,
+          avg_response_ms: statsRow.avg_response_ms !== null
+            ? Math.round(statsRow.avg_response_ms)
+            : null,
+          first_request: statsRow.first_request,
+          last_request: statsRow.last_request,
+        },
+        endpoints: endpointBreakdown.map((e) => ({
+          endpoint: e.endpoint,
+          method: e.method,
+          count: e.count,
+          avg_response_ms: e.avg_ms !== null ? Math.round(e.avg_ms) : null,
+        })),
+        recent: rows,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 500, "INTERNAL_ERROR", `Failed to fetch usage data: ${msg}`);
+    }
+  });
+
 
   // --- GET /api/v1/pool/history ---
   router.get("/api/v1/pool/history", (req: Request, res: Response) => {
