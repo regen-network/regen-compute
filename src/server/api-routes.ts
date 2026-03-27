@@ -43,6 +43,7 @@ import { verifyPayment, getEvmChainCoingeckoId } from "../services/crypto-verify
 import { toUsdCents } from "../services/crypto-price.js";
 import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
 import { calculateNetAfterStripe, retireForSubscriber } from "../services/retire-subscriber.js";
+import { getSupportedTokens, getProjects as getEcoBridgeProjects } from "../services/ecobridge.js";
 import {
   getActiveCommunityGoal,
   getCommunityTotalCreditsRetired,
@@ -853,6 +854,64 @@ export function createApiRoutes(
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       apiError(res, 500, "INTERNAL_ERROR", `Failed to fetch scheduled retirements: ${msg}`);
+    }
+  });
+
+  // --- GET /api/v1/ecobridge/tokens ---
+  router.get("/api/v1/ecobridge/tokens", async (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    const chain = (req.query.chain as string) || undefined;
+
+    try {
+      const tokens = await getSupportedTokens(chain);
+
+      // Group by chain
+      const byChain: Record<string, Array<{ symbol: string; name: string; priceUsd: number | null }>> = {};
+      for (const t of tokens) {
+        const key = t.chainName || t.chainId;
+        if (!byChain[key]) byChain[key] = [];
+        byChain[key].push({ symbol: t.symbol, name: t.name, priceUsd: t.priceUsd });
+      }
+
+      res.json({
+        total_tokens: tokens.length,
+        chains: Object.entries(byChain).map(([chainName, chainTokens]) => ({
+          chain: chainName,
+          tokens: chainTokens,
+        })),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 503, "SERVICE_UNAVAILABLE", `Failed to fetch ecoBridge tokens: ${msg}`);
+    }
+  });
+
+  // --- GET /api/v1/ecobridge/projects ---
+  router.get("/api/v1/ecobridge/projects", async (req: Request, res: Response) => {
+    const user = getUser(req);
+    if (!user) return;
+
+    try {
+      const projects = await getEcoBridgeProjects();
+
+      res.json({
+        total_projects: projects.length,
+        projects: projects.map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          credit_class: p.creditClass,
+          price: p.price,
+          unit: p.unit,
+          location: p.location,
+          type: p.type,
+        })),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      apiError(res, 503, "SERVICE_UNAVAILABLE", `Failed to fetch ecoBridge projects: ${msg}`);
     }
   });
 

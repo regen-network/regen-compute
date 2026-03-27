@@ -7,6 +7,7 @@ import { getRetirementCertificate } from "./tools/certificates.js";
 import { getImpactSummary } from "./tools/impact.js";
 import { retireCredits } from "./tools/retire.js";
 import { checkSubscriptionStatus } from "./tools/subscription.js";
+import { checkSupplyHealth } from "./tools/supply.js";
 import { getRegenPriceTool } from "./tools/regen-price.js";
 import { verifyPaymentTool } from "./tools/verify-payment.js";
 import { getCommunityGoals } from "./tools/community-goals.js";
@@ -39,6 +40,8 @@ USAGE:
   npx regen-compute              Start the MCP server (stdio transport)
   npx regen-compute serve        Start the payment & balance web server
   npx regen-compute pool-run     Execute monthly pool retirement batch
+  npx regen-compute accounting   Show financial summary report
+  npx regen-compute swap-and-burn Execute REGEN buy-back-and-burn pipeline
   regen-compute --help           Show this help message
   regen-compute --version        Show version
 
@@ -64,6 +67,19 @@ POOL RETIREMENT:
   Executes monthly batch retirement from subscription pool.
   Use --dry-run to calculate without broadcasting transactions.
   Requires REGEN_WALLET_MNEMONIC for live runs.
+
+ACCOUNTING:
+  npx regen-compute accounting [--json] [--month 2026-03]
+  Shows financial summary: revenue, credit spending, burns, subscribers.
+  Use --json for machine-readable output.
+  Use --month to filter to a specific month.
+
+SWAP AND BURN:
+  npx regen-compute swap-and-burn [--dry-run] [--denom usdc|osmo|atom] [--check]
+  Executes REGEN buy-back-and-burn: Osmosis swap → IBC transfer → burn.
+  Use --check to verify Osmosis wallet readiness without executing.
+  Use --dry-run to simulate without broadcasting transactions.
+  Requires REGEN_WALLET_MNEMONIC and funded Osmosis wallet.
 
 CONFIGURATION:
   Copy .env.example to .env to customize. The server works without any
@@ -117,6 +133,98 @@ if (args[0] === "serve") {
       process.exit(1);
     }
   });
+} else if (args[0] === "accounting") {
+  // Handle "accounting" subcommand — show financial summary
+  const jsonOutput = args.includes("--json");
+  const monthIdx = args.indexOf("--month");
+  const month = monthIdx !== -1 ? args[monthIdx + 1] : undefined;
+  (async () => {
+    const { getFinancialSummary, formatFinancialReport } = await import("./services/accounting.js");
+    const { getDb } = await import("./server/db.js");
+    try {
+      const db = getDb(process.env.REGEN_DB_PATH ?? "data/regen-compute.db");
+      const summary = getFinancialSummary(db);
+
+      if (month) {
+        // Filter monthly breakdown to the requested month
+        summary.monthlyBreakdown = summary.monthlyBreakdown.filter(
+          (m) => m.month === month
+        );
+      }
+
+      if (jsonOutput) {
+        console.log(JSON.stringify(summary, null, 2));
+      } else {
+        console.log(formatFinancialReport(summary));
+      }
+      process.exit(0);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Accounting report failed: ${msg}`);
+      process.exit(1);
+    }
+  })();
+} else if (args[0] === "swap-and-burn") {
+  // Handle "swap-and-burn" subcommand — execute REGEN buy-back-and-burn
+  const checkOnly = args.includes("--check");
+  const dryRun = args.includes("--dry-run");
+  const denomIdx = args.indexOf("--denom");
+  const validDenoms = ["usdc", "osmo", "atom"] as const;
+  const denomArg = denomIdx !== -1 ? args[denomIdx + 1] : "usdc";
+  if (!validDenoms.includes(denomArg as any)) {
+    console.error(`Invalid denom: ${denomArg}. Must be one of: ${validDenoms.join(", ")}`);
+    process.exit(1);
+  }
+  const swapDenom = denomArg as "usdc" | "osmo" | "atom";
+
+  (async () => {
+    const { swapAndBurn, checkOsmosisReadiness, formatSwapAndBurnResult } = await import("./services/swap-and-burn.js");
+    const { getPendingBurnBudget } = await import("./services/retire-subscriber.js");
+    const { getDb } = await import("./server/db.js");
+    try {
+      if (checkOnly) {
+        console.log("Checking Osmosis wallet readiness...");
+        const readiness = await checkOsmosisReadiness();
+        console.log(`  Osmosis address: ${readiness.osmoAddress}`);
+        console.log(`  OSMO balance:    ${readiness.osmoBalance.toFixed(6)} OSMO`);
+        console.log(`  USDC balance:    ${readiness.usdcBalance.toFixed(6)} USDC`);
+        console.log(`  ATOM balance:    ${readiness.atomBalance.toFixed(6)} ATOM`);
+        console.log(`  REGEN on Osmo:   ${readiness.regenOnOsmosisBalance.toFixed(6)} REGEN`);
+        console.log(`  Ready: ${readiness.ready ? "YES" : "NO"}`);
+        if (readiness.issues.length > 0) {
+          console.log(`  Issues:`);
+          for (const issue of readiness.issues) {
+            console.log(`    - ${issue}`);
+          }
+        }
+        process.exit(readiness.ready ? 0 : 1);
+      }
+
+      // Get pending burn budget from DB
+      const db = getDb(process.env.REGEN_DB_PATH ?? "data/regen-compute.db");
+      const pendingCents = getPendingBurnBudget(db);
+
+      if (pendingCents <= 0) {
+        console.log("No pending burn budget. Nothing to do.");
+        process.exit(0);
+      }
+
+      console.log(dryRun ? `Swap-and-burn (DRY RUN): $${(pendingCents / 100).toFixed(2)} allocation` : `Swap-and-burn: $${(pendingCents / 100).toFixed(2)} allocation`);
+      const result = await swapAndBurn({
+        allocationCents: pendingCents,
+        dryRun,
+        swapDenom,
+      });
+      console.log(formatSwapAndBurnResult(result));
+      console.log("\nJSON output:");
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.status === "failed" ? 1 : 0);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Swap-and-burn failed: ${msg}`);
+      process.exit(1);
+    }
+  })();
 } else {
 
 // Load config early so isWalletConfigured() is available for annotations
@@ -375,6 +483,22 @@ server.tool(
   },
   async () => {
     return checkSubscriptionStatus();
+  }
+);
+
+// Tool: Check tradable supply health across batches
+server.tool(
+  "check_supply_health",
+  "Shows the tradable credit supply per batch on Regen Marketplace. Use this when the user asks about credit availability, wants to know if specific batches are running low, or needs to understand what's available for retirement. Returns live sell order data grouped by batch with tradable vs total quantities and low-stock alerts.",
+  {},
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
+  async () => {
+    return checkSupplyHealth();
   }
 );
 

@@ -181,6 +181,60 @@
         }
       }
     },
+    "/ecobridge/tokens": {
+      "get": {
+        "operationId": "getEcoBridgeTokens",
+        "summary": "List ecoBridge supported tokens",
+        "description": "Returns all tokens and chains supported by ecoBridge for cross-chain credit retirement payments. Tokens are grouped by chain with current USD prices.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "query",
+            "description": "Filter by chain name (e.g., 'ethereum', 'polygon', 'base')",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supported tokens grouped by chain",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcoBridgeTokensResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/ecobridge/projects": {
+      "get": {
+        "operationId": "getEcoBridgeProjects",
+        "summary": "List ecoBridge projects",
+        "description": "Returns all ecological projects available for credit retirement via ecoBridge, including pricing and location details.",
+        "responses": {
+          "200": {
+            "description": "Available ecoBridge projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcoBridgeProjectsResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
     "/community/goals": {
       "get": {
         "operationId": "getCommunityGoals",
@@ -438,6 +492,32 @@
           }
         }
       },
+      "EcoBridgeTokensResponse": {
+        "type": "object",
+        "properties": {
+          "total_tokens": { "type": "integer" },
+          "chains": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "chain": { "type": "string" },
+                "tokens": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "symbol": { "type": "string" },
+                      "name": { "type": "string" },
+                      "priceUsd": { "type": "number", "nullable": true }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "CommunityGoalsResponse": {
         "type": "object",
         "properties": {
@@ -472,6 +552,28 @@
                 "deadline": { "type": "string", "nullable": true },
                 "active": { "type": "boolean" },
                 "created_at": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "EcoBridgeProjectsResponse": {
+        "type": "object",
+        "properties": {
+          "total_projects": { "type": "integer" },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "description": { "type": "string", "nullable": true },
+                "credit_class": { "type": "string", "nullable": true },
+                "price": { "type": "number", "nullable": true },
+                "unit": { "type": "string", "nullable": true },
+                "location": { "type": "string", "nullable": true },
+                "type": { "type": "string", "nullable": true }
               }
             }
           }
