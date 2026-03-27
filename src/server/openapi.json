@@ -181,6 +181,71 @@
         }
       }
     },
+    "/community/goals": {
+      "get": {
+        "operationId": "getCommunityGoals",
+        "summary": "Get community goals and progress",
+        "description": "Returns the active community retirement goal, progress toward it, subscriber count, total credits retired, and historical goals.",
+        "responses": {
+          "200": {
+            "description": "Community goals and progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityGoalsResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+    "/scheduled-retirements": {
+      "get": {
+        "operationId": "getScheduledRetirements",
+        "summary": "List scheduled retirements",
+        "description": "Returns scheduled retirements with status breakdown. Scheduled retirements are created from yearly subscriptions and executed on their scheduled date.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by status (pending, running, completed, partial, failed)",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "running", "completed", "partial", "failed"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of retirements to return (max 200)",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scheduled retirements with status summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledRetirementsResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
     "/impact": {
       "get": {
         "operationId": "getImpact",
@@ -368,6 +433,81 @@
               "properties": {
                 "abbreviation": { "type": "string" },
                 "name": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "CommunityGoalsResponse": {
+        "type": "object",
+        "properties": {
+          "active_goal": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": { "type": "integer" },
+              "label": { "type": "string" },
+              "target_credits": { "type": "number" },
+              "deadline": { "type": "string", "nullable": true },
+              "progress_percent": { "type": "number", "nullable": true },
+              "completed": { "type": "boolean" },
+              "created_at": { "type": "string" }
+            }
+          },
+          "community_stats": {
+            "type": "object",
+            "properties": {
+              "total_credits_retired": { "type": "number" },
+              "active_subscribers": { "type": "integer" }
+            }
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "label": { "type": "string" },
+                "target_credits": { "type": "number" },
+                "deadline": { "type": "string", "nullable": true },
+                "active": { "type": "boolean" },
+                "created_at": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "ScheduledRetirementsResponse": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer" },
+              "pending": { "type": "integer" },
+              "completed": { "type": "integer" },
+              "partial": { "type": "integer" },
+              "failed": { "type": "integer" },
+              "running": { "type": "integer" }
+            }
+          },
+          "retirements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "subscriber_id": { "type": "integer" },
+                "gross_amount_cents": { "type": "integer" },
+                "net_amount_cents": { "type": "integer" },
+                "billing_interval": { "type": "string" },
+                "scheduled_date": { "type": "string" },
+                "status": { "type": "string" },
+                "retirement_id": { "type": "integer", "nullable": true },
+                "error": { "type": "string", "nullable": true },
+                "retry_count": { "type": "integer" },
+                "created_at": { "type": "string" },
+                "executed_at": { "type": "string", "nullable": true }
               }
             }
           }

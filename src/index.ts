@@ -7,6 +7,9 @@ import { getRetirementCertificate } from "./tools/certificates.js";
 import { getImpactSummary } from "./tools/impact.js";
 import { retireCredits } from "./tools/retire.js";
 import { checkSubscriptionStatus } from "./tools/subscription.js";
+import { getRegenPriceTool } from "./tools/regen-price.js";
+import { verifyPaymentTool } from "./tools/verify-payment.js";
+import { getCommunityGoals } from "./tools/community-goals.js";
 import { loadConfig, isWalletConfigured } from "./config.js";
 import {
   fetchRegistry,
@@ -372,6 +375,63 @@ server.tool(
   },
   async () => {
     return checkSubscriptionStatus();
+  }
+);
+
+// Tool: REGEN token price from CoinGecko
+server.tool(
+  "get_regen_price",
+  "Shows the current REGEN token price in USD from CoinGecko, alongside other tracked crypto prices. Use this when the user asks about REGEN price, wants to understand burn economics, or needs to estimate how much REGEN their subscription buys. Prices are cached for 60 seconds.",
+  {},
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
+  async () => {
+    return getRegenPriceTool();
+  }
+);
+
+// Tool: Verify on-chain payment across 19 chains
+server.tool(
+  "verify_payment",
+  "Verifies an on-chain payment transaction across any supported chain (16 EVM chains, Bitcoin, Solana, Tron). Use this when an agent or user wants to confirm a crypto payment was received before attempting a retirement or subscription provisioning. Returns sender, token, amount, USD value, and confirmation status.",
+  {
+    chain: z
+      .string()
+      .describe(
+        "Blockchain name: ethereum, base, polygon, arbitrum, optimism, avalanche, bnb, linea, zksync, scroll, mantle, blast, celo, gnosis, fantom, mode, bitcoin, solana, tron. Aliases: eth, btc, sol, trx, bsc, matic, avax, op, arb, ftm"
+      ),
+    tx_hash: z
+      .string()
+      .describe("The on-chain transaction hash to verify"),
+  },
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
+  async ({ chain, tx_hash }) => {
+    return verifyPaymentTool(chain, tx_hash);
+  }
+);
+
+// Tool: Community goals and progress
+server.tool(
+  "get_community_goals",
+  "Shows the current community retirement goal, progress toward it, subscriber count, and total credits retired. Use this when the user asks about community milestones, collective impact, or wants to see how close the community is to its target.",
+  {},
+  {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  },
+  async () => {
+    return getCommunityGoals();
   }
 );
 
