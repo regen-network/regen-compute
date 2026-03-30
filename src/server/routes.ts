@@ -155,7 +155,7 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@RegenCompute">
+  <meta name="twitter:site" content="@RegenChristian">
   <meta name="twitter:title" content="${t(lang, "page_title")}">
   <meta name="twitter:description" content="${t(lang, "page_description")}">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
@@ -2121,7 +2121,7 @@ ${betaBannerJS()}
         // Subscription success page
         const referralLink = `${baseUrl}/r/${user.referral_code}`;
         const shareText = encodeURIComponent(
-          "I just subscribed to @RegenCompute — funding verified ecological regeneration from my AI sessions. Use my link for a free first month:"
+          "I just subscribed to @RegenChristian — funding verified ecological regeneration from my AI sessions. Use my link for a free first month:"
         );
         const shareUrl = encodeURIComponent(referralLink);
         const twitterUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;

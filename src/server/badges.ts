@@ -273,7 +273,7 @@ function badgesPageHTML(baseUrl: string): string {
   <meta property="og:url" content="${baseUrl}/badges">
   <meta property="og:image" content="${baseUrl}/og-card.jpg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@RegenCompute">
+  <meta name="twitter:site" content="@RegenChristian">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
