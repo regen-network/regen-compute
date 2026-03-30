@@ -16,6 +16,7 @@
  */
 
 import { join } from "path";
+import { readFileSync } from "fs";
 import express from "express";
 import helmet from "helmet";
 import Stripe from "stripe";
@@ -461,6 +462,44 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   setInterval(() => {
     checkCryptoRenewals().catch(console.error);
   }, 24 * 60 * 60 * 1000);
+
+  // --- Password-protected strategy document ---
+  const STRATEGY_PASSWORD = process.env.STRATEGY_PASSWORD ?? "regen";
+  app.get("/strategy", (req, res) => {
+    if (req.query.p === STRATEGY_PASSWORD) {
+      try {
+        const html = readFileSync(join(process.cwd(), "regen-compute-strategy.html"), "utf-8");
+        res.send(html);
+      } catch {
+        res.status(404).send("Document not found");
+      }
+      return;
+    }
+    res.send(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Strategy — Regenerative Compute</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+background:linear-gradient(135deg,#0a3d2e 0%,#0d6b52 50%,#0f5a4a 100%);color:#fff}
+.box{text-align:center;padding:2rem;max-width:400px}
+h2{font-size:1.3rem;font-weight:400;margin-bottom:1.5rem;opacity:0.9}
+form{display:flex;gap:8px;justify-content:center}
+input{padding:10px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);
+background:rgba(255,255,255,0.1);color:#fff;font-size:1rem;outline:none;width:180px}
+input::placeholder{color:rgba(255,255,255,0.4)}
+input:focus{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.15)}
+button{padding:10px 20px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);
+background:rgba(255,255,255,0.15);color:#fff;font-size:1rem;cursor:pointer}
+button:hover{background:rgba(255,255,255,0.25)}
+</style></head><body><div class="box">
+<h2>This document is password-protected</h2>
+<form method="get" action="/strategy">
+<input type="password" name="p" placeholder="Password" autofocus/>
+<button type="submit">View</button>
+</form></div></body></html>`);
+  });
 
   // --- Convenience redirects for commonly guessed URLs ---
   app.get("/pricing", (_req, res) => res.redirect(301, "/#pricing"));
