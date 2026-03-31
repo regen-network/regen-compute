@@ -759,7 +759,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
   <section class="trust-compare-section">
     <div style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;">
       <p style="font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-emerald);margin:0 0 16px;">${t(lang, "trust_title")}</p>
-      <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--color-cream);margin:0;">Not all offsets are created equal</h2>
+      <h2 style="font-family:var(--font-display);font-weight:700;color:var(--color-cream);margin:0;line-height:1.2;"><span style="font-size:clamp(1.2rem,2.5vw,1.8rem);display:block;color:var(--color-muted);">This is not a carbon offset program.</span><span style="font-size:clamp(1.8rem,3.5vw,2.8rem);">This is Regeneration.</span></h2>
     </div>
     <div class="trust-table" id="trust-table">
       <div class="trust-table-header">
