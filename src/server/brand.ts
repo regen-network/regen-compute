@@ -91,8 +91,8 @@ export function brandCSS(): string {
       /* Text */
       --color-cream: #F0ECE2;
       --color-cream-soft: #D4D0C8;
-      --color-muted: #A8ADBC;
-      --color-dim: #7A8194;
+      --color-muted: #B8BCC8;
+      --color-dim: #929AB0;
 
       /* Accent — Gaia green */
       --color-emerald: #2b994f;
@@ -128,8 +128,8 @@ export function brandCSS(): string {
       --regen-gray-100: #0E1018;
       --regen-gray-200: rgba(240,236,226,0.07);
       --regen-gray-300: rgba(240,236,226,0.12);
-      --regen-gray-400: #7A8194;
-      --regen-gray-500: #A8ADBC;
+      --regen-gray-400: #929AB0;
+      --regen-gray-500: #B8BCC8;
       --regen-gray-700: #D4D0C8;
       --regen-teal: #33b35c;
       --regen-sage: #2b994f;
