@@ -668,7 +668,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       <p style="font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-emerald);margin:0 0 16px;">${t(lang, "stats_title")}</p>
       <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--color-cream);margin:0 0 16px;max-width:600px;line-height:1.15;">The Uncomfortable Math</h2>
       <p style="font-size:1rem;color:var(--color-muted);max-width:560px;line-height:1.7;margin:0;">
-        ${t(lang, "impact_prefix")} <strong style="color:var(--color-cream);">${t(lang, "impact_co2_daily")}</strong>. ${t(lang, "impact_middle")} <strong style="color:var(--color-cream);">${t(lang, "impact_co2_agentic")}</strong>.
+        ${t(lang, "impact_prefix")} <strong style="color:var(--color-cream);white-space:nowrap;">${t(lang, "impact_co2_daily")}</strong>. ${t(lang, "impact_middle")} <strong style="color:var(--color-cream);white-space:nowrap;">${t(lang, "impact_co2_agentic")}</strong>.
         <a href="/research" style="color:var(--color-emerald);font-weight:600;margin-left:4px;">${t(lang, "impact_link")} &rarr;</a>
       </p>
       <div class="stats-grid-dark">
