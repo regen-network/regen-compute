@@ -41,10 +41,24 @@ export function createResearchRoutes(baseUrl: string): Router {
     ${brandCSS()}
 
     .research-hero {
-      padding: 64px 0 48px;
+      position: relative;
+      padding: 120px 0 80px;
       text-align: center;
       border-bottom: 1px solid var(--color-border);
+      overflow: hidden;
+      min-height: 360px;
+      display: flex; align-items: center; justify-content: center;
     }
+    .research-hero__bg {
+      position: absolute; inset: 0;
+      background: url('/images/research-hero.webp') center / cover no-repeat;
+      filter: brightness(0.25) saturate(0.7);
+    }
+    .research-hero__fade {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(5,6,10,0.5), rgba(5,6,10,0.3) 50%, var(--color-void));
+    }
+    .research-hero .regen-container { position: relative; z-index: 2; }
     .research-hero h1 {
       font-family: var(--font-display); font-size: 36px; font-weight: 800;
       color: var(--color-cream);
@@ -175,6 +189,8 @@ export function createResearchRoutes(baseUrl: string): Router {
   })}
 
   <section class="research-hero">
+    <div class="research-hero__bg"></div>
+    <div class="research-hero__fade"></div>
     <div class="regen-container">
       <h1>The Ecological Footprint of <span>"One Person Using AI"</span></h1>
       <p class="subtitle">A transparent, citation-backed look at what AI compute actually costs the planet &mdash; and why regenerative contribution matters.</p>
