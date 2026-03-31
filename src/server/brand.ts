@@ -166,7 +166,7 @@ export function brandCSS(): string {
       border-bottom: 1px solid var(--color-border);
     }
     .regen-header__inner {
-      max-width: 1200px; margin: 0 auto; padding: 0 32px;
+      margin: 0; padding: 0 24px;
       display: flex; align-items: center; justify-content: space-between;
       height: 56px;
     }
@@ -187,17 +187,16 @@ export function brandCSS(): string {
     }
     .regen-header__subscribe {
       font-family: var(--font-ui);
-      font-size: 13px; font-weight: 700;
-      background: var(--color-emerald); color: #ffffff;
+      font-size: 13px; font-weight: 800;
+      background: var(--color-emerald); color: #FFFFFF;
       border: none; border-radius: 6px;
-      padding: 6px 16px; cursor: pointer;
+      padding: 7px 18px; cursor: pointer;
       text-decoration: none; transition: all 0.2s;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
     }
     .regen-header__subscribe:hover {
-      background: var(--color-emerald-bright); color: #ffffff; text-decoration: none;
-      box-shadow: 0 2px 12px var(--color-emerald-glow);
+      background: var(--color-emerald-bright); color: #FFFFFF; text-decoration: none;
+      box-shadow: 0 2px 16px var(--color-emerald-glow);
     }
 
     /* ---- Hamburger menu (mobile) ---- */
