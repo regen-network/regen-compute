@@ -221,6 +221,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
       display: block; font-size: 14px; color: var(--color-cream);
       white-space: pre-wrap; line-height: 1.6;
       font-family: var(--font-mono);
+      padding-right: 64px;
     }
     .try-prompt__text button {
       position: absolute; top: 0; right: 0;
