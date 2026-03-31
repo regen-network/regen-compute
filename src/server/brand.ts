@@ -185,17 +185,17 @@ export function brandCSS(): string {
       background: var(--color-emerald-dim); padding: 4px 12px; border-radius: 20px;
       letter-spacing: 0.03em;
     }
-    .regen-header__subscribe {
+    .regen-header__nav a.regen-header__subscribe {
       font-family: var(--font-ui);
       font-size: 13px; font-weight: 800;
-      background: var(--color-emerald); color: #FFFFFF;
+      background: var(--color-emerald); color: #FFFFFF !important;
       border: none; border-radius: 6px;
       padding: 7px 18px; cursor: pointer;
       text-decoration: none; transition: all 0.2s;
       letter-spacing: 0.03em;
     }
-    .regen-header__subscribe:hover {
-      background: var(--color-emerald-bright); color: #FFFFFF; text-decoration: none;
+    .regen-header__nav a.regen-header__subscribe:hover {
+      background: var(--color-emerald-bright); color: #FFFFFF !important; text-decoration: none;
       box-shadow: 0 2px 16px var(--color-emerald-glow);
     }
 
