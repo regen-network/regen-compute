@@ -206,22 +206,58 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 
     /* ---- Projects section ---- */
     .projects-section { padding: 100px 0; }
-    .project-spread { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-bottom: 80px; }
-    .project-spread:last-child { margin-bottom: 0; }
-    .project-spread--reverse { direction: rtl; }
-    .project-spread--reverse > * { direction: ltr; }
-    .project-spread__img { width: 100%; border-radius: 16px; aspect-ratio: 4/3; object-fit: cover; display: block; border: 1px solid var(--color-border); }
-    .project-spread__text { }
-    .project-spread__badge { display: inline-block; font-family: var(--font-ui); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; }
-    .project-spread__name { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--color-cream); margin: 0 0 8px; line-height: 1.2; }
-    .project-spread__location { font-family: var(--font-ui); font-size: 14px; color: var(--color-muted); margin-bottom: 16px; font-weight: 500; }
-    .project-spread__desc { font-size: 15px; color: var(--color-cream-soft); line-height: 1.7; margin: 0 0 20px; }
+    .project-spread {
+      display: grid; grid-template-columns: 1fr 1fr; min-height: 500px;
+      border-top: 1px solid var(--color-border);
+      transition: background 0.3s;
+    }
+    .project-spread:hover { background: rgba(255,255,255,0.01); }
+    .project-spread--reverse .project-spread__img-wrap { order: 2; }
+    .project-spread--reverse .project-spread__text { order: 1; }
+    .project-spread__img-wrap {
+      position: relative; overflow: hidden; min-height: 300px;
+    }
+    .project-spread__img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      filter: brightness(0.85) saturate(0.9);
+      transition: all 0.7s ease-out;
+    }
+    .project-spread:hover .project-spread__img {
+      transform: scale(1.03); filter: brightness(0.95) saturate(1);
+    }
+    .project-spread__img-fade {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    .project-spread__img-fade--right {
+      background: linear-gradient(to right, transparent, transparent 60%, var(--color-void));
+    }
+    .project-spread__img-fade--left {
+      background: linear-gradient(to left, transparent, transparent 60%, var(--color-void));
+    }
+    .project-spread__text {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 48px 60px;
+    }
+    .project-spread__badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; width: fit-content; border: 1px solid; }
+    .project-spread__badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .project-spread__name { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; color: var(--color-cream); margin: 0 0 6px; line-height: 1.2; }
+    .project-spread__location { font-family: var(--font-mono); font-size: 0.65rem; color: var(--color-dim); letter-spacing: 0.05em; margin-bottom: 20px; }
+    .project-spread__desc { font-size: 1rem; color: var(--color-cream-soft); line-height: 1.75; margin: 0 0 28px; max-width: 440px; }
+    .project-spread__metrics { display: flex; gap: 28px; padding-top: 20px; border-top: 1px solid var(--color-border); margin-bottom: 20px; }
+    .project-spread__metric-val { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 500; color: var(--color-cream); }
+    .project-spread__metric-label { font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-dim); margin-top: 2px; }
     .project-spread__links { display: flex; gap: 16px; flex-wrap: wrap; }
-    .project-spread__link { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--color-emerald); }
-    .project-spread__link:hover { text-decoration: underline; }
+    .project-spread__link { font-family: var(--font-mono); font-size: 0.62rem; font-weight: 500; color: var(--color-emerald); letter-spacing: 0.05em; opacity: 0.7; transition: opacity 0.2s; }
+    .project-spread__link:hover { opacity: 1; text-decoration: none; }
     @media (max-width: 700px) {
-      .project-spread, .project-spread--reverse { grid-template-columns: 1fr; direction: ltr; }
-      .project-spread__name { font-size: 22px; }
+      .project-spread { grid-template-columns: 1fr; min-height: auto; }
+      .project-spread--reverse .project-spread__img-wrap { order: 0; }
+      .project-spread--reverse .project-spread__text { order: 0; }
+      .project-spread__img-wrap { min-height: 250px; }
+      .project-spread__img-fade--right, .project-spread__img-fade--left { background: linear-gradient(to bottom, transparent 60%, var(--color-void)); }
+      .project-spread__text { padding: 32px 24px; }
+      .project-spread__name { font-size: 1.4rem; }
     }
 
     /* ---- How It Works ---- */
@@ -656,31 +692,36 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
   </section>
 
   <!-- ==================== PROJECTS ==================== -->
-  <section class="projects-section" id="projects">
-    <div style="max-width:1200px;margin:0 auto;padding:0 24px;">
-      <p style="font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-emerald);margin:0 0 16px;text-align:center;">${t(lang, "basket_title")}</p>
-      <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--color-cream);margin:0 0 16px;text-align:center;">Where your money goes</h2>
-      <p style="font-size:1rem;color:var(--color-muted);max-width:560px;margin:0 auto 64px;text-align:center;line-height:1.7;">${t(lang, "basket_desc")}</p>
-
-      ${PROJECTS.map((p, i) => `
-      <div class="project-spread${i % 2 === 1 ? ' project-spread--reverse' : ''}">
-        <img class="project-spread__img" src="${p.imageUrl}" alt="${p.name}" loading="lazy">
-        <div class="project-spread__text">
-          <span class="project-spread__badge" style="background:${p.accentColor}22;color:${p.accentColor};">${p.creditTypeLabel} (${p.creditType})</span>
-          <h3 class="project-spread__name">${p.name}</h3>
-          <p class="project-spread__location">${p.location}</p>
-          <p class="project-spread__desc">${p.description}</p>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-            <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--color-muted);background:var(--color-surface);padding:3px 10px;border-radius:4px;border:1px solid var(--color-border);">${p.creditClassId}</span>
-            <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--color-muted);background:var(--color-surface);padding:3px 10px;border-radius:4px;border:1px solid var(--color-border);">${p.projectId}</span>
-          </div>
-          <div class="project-spread__links">
-            <a class="project-spread__link" href="${p.projectPageUrl}" target="_blank" rel="noopener">${t(lang, "basket_view_project")} &rarr;</a>
-            <a class="project-spread__link" href="https://app.regen.network/credit-classes/${p.creditClassId}" target="_blank" rel="noopener">${t(lang, "basket_credit_class")}</a>
-          </div>
-        </div>
-      </div>`).join('')}
+  <section id="projects" style="padding:40px 0 0;">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px 48px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h2 style="font-family:var(--font-display);font-size:2rem;font-weight:600;color:var(--color-cream);margin:0;">Where your money goes</h2>
+      <a href="https://app.regen.network" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--color-muted);letter-spacing:0.05em;transition:color 0.2s;">View all on Regen Marketplace &rarr;</a>
     </div>
+
+    ${PROJECTS.map((p, i) => {
+      const reversed = i % 2 !== 0;
+      const fadeClass = reversed ? 'project-spread__img-fade--left' : 'project-spread__img-fade--right';
+      return `
+    <div class="project-spread${reversed ? ' project-spread--reverse' : ''}">
+      <div class="project-spread__img-wrap">
+        <img class="project-spread__img" src="${p.imageUrl}" alt="${p.name}" loading="lazy">
+        <div class="project-spread__img-fade ${fadeClass}"></div>
+      </div>
+      <div class="project-spread__text">
+        <span class="project-spread__badge" style="background:${p.accentColor}14;color:${p.accentColor};border-color:${p.accentColor}26;">
+          <span class="project-spread__badge-dot"></span>
+          ${p.creditTypeLabel}
+        </span>
+        <h3 class="project-spread__name">${p.name}</h3>
+        <p class="project-spread__location">${p.location} &middot; Credit Class ${p.creditClassId}</p>
+        <p class="project-spread__desc">${p.description}</p>
+        <div class="project-spread__links">
+          <a class="project-spread__link" href="https://www.mintscan.io/regen/credit-class/${p.creditClassId}" target="_blank" rel="noopener">Verify on Regen Ledger &rarr;</a>
+          <a class="project-spread__link" href="${p.projectPageUrl}" target="_blank" rel="noopener">${t(lang, "basket_view_project")} &rarr;</a>
+        </div>
+      </div>
+    </div>`;
+    }).join('')}
   </section>
 
   <!-- ==================== HOW IT WORKS ==================== -->
