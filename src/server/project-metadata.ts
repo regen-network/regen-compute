@@ -47,7 +47,7 @@ export const PROJECTS: ProjectInfo[] = [
     description:
       'El Globo is located in the "Cuchilla Jardin-Tamesis" Integrated Management District (DMI). Here ecosystem preservation, forest enhancement and restoration activities are implemented to generate positive and permanent impacts on biodiversity.',
     location: "Antioquia, Colombia",
-    imageUrl: "/projects/opt-el-globo.jpg",
+    imageUrl: "/projects/el-globo.webp",
     projectPageUrl: "https://app.regen.network/project/BT01-001",
     accentColor: "#527984",
   },
@@ -60,7 +60,7 @@ export const PROJECTS: ProjectInfo[] = [
     description:
       "In the Amazon headwaters, Indigenous stewards face increasing pressure from activities like illegal logging and mining, which endanger both their forest ecosystem and cultural heritage. The Sharamentsa community, belonging to the Achuar Nation, is pivotal in this biodiversity project that focuses on safeguarding a critical 10,000-hectare jaguar habitat.",
     location: "Pastaza Province, Ecuador",
-    imageUrl: "/projects/opt-jaguar.jpg",
+    imageUrl: "/projects/jaguar.webp",
     projectPageUrl: "https://app.regen.network/project/USS01-002",
     accentColor: "#7c3aed",
   },
@@ -73,7 +73,7 @@ export const PROJECTS: ProjectInfo[] = [
     description:
       'The 15.14 acre Harvey Manning Park Expansion project is part of 33 acres in the "Issaquah Alps" comprised of Tiger, Squak, and Cougar Mountains, above Lake Sammamish. The 100+ year old forest includes riparian and wetland habitat that supports wildlife corridors on Cougar Mountain and protects cool freshwater streams that feed Tibbetts Creek, a salmon-bearing tributary to Lake Sammamish.',
     location: "Issaquah, Washington",
-    imageUrl: "/projects/opt-harvey-manning.jpg",
+    imageUrl: "/projects/harvey-manning.webp",
     projectPageUrl: "https://app.regen.network/project/C02-004",
     accentColor: "#4FB573",
   },
@@ -86,7 +86,7 @@ export const PROJECTS: ProjectInfo[] = [
     description:
       "Lookout Mountain is one of the most biologically diverse and critically imperiled ecoregions in the world stretching 90+ miles across three states; Tennessee, Alabama, and Georgia. The 58 acre oak-pine forest is situated between the Chickamauga & Chattanooga National Military Park and the historic St. Elmo neighborhood. By protecting this property, the Conservancy ensures connectivity between habitat corridors and provides essential wildlife habitat for several species.",
     location: "Chattanooga, Tennessee",
-    imageUrl: "/projects/opt-st-elmo.jpg",
+    imageUrl: "/projects/st-elmo.webp",
     projectPageUrl: "https://app.regen.network/project/C02-006",
     accentColor: "#4FB573",
   },
@@ -99,7 +99,7 @@ export const PROJECTS: ProjectInfo[] = [
     description:
       "The primary indicator in this credit class is soil organic carbon stocks (SOCS). Levels will be increased by growing harvestable and cover crops and grass to maximise canopy and root growth while incorporating crop residues and manures. Reduced soil disturbance, maintaining soil cover and returning crop residues will maximise retained organic matter in the soil.",
     location: "Oxfordshire, United Kingdom",
-    imageUrl: "/projects/opt-pimlico.jpg",
+    imageUrl: "/projects/pimlico.webp",
     projectPageUrl: "https://app.regen.network/project/C06-002",
     accentColor: "#4FB573",
   },
@@ -112,7 +112,7 @@ export const PROJECTS: ProjectInfo[] = [
     description:
       "This project uses high-density, short-duration rotational sheep grazing in vineyard systems to improve ecosystem functioning through active management of the soil and herbaceous cover in the vineyard understory. The practice improves soil health, reduces use of herbicides or mowing, and enhances carbon storage.",
     location: "Napa Valley, California",
-    imageUrl: "/projects/opt-grgich.jpg",
+    imageUrl: "/projects/grgich-hills.webp",
     projectPageUrl: "https://app.regen.network/project/KSH01-001",
     accentColor: "#a3785c",
   },
