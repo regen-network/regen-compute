@@ -273,19 +273,20 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     .hiw-card__title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--color-cream); margin: 0 0 8px; }
     .hiw-card__desc { font-size: 14px; color: var(--color-muted); line-height: 1.6; margin: 0; }
     .install-block {
-      margin-top: 48px; background: var(--color-surface); border: 1px solid var(--color-border);
-      border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      max-width: 640px; margin-left: auto; margin-right: auto;
+      background: var(--color-surface); border: 1px solid var(--color-border-light);
+      border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 12px;
+      transition: border-color 0.2s;
     }
-    .install-block code { font-family: var(--font-mono); font-size: 13px; color: var(--color-emerald); white-space: nowrap; overflow-x: auto; }
+    .install-block:hover { border-color: var(--color-emerald); }
+    .install-block code { font-family: var(--font-mono); font-size: 14px; color: var(--color-cream-soft); white-space: nowrap; overflow-x: auto; flex: 1; }
     .copy-btn {
-      font-family: var(--font-ui); font-size: 12px; font-weight: 600;
-      background: var(--color-card); color: var(--color-cream);
-      border: 1px solid var(--color-border-light); border-radius: 6px;
-      padding: 6px 14px; cursor: pointer; white-space: nowrap;
-      transition: background 0.2s, border-color 0.2s;
+      font-family: var(--font-mono); font-size: 0.62rem; font-weight: 500;
+      background: transparent; color: var(--color-dim);
+      border: 1px solid var(--color-border); border-radius: 5px;
+      padding: 4px 10px; cursor: pointer; white-space: nowrap;
+      transition: all 0.2s;
     }
-    .copy-btn:hover { background: var(--color-card-hover); border-color: var(--color-emerald); }
+    .copy-btn:hover { color: var(--color-emerald); border-color: var(--color-border-emerald); }
     @media (max-width: 700px) {
       .hiw-cards { grid-template-columns: 1fr; }
       .install-block { flex-direction: column; text-align: center; }
@@ -748,9 +749,17 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       </div>
 
       <!-- Install command -->
-      <div class="install-block">
-        <code id="install-cmd">claude mcp add -s user regen-compute -- npx regen-compute</code>
-        <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('install-cmd').textContent);this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500);">Copy</button>
+      <div style="margin-top:64px;max-width:680px;margin-left:auto;margin-right:auto;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--color-emerald);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">Works with Claude, Cursor, VS Code, Windsurf, Gemini</div>
+          <h3 style="font-family:var(--font-display);font-size:1.25rem;font-weight:600;color:var(--color-cream);margin:0;">One command to connect your AI</h3>
+        </div>
+        <div class="install-block">
+          <span style="color:var(--color-emerald);font-size:1.1rem;font-family:var(--font-mono);">$</span>
+          <code id="install-cmd">claude mcp add -s user regen-compute -- npx regen-compute</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('install-cmd').textContent);this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500);">Copy</button>
+        </div>
+        <p style="text-align:center;margin-top:12px;font-family:var(--font-mono);font-size:0.6rem;color:var(--color-dim);">Zero config. Read-only tools work immediately. On-chain retirement requires a wallet.</p>
       </div>
     </div>
   </section>
