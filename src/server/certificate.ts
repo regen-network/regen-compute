@@ -181,7 +181,7 @@ function renderCertificatePage(
     }
 
     body {
-      background: linear-gradient(135deg, var(--cert-accent-light) 0%, #fafafa 40%, #fafafa 100%);
+      background: var(--color-void);
       min-height: 100vh;
       padding: 0;
     }
@@ -189,8 +189,8 @@ function renderCertificatePage(
     .cert-container { max-width: 640px; margin: 0 auto; padding: 32px 16px 0; }
 
     .cert-card {
-      background: var(--regen-white);
-      border: 1px solid var(--regen-gray-200);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius-lg);
       box-shadow: var(--regen-shadow-card);
       overflow: hidden;
@@ -201,11 +201,11 @@ function renderCertificatePage(
       color: #fff; padding: 32px 32px 28px; text-align: center;
     }
     .cert-top-label {
-      font-family: var(--regen-font-secondary);
+      font-family: var(--font-ui);
       font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
       text-transform: uppercase; opacity: 0.85; margin-bottom: 8px;
     }
-    .cert-top-title { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 16px; }
+    .cert-top-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 16px; }
     .cert-badge {
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(255,255,255,0.2); border-radius: 24px;
@@ -218,28 +218,28 @@ function renderCertificatePage(
     .cert-body { padding: 28px 32px; }
 
     .cert-details { width: 100%; border-collapse: collapse; }
-    .cert-details tr { border-bottom: 1px solid var(--regen-gray-100); }
+    .cert-details tr { border-bottom: 1px solid var(--color-border); }
     .cert-details tr:last-child { border-bottom: none; }
     .cert-details td { padding: 12px 0; vertical-align: top; }
     .cert-details .cert-label {
-      font-family: var(--regen-font-secondary);
-      font-size: 13px; font-weight: 600; color: var(--regen-gray-500);
+      font-family: var(--font-ui);
+      font-size: 13px; font-weight: 600; color: var(--color-dim);
       width: 140px; text-transform: uppercase; letter-spacing: 0.03em;
     }
-    .cert-details .cert-value { font-size: 14px; color: var(--regen-black); word-break: break-all; }
+    .cert-details .cert-value { font-size: 14px; color: var(--color-cream); word-break: break-all; }
 
     .cert-embed { margin-top: 32px; }
     .cert-embed-code {
       display: block; width: 100%; min-height: 80px;
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      font-family: var(--font-mono);
       font-size: 11px; line-height: 1.5; padding: 12px;
-      border: 1px solid var(--regen-gray-200); border-radius: 8px;
-      background: var(--regen-gray-50); color: var(--regen-gray-700); resize: vertical;
+      border: 1px solid var(--color-border); border-radius: 8px;
+      background: var(--color-surface); color: var(--color-cream-soft); resize: vertical;
     }
 
     .cert-cta {
-      text-align: center; margin: 28px auto; max-width: 480px;
-      background: var(--regen-green-bg); border: 2px solid var(--regen-green);
+      text-align: center; margin: 28px auto 0; max-width: 480px;
+      background: var(--color-emerald-dim); border: 1px solid var(--color-border-emerald);
       border-radius: var(--regen-radius-lg); padding: 24px;
     }
   </style>
@@ -287,8 +287,8 @@ function renderCertificatePage(
         </div>
 
         <div class="cert-embed">
-          <div style="font-size:14px;font-weight:700;color:var(--regen-navy);margin-bottom:8px;">Share this certificate</div>
-          <div style="font-size:13px;color:var(--regen-gray-500);margin-bottom:12px;">Add this badge to your README, website, or profile:</div>
+          <div style="font-family:var(--font-ui);font-size:14px;font-weight:700;color:var(--color-cream);margin-bottom:8px;">Share this certificate</div>
+          <div style="font-family:var(--font-ui);font-size:13px;color:var(--color-muted);margin-bottom:12px;">Add this badge to your README, website, or profile:</div>
           <div style="text-align:center;margin-bottom:12px;">
             <a href="${escapeHtml(certUrl)}">
               <img src="${escapeHtml(badgeUrl)}" alt="${escapeHtml(amount)} ${escapeHtml(theme.name.toLowerCase())} credits retired via Regenerative AI" width="320" height="80" />
@@ -298,7 +298,7 @@ function renderCertificatePage(
         </div>
 
         <div style="margin-top:28px;text-align:center;">
-          <div style="font-size:14px;font-weight:700;color:var(--regen-navy);margin-bottom:12px;">Share your impact</div>
+          <div style="font-family:var(--font-ui);font-size:14px;font-weight:700;color:var(--color-cream);margin-bottom:12px;">Share your impact</div>
           <div class="regen-share-btns">
             <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just retired ${amount} ${theme.name.toLowerCase()} credits on Regen Network — funding verified ecological regeneration.`)}&url=${encodeURIComponent(certUrl)}" target="_blank" rel="noopener">Post on X</a>
             <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certUrl)}" target="_blank" rel="noopener">Share on LinkedIn</a>
@@ -309,8 +309,8 @@ function renderCertificatePage(
     </div>
 
     <div class="cert-cta">
-      <div style="font-size:16px;font-weight:800;color:var(--regen-green);margin-bottom:8px;">Fund regeneration for your AI sessions</div>
-      <div style="font-size:14px;color:var(--regen-gray-500);margin-bottom:16px;">Monthly subscriptions from $1.25/mo retire verified ecological credits on Regen Network.</div>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--color-emerald-bright);margin-bottom:8px;">Fund regeneration for your AI sessions</div>
+      <div style="font-family:var(--font-body);font-size:14px;color:var(--color-muted);margin-bottom:16px;">Monthly subscriptions from $1.25/mo retire verified ecological credits on Regen Network.</div>
       <a class="regen-btn regen-btn--solid" href="${escapeHtml(baseUrl)}/#pricing">Subscribe</a>
     </div>
   </div>
@@ -343,9 +343,9 @@ function renderBadgeSvg(retirement: Retirement, baseUrl: string): string {
       ${theme.icon.replace(/currentColor/g, "#fff")}
     </svg>
   </g>
-  <text x="52" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#fff">${escapeHtml(label)}</text>
-  <text x="52" y="50" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" fill="rgba(255,255,255,0.85)">credits retired on Regen Network</text>
-  <text x="16" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" fill="rgba(255,255,255,0.65)">Powered by Regenerative AI</text>
+  <text x="52" y="32" font-family="Lato, sans-serif" font-size="16" font-weight="700" fill="#fff">${escapeHtml(label)}</text>
+  <text x="52" y="50" font-family="Lato, sans-serif" font-size="11" fill="rgba(255,255,255,0.85)">credits retired on Regen Network</text>
+  <text x="16" y="70" font-family="Lato, sans-serif" font-size="9" fill="rgba(255,255,255,0.65)">Powered by Regenerative AI</text>
 </svg>`;
 }
 
@@ -361,17 +361,18 @@ function renderErrorPage(status: number, message: string): string {
   <title>${title} — Regenerative Compute</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Source Serif 4', serif;
       max-width: 640px;
       margin: 80px auto;
       padding: 0 20px;
-      color: #1a1a1a;
+      color: #F0ECE2;
+      background: #05060A;
       text-align: center;
     }
-    h1 { color: #6b7280; font-size: 24px; margin-bottom: 12px; }
-    p { color: #9ca3af; font-size: 15px; line-height: 1.6; }
-    a { color: #2d6a4f; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    h1 { font-family: 'Playfair Display', serif; color: #8B90A0; font-size: 24px; margin-bottom: 12px; }
+    p { color: #515868; font-size: 15px; line-height: 1.6; }
+    a { color: #2b994f; text-decoration: none; }
+    a:hover { color: #33b35c; text-decoration: none; }
   </style>
 </head>
 <body>

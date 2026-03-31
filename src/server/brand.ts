@@ -4,8 +4,7 @@
  * Exports helpers that inject brand-consistent fonts, CSS custom properties,
  * component classes, header, and footer into any server-rendered HTML page.
  *
- * Design tokens match app.regen.network / regen.network.
- * To update the brand, edit this single file — all pages inherit.
+ * Dark theme design system — all pages inherit from this single file.
  */
 
 // ---------------------------------------------------------------------------
@@ -52,7 +51,7 @@ export const regenLogoSVG = `<svg width="186" height="84" viewBox="0 0 186 84" f
 // ---------------------------------------------------------------------------
 
 export const regenLogoPNG = Buffer.from(
-  "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",
+  "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",
   "base64"
 );
 
@@ -64,7 +63,7 @@ export function brandFonts(): string {
   return `<link rel="icon" href="https://app.regen.network/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Lato:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});
@@ -75,92 +74,133 @@ gtag('js',new Date());gtag('config','G-CGCVGY357V');
 }
 
 // ---------------------------------------------------------------------------
-// CSS custom properties + shared component classes
+// CSS custom properties + shared component classes (dark theme)
 // ---------------------------------------------------------------------------
 
 export function brandCSS(): string {
   return `
-    /* ---- Regen Brand Tokens ---- */
+    /* ---- Dark Design System Tokens ---- */
     :root {
-      --regen-green: #4FB573;
-      --regen-green-light: #b9e1c7;
-      --regen-green-bg: #f0f7f2;
-      --regen-teal: #527984;
-      --regen-sage: #79C6AA;
-      --regen-sage-light: #C4DAB5;
-      --regen-navy: #101570;
-      --regen-white: #fff;
-      --regen-black: #1a1a1a;
-      --regen-gray-50: #f9fafb;
-      --regen-gray-100: #f3f4f6;
-      --regen-gray-200: #e5e7eb;
-      --regen-gray-300: #d1d5db;
-      --regen-gray-500: #6b7280;
-      --regen-gray-700: #374151;
-      --regen-font-primary: 'Mulish', -apple-system, system-ui, sans-serif;
-      --regen-font-secondary: 'Inter', -apple-system, system-ui, sans-serif;
-      --regen-shadow-card: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
-      --regen-shadow-card-hover: 0 8px 32px rgba(79, 181, 115, 0.18), 0 2px 8px rgba(0,0,0,0.06);
+      /* Backgrounds */
+      --color-void: #05060A;
+      --color-surface: #0A0C12;
+      --color-card: #0E1018;
+      --color-card-hover: #141620;
+      --color-glass: rgba(10,12,18,0.85);
+
+      /* Text */
+      --color-cream: #F0ECE2;
+      --color-cream-soft: #D4D0C8;
+      --color-muted: #8B90A0;
+      --color-dim: #515868;
+
+      /* Accent — Gaia green */
+      --color-emerald: #2b994f;
+      --color-emerald-bright: #33b35c;
+      --color-emerald-glow: rgba(43,153,79,0.2);
+      --color-emerald-dim: rgba(43,153,79,0.08);
+
+      /* Credit types */
+      --color-carbon: #22C55E;
+      --color-biodiversity: #FBBF24;
+      --color-species: #FB923C;
+      --color-grazing: #D4A574;
+
+      /* Borders */
+      --color-border: rgba(240,236,226,0.07);
+      --color-border-light: rgba(240,236,226,0.12);
+      --color-border-emerald: rgba(43,153,79,0.25);
+
+      /* Typography */
+      --font-display: 'Playfair Display', serif;
+      --font-body: 'Source Serif 4', serif;
+      --font-ui: 'Lato', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Backward compat aliases */
+      --regen-green: #2b994f;
+      --regen-green-light: #33b35c;
+      --regen-green-bg: rgba(43,153,79,0.08);
+      --regen-navy: #F0ECE2;
+      --regen-white: #05060A;
+      --regen-black: #F0ECE2;
+      --regen-gray-50: #0A0C12;
+      --regen-gray-100: #0E1018;
+      --regen-gray-200: rgba(240,236,226,0.07);
+      --regen-gray-300: rgba(240,236,226,0.12);
+      --regen-gray-400: #515868;
+      --regen-gray-500: #8B90A0;
+      --regen-gray-700: #D4D0C8;
+      --regen-teal: #33b35c;
+      --regen-sage: #2b994f;
       --regen-radius: 12px;
       --regen-radius-lg: 16px;
+      --regen-font-primary: var(--font-body);
+      --regen-font-secondary: var(--font-ui);
+      --regen-shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+      --regen-shadow-card-hover: 0 8px 32px rgba(43,153,79,0.15), 0 2px 8px rgba(0,0,0,0.3);
     }
 
     /* ---- Base reset ---- */
     *, *::before, *::after { box-sizing: border-box; }
     body {
-      font-family: var(--regen-font-primary);
+      font-family: var(--font-body);
       margin: 0; padding: 0;
-      color: var(--regen-black);
+      color: var(--color-cream);
       line-height: 1.6;
-      background: var(--regen-white);
+      background: var(--color-void);
       -webkit-font-smoothing: antialiased;
     }
-    a { color: var(--regen-green); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* ---- Hindi / Devanagari typography ---- */
-    html[lang="hi"] body {
-      font-family: 'Hind', var(--regen-font-primary);
-      font-size: 17px;
-      line-height: 1.9;
-    }
-    html[lang="hi"] p { line-height: 2.0; }
-    html[lang="hi"] h1, html[lang="hi"] h2, html[lang="hi"] h3 {
-      font-family: 'Hind', var(--regen-font-primary);
-      line-height: 1.5;
-    }
+    a { color: var(--color-emerald); text-decoration: none; }
+    a:hover { color: var(--color-emerald-bright); text-decoration: none; }
 
     /* ---- Layout ---- */
     .regen-container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
     .regen-container--narrow { max-width: 640px; margin: 0 auto; padding: 0 24px; }
 
-    /* ---- Brand header ---- */
+    /* ---- Brand header (dark, fixed) ---- */
     .regen-header {
-      padding: 20px 0;
-      border-bottom: 1px solid var(--regen-gray-200);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(5,6,10,0.7);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--color-border);
     }
     .regen-header__inner {
       max-width: 900px; margin: 0 auto; padding: 0 24px;
       display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
     }
-    .regen-header__logo { color: var(--regen-navy); display: flex; align-items: center; }
-    .regen-header__logo svg { height: 36px; width: auto; }
+    .regen-header__logo { color: var(--color-cream); display: flex; align-items: center; text-decoration: none; }
+    .regen-header__logo:hover { color: var(--color-cream); }
+    .regen-header__logo svg { height: 32px; width: auto; }
     .regen-header__nav { display: flex; align-items: center; gap: 20px; }
     .regen-header__nav a {
-      font-family: var(--regen-font-secondary);
-      font-size: 14px; font-weight: 500; color: var(--regen-gray-500);
+      font-family: var(--font-ui);
+      font-size: 13px; font-weight: 500; color: var(--color-muted);
+      text-decoration: none; transition: color 0.2s;
     }
-    .regen-header__nav a:hover { color: var(--regen-green); text-decoration: none; }
+    .regen-header__nav a:hover { color: var(--color-cream); text-decoration: none; }
     .regen-header__badge {
-      font-size: 12px; font-weight: 700; color: var(--regen-green);
-      background: var(--regen-green-bg); padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; color: var(--color-emerald);
+      background: var(--color-emerald-dim); padding: 4px 12px; border-radius: 20px;
       letter-spacing: 0.03em;
+    }
+    .regen-header__subscribe {
+      font-family: var(--font-ui);
+      font-size: 13px; font-weight: 600;
+      background: var(--color-emerald); color: #fff;
+      border: none; border-radius: 6px;
+      padding: 6px 16px; cursor: pointer;
+      text-decoration: none; transition: background 0.2s;
+    }
+    .regen-header__subscribe:hover {
+      background: var(--color-emerald-bright); color: #fff; text-decoration: none;
     }
 
     /* ---- Hamburger menu (mobile) ---- */
     .regen-hamburger {
       display: none; background: none; border: none; cursor: pointer; padding: 8px;
-      color: var(--regen-navy); flex-direction: column; justify-content: center; gap: 5px;
+      color: var(--color-cream); flex-direction: column; justify-content: center; gap: 5px;
     }
     .regen-hamburger span {
       display: block; width: 22px; height: 2px; background: currentColor;
@@ -170,67 +210,91 @@ export function brandCSS(): string {
     .regen-hamburger.active span:nth-child(2) { opacity: 0; }
     .regen-hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
     .regen-mobile-nav {
-      display: none; flex-direction: column; background: var(--regen-white);
-      border-bottom: 1px solid var(--regen-gray-200);
+      display: none; flex-direction: column; background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
       padding: 8px 24px 16px;
     }
     .regen-mobile-nav.open { display: flex; }
     .regen-mobile-nav a, .regen-mobile-nav .lang-picker {
-      font-family: var(--regen-font-secondary);
-      font-size: 15px; font-weight: 500; color: var(--regen-gray-500);
-      padding: 12px 0; border-bottom: 1px solid var(--regen-gray-100);
+      font-family: var(--font-ui);
+      font-size: 15px; font-weight: 500; color: var(--color-muted);
+      padding: 12px 0; border-bottom: 1px solid var(--color-border);
       text-decoration: none;
     }
     .regen-mobile-nav a:last-child, .regen-mobile-nav .lang-picker { border-bottom: none; }
-    .regen-mobile-nav a:hover { color: var(--regen-green); }
+    .regen-mobile-nav a:hover { color: var(--color-cream); }
 
-    /* ---- Brand footer ---- */
+    /* ---- Brand footer (dark) ---- */
     .regen-footer {
       padding: 40px 24px 32px; text-align: center;
-      border-top: 1px solid var(--regen-gray-200);
-      margin-top: 48px;
+      border-top: 1px solid var(--color-border);
+      margin-top: 48px; background: var(--color-void);
     }
-    .regen-footer__logo { color: var(--regen-gray-500); margin-bottom: 12px; }
+    .regen-footer__logo { color: var(--color-dim); margin-bottom: 12px; }
     .regen-footer__logo svg { height: 28px; width: auto; opacity: 0.5; }
     .regen-footer__nav {
       display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px;
-      font-family: var(--regen-font-secondary); font-size: 13px;
-      color: var(--regen-gray-500); margin-bottom: 14px;
+      font-family: var(--font-ui); font-size: 13px;
+      color: var(--color-muted); margin-bottom: 14px;
     }
     .regen-footer__nav a {
-      color: var(--regen-gray-500); text-decoration: none; transition: color 0.2s;
+      color: var(--color-muted); text-decoration: none; transition: color 0.2s;
       display: inline-flex; align-items: center; gap: 5px;
     }
-    .regen-footer__nav a:hover { color: var(--regen-green); }
+    .regen-footer__nav a:hover { color: var(--color-emerald); }
     .regen-footer__social { margin-bottom: 12px; }
-    .regen-footer__social a:hover { color: var(--regen-green); }
+    .regen-footer__social a:hover { color: var(--color-emerald); }
     .regen-footer__note {
-      font-family: var(--regen-font-secondary);
-      font-size: 12px; color: var(--regen-gray-500);
+      font-family: var(--font-ui);
+      font-size: 12px; color: var(--color-dim);
       margin-bottom: 8px;
     }
-    .regen-footer__note a { color: var(--regen-green); text-decoration: none; }
+    .regen-footer__note a { color: var(--color-emerald); text-decoration: none; }
     .regen-footer__note a:hover { text-decoration: underline; }
     .regen-footer__legal {
-      font-family: var(--regen-font-secondary);
-      font-size: 11px; color: var(--regen-gray-400);
+      font-family: var(--font-ui);
+      font-size: 11px; color: var(--color-dim);
     }
-    .regen-footer__legal a { color: var(--regen-gray-400); text-decoration: none; }
-    .regen-footer__legal a:hover { color: var(--regen-green); }
+    .regen-footer__legal a { color: var(--color-dim); text-decoration: none; }
+    .regen-footer__legal a:hover { color: var(--color-emerald); }
     .regen-footer__install {
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 11px; color: var(--regen-gray-500);
-      background: var(--regen-gray-100); border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--color-muted);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 6px;
       padding: 8px 14px; display: inline-block; margin-top: 8px;
     }
     /* Links row kept for backward compat but hidden if nav is present */
-    .regen-footer__links { font-size: 13px; color: var(--regen-gray-500); margin-bottom: 8px; }
-    .regen-footer__links a { color: var(--regen-green); margin: 0 8px; }
+    .regen-footer__links { font-size: 13px; color: var(--color-muted); margin-bottom: 8px; }
+    .regen-footer__links a { color: var(--color-emerald); margin: 0 8px; }
+
+    /* ---- Partners section in footer ---- */
+    .regen-footer__partners {
+      display: flex; justify-content: center; align-items: center; gap: 24px;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .regen-footer__partners-label {
+      font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+      color: var(--color-dim); text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .regen-footer__partner {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-ui); font-size: 13px; font-weight: 500;
+      color: var(--color-muted); text-decoration: none;
+      padding: 6px 14px; border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: var(--color-card);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .regen-footer__partner:hover {
+      border-color: var(--color-border-light); color: var(--color-cream);
+      text-decoration: none;
+    }
 
     /* ---- Buttons ---- */
     .regen-btn {
       display: inline-block; padding: 12px 28px;
-      font-family: var(--regen-font-primary);
+      font-family: var(--font-ui);
       font-size: 15px; font-weight: 700;
       border-radius: 8px; border: 2px solid transparent;
       cursor: pointer; transition: all 0.3s ease;
@@ -239,40 +303,42 @@ export function brandCSS(): string {
     .regen-btn:hover { text-decoration: none; }
 
     .regen-btn--primary {
-      background: var(--regen-white); color: var(--regen-green);
-      border-image: linear-gradient(135deg, #4fb573, #b9e1c7) 1;
-      border-style: solid; border-width: 2px;
+      background: var(--color-emerald); color: #000;
+      border: 2px solid var(--color-emerald);
     }
     .regen-btn--primary:hover {
-      background: linear-gradient(135deg, #4fb573, #79C6AA);
-      color: var(--regen-white); border-color: transparent;
+      background: var(--color-emerald-bright);
+      color: #000; border-color: var(--color-emerald-bright);
     }
 
     .regen-btn--solid {
-      background: linear-gradient(135deg, #4fb573, #79C6AA);
-      color: var(--regen-white); border: none;
+      background: var(--color-emerald); color: #000; border: none;
     }
     .regen-btn--solid:hover {
-      background: linear-gradient(135deg, #3a9c5c, #4FB573);
+      background: var(--color-emerald-bright);
     }
 
     .regen-btn--secondary {
-      background: linear-gradient(0deg, #527984 6%, #79C6AA 52%, #C4DAB5 98%);
-      color: var(--regen-white); border: none;
+      background: var(--color-emerald-dim); color: var(--color-emerald);
+      border: 1px solid var(--color-border-emerald);
     }
-    .regen-btn--secondary:hover { opacity: 0.88; }
+    .regen-btn--secondary:hover {
+      background: var(--color-emerald-glow);
+      color: var(--color-emerald-bright);
+    }
 
     .regen-btn--dark {
-      background: var(--regen-black); color: var(--regen-white); border: none;
+      background: var(--color-surface); color: var(--color-cream);
+      border: 1px solid var(--color-border);
     }
-    .regen-btn--dark:hover { background: #333; }
+    .regen-btn--dark:hover { background: var(--color-card); }
 
     .regen-btn--outline {
-      background: transparent; color: var(--regen-green);
-      border: 2px solid var(--regen-green);
+      background: transparent; color: var(--color-emerald);
+      border: 2px solid var(--color-emerald);
     }
     .regen-btn--outline:hover {
-      background: var(--regen-green-bg);
+      background: var(--color-emerald-dim);
     }
 
     .regen-btn--sm { padding: 8px 18px; font-size: 13px; }
@@ -280,57 +346,61 @@ export function brandCSS(): string {
 
     /* ---- Cards ---- */
     .regen-card {
-      background: var(--regen-white);
-      border: 1px solid var(--regen-gray-200);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius-lg);
       box-shadow: var(--regen-shadow-card);
       overflow: hidden;
-      transition: box-shadow 0.3s ease, transform 0.3s ease;
+      transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
     }
     .regen-card:hover {
       box-shadow: var(--regen-shadow-card-hover);
+      border-color: var(--color-border-light);
     }
     .regen-card--interactive:hover {
       transform: translateY(-3px);
     }
     .regen-card__body { padding: 28px 32px; }
     .regen-card__header {
-      background: linear-gradient(135deg, var(--regen-green), var(--regen-sage));
-      color: var(--regen-white); padding: 32px; text-align: center;
+      background: linear-gradient(135deg, var(--color-emerald), var(--color-emerald-bright));
+      color: #000; padding: 32px; text-align: center;
     }
 
     /* ---- Hero section ---- */
     .regen-hero {
       padding: 72px 0 56px; text-align: center;
+      background: transparent;
     }
     .regen-hero__label {
       display: inline-block;
-      font-family: var(--regen-font-secondary);
+      font-family: var(--font-ui);
       font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--regen-green); background: var(--regen-green-bg);
+      color: var(--color-emerald); background: var(--color-emerald-dim);
       padding: 5px 14px; border-radius: 20px; margin-bottom: 16px;
     }
     .regen-hero h1 {
-      font-size: 42px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 42px; font-weight: 800; color: var(--color-cream);
       margin: 0 0 16px; line-height: 1.15; letter-spacing: -0.02em;
     }
     .regen-hero h1 span {
-      background: linear-gradient(180deg, #4fb573, #b9e1c7);
+      background: linear-gradient(180deg, var(--color-emerald-bright), var(--color-emerald));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .regen-hero p {
-      font-size: 18px; color: var(--regen-gray-500);
+      font-size: 18px; color: var(--color-muted);
       max-width: 560px; margin: 0 auto 28px;
     }
 
     /* ---- Section titles ---- */
     .regen-section-title {
-      font-size: 28px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 800; color: var(--color-cream);
       margin: 0 0 16px; letter-spacing: -0.01em;
     }
     .regen-section-subtitle {
-      font-size: 15px; color: var(--regen-gray-500); margin: 0 0 28px;
+      font-size: 15px; color: var(--color-muted); margin: 0 0 28px;
     }
 
     /* ---- Stats cards ---- */
@@ -340,23 +410,27 @@ export function brandCSS(): string {
       gap: 16px; margin-bottom: 32px;
     }
     .regen-stat-card {
-      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      background: var(--color-card); border: 1px solid var(--color-border);
       border-radius: var(--regen-radius); padding: 20px; text-align: center;
-      transition: box-shadow 0.3s ease;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
     }
-    .regen-stat-card:hover { box-shadow: var(--regen-shadow-card-hover); }
-    .regen-stat-card--green { border-left: 4px solid var(--regen-green); }
-    .regen-stat-card--teal { border-left: 4px solid var(--regen-teal); }
-    .regen-stat-card--sage { border-left: 4px solid var(--regen-sage); }
-    .regen-stat-card--navy { border-left: 4px solid var(--regen-navy); }
-    .regen-stat-card--muted { border-left: 4px solid var(--regen-gray-500); }
+    .regen-stat-card:hover {
+      box-shadow: var(--regen-shadow-card-hover);
+      border-color: var(--color-border-light);
+    }
+    .regen-stat-card--green { border-left: 4px solid var(--color-emerald); }
+    .regen-stat-card--teal { border-left: 4px solid var(--color-emerald-bright); }
+    .regen-stat-card--sage { border-left: 4px solid var(--color-emerald); }
+    .regen-stat-card--navy { border-left: 4px solid var(--color-cream); }
+    .regen-stat-card--muted { border-left: 4px solid var(--color-muted); }
     .regen-stat-value {
-      font-size: 28px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 800; color: var(--color-cream);
       letter-spacing: -0.02em;
     }
     .regen-stat-label {
-      font-family: var(--regen-font-secondary);
-      font-size: 12px; color: var(--regen-gray-500); margin-top: 4px;
+      font-family: var(--font-ui);
+      font-size: 12px; color: var(--color-muted); margin-top: 4px;
       text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
     }
 
@@ -366,76 +440,91 @@ export function brandCSS(): string {
       gap: 20px; margin: 28px 0;
     }
     .regen-tier {
-      background: var(--regen-white);
-      border: 2px solid var(--regen-gray-200);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius-lg); padding: 28px;
-      text-align: center; text-decoration: none; color: var(--regen-black);
+      text-align: center; text-decoration: none; color: var(--color-cream);
       transition: all 0.3s ease; display: block;
     }
     .regen-tier:hover {
-      border-color: var(--regen-green);
+      border-color: var(--color-border-emerald);
       box-shadow: var(--regen-shadow-card-hover);
       transform: translateY(-3px); text-decoration: none;
     }
     .regen-tier__name {
-      font-weight: 800; font-size: 18px; color: var(--regen-green); margin-bottom: 4px;
+      font-weight: 800; font-size: 18px; color: var(--color-emerald); margin-bottom: 4px;
     }
     .regen-tier__price {
-      font-size: 32px; font-weight: 800; color: var(--regen-navy); margin: 8px 0;
+      font-family: var(--font-display);
+      font-size: 32px; font-weight: 800; color: var(--color-cream); margin: 8px 0;
     }
     .regen-tier__price span {
-      font-size: 16px; font-weight: 500; color: var(--regen-gray-500);
+      font-size: 16px; font-weight: 500; color: var(--color-muted);
     }
     .regen-tier__desc {
-      font-size: 14px; color: var(--regen-gray-500); line-height: 1.5; margin-bottom: 16px;
+      font-size: 14px; color: var(--color-muted); line-height: 1.5; margin-bottom: 16px;
     }
 
     /* ---- Forms ---- */
     .regen-input {
       width: 100%; padding: 12px 14px;
-      border: 1px solid var(--regen-gray-300); border-radius: 8px;
-      font-family: var(--regen-font-primary);
-      font-size: 15px; color: var(--regen-black);
+      border: 1px solid var(--color-border-light); border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 15px; color: var(--color-cream);
+      background: var(--color-surface);
       outline: none; transition: border-color 0.2s;
     }
-    .regen-input:focus { border-color: var(--regen-green); }
+    .regen-input:focus { border-color: var(--color-emerald); }
+    .regen-input::placeholder { color: var(--color-dim); }
     .regen-label {
-      font-size: 14px; font-weight: 600; color: var(--regen-gray-700);
+      font-size: 14px; font-weight: 600; color: var(--color-cream-soft);
       display: block; margin-bottom: 6px;
     }
 
     /* ---- Alert boxes ---- */
     .regen-alert { border-radius: 8px; padding: 14px 16px; font-size: 14px; margin-bottom: 16px; }
-    .regen-alert--error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-    .regen-alert--success { background: var(--regen-green-bg); border: 1px solid #b9e1c7; color: #1b4332; }
-    .regen-alert--info { background: #f0f4ff; border: 1px solid #c7d2fe; color: var(--regen-navy); }
+    .regen-alert--error {
+      background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3);
+      color: #fca5a5;
+    }
+    .regen-alert--success {
+      background: var(--color-emerald-dim); border: 1px solid var(--color-border-emerald);
+      color: var(--color-emerald-bright);
+    }
+    .regen-alert--info {
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+      color: #93c5fd;
+    }
 
     /* ---- Info box ---- */
     .regen-info-box {
-      background: var(--regen-green-bg); border-left: 4px solid var(--regen-green);
+      background: var(--color-emerald-dim); border-left: 4px solid var(--color-emerald);
       padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;
-      font-size: 15px; color: var(--regen-gray-700);
+      font-size: 15px; color: var(--color-cream-soft);
     }
 
     /* ---- Code/pre ---- */
     .regen-code {
-      background: var(--regen-gray-100); padding: 2px 8px; border-radius: 4px;
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 13px;
+      background: var(--color-surface); padding: 2px 8px; border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 13px; color: var(--color-emerald);
+      border: 1px solid var(--color-border);
     }
     .regen-pre {
-      background: var(--regen-navy); color: #e0e0e0;
+      background: var(--color-surface); color: var(--color-cream-soft);
       padding: 16px 18px; border-radius: 10px;
       overflow-x: auto; font-size: 13px; margin: 8px 0 16px;
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      font-family: var(--font-mono);
+      border: 1px solid var(--color-border);
     }
 
     /* ---- API key display ---- */
     .regen-api-key {
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 13px; background: var(--regen-white);
-      border: 1px solid var(--regen-gray-300);
+      font-family: var(--font-mono);
+      font-size: 13px; background: var(--color-surface);
+      border: 1px solid var(--color-border);
       padding: 10px 14px; border-radius: 8px;
+      color: var(--color-cream);
       word-break: break-all; display: block; margin: 8px 0;
       user-select: all;
     }
@@ -443,19 +532,20 @@ export function brandCSS(): string {
     /* ---- Tables ---- */
     .regen-table { width: 100%; border-collapse: collapse; }
     .regen-table th {
-      font-family: var(--regen-font-secondary);
-      font-size: 11px; font-weight: 700; color: var(--regen-gray-500);
+      font-family: var(--font-ui);
+      font-size: 11px; font-weight: 700; color: var(--color-muted);
       text-transform: uppercase; letter-spacing: 0.05em;
       text-align: left; padding: 12px 16px;
-      border-bottom: 1px solid var(--regen-gray-200);
-      background: var(--regen-gray-50);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-surface);
     }
     .regen-table td {
       font-size: 14px; padding: 12px 16px;
-      border-bottom: 1px solid var(--regen-gray-100);
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-cream-soft);
     }
     .regen-table tr:last-child td { border-bottom: none; }
-    .regen-table td a { color: var(--regen-green); font-weight: 600; }
+    .regen-table td a { color: var(--color-emerald); font-weight: 600; }
 
     /* ---- Share buttons ---- */
     .regen-share-btns {
@@ -464,29 +554,30 @@ export function brandCSS(): string {
     }
     .regen-share-btn {
       display: inline-block; padding: 10px 20px;
-      font-family: var(--regen-font-primary);
+      font-family: var(--font-ui);
       font-size: 14px; font-weight: 600;
       border-radius: 8px; text-decoration: none; color: #fff;
       transition: opacity 0.2s; cursor: pointer; border: none;
     }
     .regen-share-btn:hover { opacity: 0.88; text-decoration: none; }
-    .regen-share-btn--x { background: var(--regen-black); }
+    .regen-share-btn--x { background: var(--color-cream); color: var(--color-void); }
     .regen-share-btn--linkedin { background: #0a66c2; }
-    .regen-share-btn--copy { background: var(--regen-gray-500); }
+    .regen-share-btn--copy { background: var(--color-muted); }
 
     /* ---- Referral box ---- */
     .regen-referral-box {
-      background: var(--regen-green-bg); border: 2px solid var(--regen-green);
+      background: var(--color-emerald-dim); border: 2px solid var(--color-emerald);
       border-radius: var(--regen-radius-lg); padding: 28px; margin: 28px 0;
       text-align: center;
     }
-    .regen-referral-box h2 { color: var(--regen-green); margin: 0 0 8px; font-size: 20px; }
-    .regen-referral-box p { color: var(--regen-gray-500); margin: 4px 0 16px; }
+    .regen-referral-box h2 { color: var(--color-emerald); margin: 0 0 8px; font-size: 20px; }
+    .regen-referral-box p { color: var(--color-muted); margin: 4px 0 16px; }
     .regen-ref-link {
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 14px; background: var(--regen-white);
-      border: 1px solid var(--regen-sage); padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 14px; background: var(--color-surface);
+      border: 1px solid var(--color-border-emerald); padding: 10px 14px;
       border-radius: 8px; display: block; margin: 12px 0;
+      color: var(--color-cream);
       word-break: break-all; cursor: pointer; user-select: all;
     }
 
@@ -497,19 +588,23 @@ export function brandCSS(): string {
       gap: 12px;
     }
     .regen-badge {
-      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      background: var(--color-card); border: 1px solid var(--color-border);
       border-radius: var(--regen-radius); padding: 16px; text-align: center;
-      transition: transform 0.2s, box-shadow 0.3s;
+      transition: transform 0.2s, box-shadow 0.3s, border-color 0.3s;
     }
-    .regen-badge:hover { transform: translateY(-2px); box-shadow: var(--regen-shadow-card-hover); }
+    .regen-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--regen-shadow-card-hover);
+      border-color: var(--color-border-light);
+    }
     .regen-badge svg { margin-bottom: 8px; }
-    .regen-badge__name { font-size: 13px; font-weight: 700; color: var(--regen-navy); margin-bottom: 2px; }
-    .regen-badge__desc { font-size: 11px; color: var(--regen-gray-500); }
+    .regen-badge__name { font-size: 13px; font-weight: 700; color: var(--color-cream); margin-bottom: 2px; }
+    .regen-badge__desc { font-size: 11px; color: var(--color-muted); }
 
     /* ---- Referral banner ---- */
     .regen-ref-banner {
-      background: linear-gradient(135deg, var(--regen-green), var(--regen-sage));
-      color: var(--regen-white); text-align: center;
+      background: linear-gradient(135deg, var(--color-emerald), var(--color-emerald-bright));
+      color: #000; text-align: center;
       padding: 10px 16px; font-size: 14px; font-weight: 600;
     }
     .regen-ref-banner span { opacity: 0.85; }
@@ -517,25 +612,47 @@ export function brandCSS(): string {
     /* ---- Proof/data section ---- */
     .regen-proof-section {
       margin-top: 24px; padding: 16px 20px;
-      background: var(--regen-gray-50); border-radius: 10px;
-      border: 1px solid var(--regen-gray-200);
+      background: var(--color-surface); border-radius: 10px;
+      border: 1px solid var(--color-border);
     }
     .regen-proof-title {
-      font-family: var(--regen-font-secondary);
+      font-family: var(--font-ui);
       font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--regen-gray-500); margin-bottom: 10px;
+      text-transform: uppercase; color: var(--color-muted); margin-bottom: 10px;
     }
     .regen-proof-row {
       display: flex; align-items: center; justify-content: space-between;
       font-size: 13px; margin-bottom: 6px;
     }
     .regen-proof-row:last-child { margin-bottom: 0; }
-    .regen-proof-label { color: var(--regen-gray-500); font-weight: 500; }
+    .regen-proof-label { color: var(--color-muted); font-weight: 500; }
     .regen-proof-value {
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 12px; color: var(--regen-black);
+      font-family: var(--font-mono);
+      font-size: 12px; color: var(--color-cream);
     }
-    .regen-proof-value a { color: var(--regen-green); }
+    .regen-proof-value a { color: var(--color-emerald); }
+
+    /* ---- Animations ---- */
+    @keyframes breathe {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .animate-breathe { animation: breathe 3s ease-in-out infinite; }
+    .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+    .animate-slide-in-left { animation: slideInLeft 0.5s ease-out forwards; }
+    .animate-slide-in-right { animation: slideInRight 0.5s ease-out forwards; }
 
     /* ---- Mobile ---- */
     @media (max-width: 640px) {
@@ -566,11 +683,24 @@ export interface HeaderOptions {
 }
 
 export function brandHeader(opts?: HeaderOptions): string {
-  const nav = opts?.nav ?? [];
+  const defaultNav = [
+    { label: "Projects", href: "#projects" },
+    { label: "How It Works", href: "#how" },
+    { label: "GitHub", href: "https://github.com/regen-network/regen-compute" },
+    { label: "Research", href: "/research" },
+    { label: "Developers", href: "/developers" },
+  ];
+  const nav = opts?.nav ?? defaultNav;
   const badge = opts?.badge ? `<span class="regen-header__badge">${opts.badge}</span>` : "";
   const suffix = opts?.navSuffix ?? "";
-  const navLinks = nav.map(n => `<a href="${n.href}">${n.label}</a>`).join("");
-  const mobileNavLinks = nav.map(n => `<a href="${n.href}">${n.label}</a>`).join("");
+  const navLinks = nav.map(n => {
+    const external = n.href.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
+    return `<a href="${n.href}"${external}>${n.label}</a>`;
+  }).join("");
+  const mobileNavLinks = nav.map(n => {
+    const external = n.href.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
+    return `<a href="${n.href}"${external}>${n.label}</a>`;
+  }).join("");
   return `
     <header class="regen-header">
       <div class="regen-header__inner">
@@ -578,13 +708,14 @@ export function brandHeader(opts?: HeaderOptions): string {
           <a href="/" class="regen-header__logo">${regenLogoSVG}</a>
           ${badge}
         </div>
-        <nav class="regen-header__nav">${navLinks}${suffix}</nav>
+        <nav class="regen-header__nav">${navLinks}${suffix}<a href="/subscribe" class="regen-header__subscribe">Subscribe</a></nav>
         <button class="regen-hamburger" aria-label="Menu" onclick="this.classList.toggle('active');document.getElementById('mobile-nav').classList.toggle('open')">
           <span></span><span></span><span></span>
         </button>
       </div>
-      <nav class="regen-mobile-nav" id="mobile-nav">${mobileNavLinks}${suffix}</nav>
-    </header>`;
+      <nav class="regen-mobile-nav" id="mobile-nav">${mobileNavLinks}${suffix}<a href="/subscribe" class="regen-header__subscribe" style="margin-top:8px;text-align:center;">Subscribe</a></nav>
+    </header>
+    <div style="height:56px;"></div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -599,6 +730,18 @@ export interface FooterOptions {
 export function brandFooter(opts?: FooterOptions): string {
   return `
     <footer class="regen-footer">
+      <div class="regen-footer__partners">
+        <span class="regen-footer__partners-label">Built on</span>
+        <a href="https://regen.network" target="_blank" rel="noopener" class="regen-footer__partner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12l3 3 5-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          Regen Network
+        </a>
+        <a href="https://gaia.ai" target="_blank" rel="noopener" class="regen-footer__partner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>
+          Gaia AI
+        </a>
+      </div>
+
       <div class="regen-footer__logo">${regenLogoSVG}</div>
 
       <nav class="regen-footer__nav">
@@ -616,7 +759,7 @@ export function brandFooter(opts?: FooterOptions): string {
       </nav>
 
       <div class="regen-footer__social">
-        <a href="https://x.com/RegenChristian" target="_blank" rel="noopener" title="Follow @RegenChristian on X" style="display:inline-flex;align-items:center;gap:6px;color:var(--regen-gray-500);font-size:13px;text-decoration:none;transition:color 0.2s;">
+        <a href="https://x.com/RegenChristian" target="_blank" rel="noopener" title="Follow @RegenChristian on X" style="display:inline-flex;align-items:center;gap:6px;color:var(--color-muted);font-size:13px;text-decoration:none;transition:color 0.2s;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           Follow @RegenChristian
         </a>
@@ -629,12 +772,12 @@ export function brandFooter(opts?: FooterOptions): string {
       <div class="regen-footer__legal">&copy; ${new Date().getFullYear()} Regen Network Development, PBC. Licensed under <a href="https://github.com/regen-network/regen-compute/blob/main/LICENSE" target="_blank" rel="noopener">Apache 2.0</a>.</div>
     </footer>
 
-    <div id="consent-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:10000;background:#fff;border-top:1px solid #e5e7eb;padding:14px 24px;box-shadow:0 -2px 12px rgba(0,0,0,0.08);font-family:'Inter',Arial,sans-serif;font-size:13px;color:#374151;">
+    <div id="consent-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:10000;background:var(--color-surface);border-top:1px solid var(--color-border);padding:14px 24px;box-shadow:0 -2px 12px rgba(0,0,0,0.3);font-family:'Lato',Arial,sans-serif;font-size:13px;color:var(--color-cream-soft);">
       <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-        <p style="margin:0;line-height:1.5;flex:1;min-width:200px;">We use cookies to understand how visitors use our site. No data is sold or used for ads. <a href="https://regen.network/privacy-policy" target="_blank" rel="noopener" style="color:#4FB573;">Privacy Policy</a></p>
+        <p style="margin:0;line-height:1.5;flex:1;min-width:200px;">We use cookies to understand how visitors use our site. No data is sold or used for ads. <a href="https://regen.network/privacy-policy" target="_blank" rel="noopener" style="color:var(--color-emerald);">Privacy Policy</a></p>
         <div style="display:flex;gap:8px;flex-shrink:0;">
-          <button onclick="acceptConsent()" style="background:#4FB573;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">Accept</button>
-          <button onclick="declineConsent()" style="background:none;color:#9ca3af;border:1px solid #e5e7eb;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer;">Decline</button>
+          <button onclick="acceptConsent()" style="background:var(--color-emerald);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">Accept</button>
+          <button onclick="declineConsent()" style="background:none;color:var(--color-muted);border:1px solid var(--color-border-light);border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer;">Decline</button>
         </div>
       </div>
     </div>

@@ -65,7 +65,7 @@ import { swapAndBurn, checkOsmosisReadiness } from "../services/swap-and-burn.js
 import { getProjectForBatch, PROJECTS } from "./project-metadata.js";
 import { checkAndSendMonthlyReminder, checkTradableStock, sendTelegram } from "../services/admin-telegram.js";
 import { updateRegistryProfile } from "../services/registry-profile.js";
-import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter, regenLogoSVG } from "./brand.js";
 import { t, SUPPORTED_LANGS, LANG_NAMES, LANG_FLAGS, LANG_SHORT, type LangCode } from "./translations.js";
 
 /** Per-subscriber lock to prevent concurrent retirement execution */
@@ -167,105 +167,165 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 
     /* Language picker */
     .lang-picker { position: relative; margin-left: 8px; }
-    .lang-picker__btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: 1px solid var(--regen-gray-200); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; color: var(--regen-navy); font-family: inherit; transition: border-color 0.2s; }
-    .lang-picker__btn:hover { border-color: var(--regen-green); }
+    .lang-picker__btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: 1px solid var(--color-border-light); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; color: var(--color-cream); font-family: inherit; transition: border-color 0.2s; }
+    .lang-picker__btn:hover { border-color: var(--color-emerald); }
     .lang-picker__flag { font-size: 16px; line-height: 1; }
     .lang-picker__code { font-weight: 600; font-size: 12px; }
-    .lang-picker__menu { display: none; position: absolute; right: 0; top: calc(100% + 6px); background: var(--regen-white); border: 1px solid var(--regen-gray-200); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); padding: 6px 0; min-width: 200px; max-height: 360px; overflow-y: auto; z-index: 1000; }
+    .lang-picker__menu { display: none; position: absolute; right: 0; top: calc(100% + 6px); background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 6px 0; min-width: 200px; max-height: 360px; overflow-y: auto; z-index: 1000; }
     .lang-picker__menu.open { display: block; }
-    .lang-picker__item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 14px; color: var(--regen-navy); text-decoration: none; transition: background 0.15s; }
-    .lang-picker__item:hover { background: var(--regen-gray-50); }
-    .lang-picker__item--active { font-weight: 700; color: var(--regen-green); }
+    .lang-picker__item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 14px; color: var(--color-cream); text-decoration: none; transition: background 0.15s; }
+    .lang-picker__item:hover { background: var(--color-card); }
+    .lang-picker__item--active { font-weight: 700; color: var(--color-emerald); }
 
-    /* How it works */
-    .hiw-section { padding: 64px 0; border-top: 1px solid var(--regen-gray-200); }
-    .hiw-steps {
-      display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+    /* ---- Hero section ---- */
+    .hero-section { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; }
+    .hero-bg { position: absolute; inset: 0; background: url('/public/hero.webp') center 40% / cover; filter: brightness(0.3) saturate(0.8); }
+    .hero-gradient { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,6,10,0.4), rgba(5,6,10,0.2) 70%, var(--color-void)); }
+    .hero-content { position: relative; z-index: 10; max-width: 1200px; margin: 0 auto; padding: 80px 24px 64px; display: grid; grid-template-columns: 1fr 400px; gap: 80px; align-items: center; }
+    @media (max-width: 900px) {
+      .hero-content { grid-template-columns: 1fr; gap: 40px; padding: 120px 24px 48px; }
     }
-    .hiw-step {
-      flex: 1 1 220px; max-width: 260px;
-      text-align: center; padding: 0 8px;
-    }
-    .hiw-num {
-      width: 44px; height: 44px; line-height: 44px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--regen-green), var(--regen-sage));
-      color: #fff; font-size: 18px; font-weight: 800;
-      margin: 0 auto 12px;
-    }
-    .hiw-step h3 { font-size: 16px; margin: 0 0 6px; color: var(--regen-navy); font-weight: 700; }
-    .hiw-step p { font-size: 13px; color: var(--regen-gray-500); margin: 0; }
 
-    /* Pricing section */
-    .pricing-section {
-      padding: 64px 0; background: var(--regen-gray-50);
-      border-top: 1px solid var(--regen-gray-200);
+    /* ---- Problem / Stats section ---- */
+    .problem-section { position: relative; padding: 100px 0; overflow: hidden; }
+    .problem-canvas { position: absolute; inset: 0; z-index: 0; }
+    .problem-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .stats-grid-dark { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 48px; }
+    .stat-card-dark {
+      background: var(--color-glass); backdrop-filter: blur(12px);
+      border: 1px solid var(--color-border-light); border-radius: 16px;
+      padding: 28px 24px; text-align: center;
+      transition: border-color 0.3s, transform 0.3s;
     }
-    .tier-featured { border-color: var(--regen-green); position: relative; }
-    .tier-featured-badge {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, var(--regen-green), var(--regen-sage));
-      color: #fff; font-size: 11px; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      padding: 4px 14px; border-radius: 20px; white-space: nowrap;
+    .stat-card-dark:hover { border-color: var(--color-border-emerald); transform: translateY(-2px); }
+    .stat-card-dark .stat-num { font-family: var(--font-display); font-size: 36px; font-weight: 800; color: var(--color-emerald); margin-bottom: 4px; }
+    .stat-card-dark .stat-label { font-family: var(--font-ui); font-size: 13px; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    @media (max-width: 700px) {
+      .stats-grid-dark { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ---- Projects section ---- */
+    .projects-section { padding: 100px 0; }
+    .project-spread { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-bottom: 80px; }
+    .project-spread:last-child { margin-bottom: 0; }
+    .project-spread--reverse { direction: rtl; }
+    .project-spread--reverse > * { direction: ltr; }
+    .project-spread__img { width: 100%; border-radius: 16px; aspect-ratio: 4/3; object-fit: cover; display: block; border: 1px solid var(--color-border); }
+    .project-spread__text { }
+    .project-spread__badge { display: inline-block; font-family: var(--font-ui); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; }
+    .project-spread__name { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--color-cream); margin: 0 0 8px; line-height: 1.2; }
+    .project-spread__location { font-family: var(--font-ui); font-size: 14px; color: var(--color-muted); margin-bottom: 16px; font-weight: 500; }
+    .project-spread__desc { font-size: 15px; color: var(--color-cream-soft); line-height: 1.7; margin: 0 0 20px; }
+    .project-spread__links { display: flex; gap: 16px; flex-wrap: wrap; }
+    .project-spread__link { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--color-emerald); }
+    .project-spread__link:hover { text-decoration: underline; }
+    @media (max-width: 700px) {
+      .project-spread, .project-spread--reverse { grid-template-columns: 1fr; direction: ltr; }
+      .project-spread__name { font-size: 22px; }
+    }
+
+    /* ---- How It Works ---- */
+    .hiw-section-dark { padding: 100px 0; border-top: 1px solid var(--color-border); }
+    .hiw-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .hiw-card {
+      background: var(--color-card); border: 1px solid var(--color-border);
+      border-radius: 16px; padding: 32px 28px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .hiw-card:hover { border-color: var(--color-border-emerald); transform: translateY(-3px); }
+    .hiw-card__num { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--color-emerald); margin-bottom: 16px; letter-spacing: 0.1em; }
+    .hiw-card__title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--color-cream); margin: 0 0 8px; }
+    .hiw-card__desc { font-size: 14px; color: var(--color-muted); line-height: 1.6; margin: 0; }
+    .install-block {
+      margin-top: 48px; background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      max-width: 640px; margin-left: auto; margin-right: auto;
+    }
+    .install-block code { font-family: var(--font-mono); font-size: 13px; color: var(--color-emerald); white-space: nowrap; overflow-x: auto; }
+    .copy-btn {
+      font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+      background: var(--color-card); color: var(--color-cream);
+      border: 1px solid var(--color-border-light); border-radius: 6px;
+      padding: 6px 14px; cursor: pointer; white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .copy-btn:hover { background: var(--color-card-hover); border-color: var(--color-emerald); }
+    @media (max-width: 700px) {
+      .hiw-cards { grid-template-columns: 1fr; }
+      .install-block { flex-direction: column; text-align: center; }
+    }
+
+    /* ---- Trust comparison table ---- */
+    .trust-compare-section { padding: 100px 0; border-top: 1px solid var(--color-border); }
+    .trust-table { max-width: 800px; margin: 48px auto 0; border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; }
+    .trust-table-header { display: grid; grid-template-columns: 1fr 1fr; }
+    .trust-table-header div { padding: 20px 28px; font-family: var(--font-ui); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .trust-table-header div:first-child { background: var(--color-surface); color: var(--color-muted); border-right: 1px solid var(--color-border); }
+    .trust-table-header div:last-child { background: var(--color-emerald-dim); color: var(--color-emerald); border-right: none; }
+    .trust-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--color-border); opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .trust-row.visible { opacity: 1; transform: translateY(0); }
+    .trust-row div { padding: 16px 28px; font-size: 14px; line-height: 1.6; }
+    .trust-row div:first-child { color: var(--color-muted); background: var(--color-surface); border-right: 1px solid var(--color-border); }
+    .trust-row div:last-child { color: var(--color-cream-soft); background: var(--color-card); }
+
+    /* ---- Subscribe card (hero) ---- */
+    .subscribe-card {
+      background: var(--color-glass); backdrop-filter: blur(24px);
+      border: 1px solid var(--color-border-light); border-radius: 16px; padding: 28px;
+      scroll-margin-top: 96px;
+    }
+    .plan-option {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border: 2px solid var(--color-border);
+      border-radius: 10px; cursor: pointer; transition: all 0.15s; margin-bottom: 8px;
+    }
+    .plan-option:hover, .plan-option.selected { border-color: var(--color-emerald); background: var(--color-emerald-dim); }
+    .plan-option__name { font-family: var(--font-ui); font-weight: 700; font-size: 14px; color: var(--color-cream); }
+    .plan-option__desc { font-size: 11px; color: var(--color-muted); }
+    .plan-option__price { font-family: var(--font-mono); font-weight: 800; font-size: 15px; color: var(--color-emerald); }
+
+    /* ---- Pricing interval toggle ---- */
     .interval-btn {
-      padding: 8px 20px; border: 1px solid transparent; border-radius: 8px;
-      font-size: 14px; font-weight: 600; cursor: pointer;
-      background: transparent; color: var(--regen-gray-500);
-      transition: all 0.15s;
+      font-family: var(--font-ui); font-size: 0.68rem; font-weight: 500;
+      padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer;
+      transition: all 0.2s; background: transparent; color: var(--color-dim);
     }
     .interval-btn--active {
-      background: var(--regen-white); color: var(--regen-navy);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      border-color: transparent;
+      background: var(--color-card); color: var(--color-cream);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
     .interval-btn--yearly {
-      border: 1px solid var(--regen-green);
-      animation: yearly-pulse 2.5s ease-in-out infinite;
+      border: none;
     }
     .interval-btn--yearly.interval-btn--active {
-      border-color: var(--regen-green);
-      animation: none;
-    }
-    @keyframes yearly-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(79, 181, 115, 0); }
-      50% { box-shadow: 0 0 0 6px rgba(79, 181, 115, 0.25); }
-    }
-    .regen-tier--clickable {
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .regen-tier--clickable:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(79, 181, 115, 0.2);
-    }
-    .regen-tier--clickable:active {
-      transform: translateY(0);
-    }
-    .regen-tier__cta-btn {
-      margin-top: auto;
-      pointer-events: none;
+      background: var(--color-card); color: var(--color-cream);
     }
     .regen-tier__effective {
-      font-size: 13px; color: var(--regen-green); font-weight: 600;
+      font-size: 13px; color: var(--color-emerald); font-weight: 600;
       margin: -4px 0 8px;
     }
 
-    /* Annual nudge modal */
+    /* ---- Final CTA ---- */
+    .cta-section { position: relative; padding: 100px 0; overflow: hidden; text-align: center; }
+    .cta-bg { position: absolute; inset: 0; background: url('/public/cta-bg.webp') center / cover; filter: brightness(0.25) saturate(0.8); }
+    .cta-gradient { position: absolute; inset: 0; background: linear-gradient(to bottom, var(--color-void), rgba(5,6,10,0.3) 30%, rgba(5,6,10,0.3) 70%, var(--color-void)); }
+    .cta-content { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 0 24px; }
+
+    /* ---- Annual nudge modal (dark) ---- */
     .nudge-overlay {
       display: none; position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,0.45); align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
     }
     .nudge-overlay.active { display: flex; }
     .nudge-box {
-      background: var(--regen-white); border-radius: var(--regen-radius-lg);
+      background: var(--color-surface); border: 1px solid var(--color-border-light);
+      border-radius: var(--regen-radius-lg);
       padding: 32px 28px; max-width: 420px; width: 90%;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.2); text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); text-align: center;
       position: relative;
     }
     .nudge-box h3 {
-      font-size: 20px; font-weight: 800; color: var(--regen-navy);
+      font-size: 20px; font-weight: 800; color: var(--color-cream);
       margin: 0 0 16px;
     }
     .nudge-reason {
@@ -274,19 +334,19 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     }
     .nudge-reason-icon {
       flex-shrink: 0; width: 28px; height: 28px; line-height: 28px;
-      border-radius: 50%; background: var(--regen-green); color: #fff;
+      border-radius: 50%; background: var(--color-emerald); color: #fff;
       font-size: 14px; font-weight: 800; text-align: center;
     }
     .nudge-reason p {
-      margin: 0; font-size: 14px; color: var(--regen-gray-500); line-height: 1.5;
+      margin: 0; font-size: 14px; color: var(--color-muted); line-height: 1.5;
     }
-    .nudge-reason strong { color: var(--regen-navy); }
+    .nudge-reason strong { color: var(--color-cream); }
     .nudge-btns {
       display: flex; flex-direction: column; gap: 10px; margin-top: 20px;
     }
     .nudge-btn-yearly {
       display: block; width: 100%; padding: 12px;
-      background: linear-gradient(135deg, var(--regen-green), var(--regen-sage));
+      background: var(--color-emerald);
       color: #fff; border: none; border-radius: 10px;
       font-size: 15px; font-weight: 700; cursor: pointer;
       transition: opacity 0.15s;
@@ -294,38 +354,39 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     .nudge-btn-yearly:hover { opacity: 0.9; }
     .nudge-btn-monthly {
       display: block; width: 100%; padding: 10px;
-      background: transparent; color: var(--regen-gray-500);
-      border: 1px solid var(--regen-gray-200); border-radius: 10px;
+      background: transparent; color: var(--color-muted);
+      border: 1px solid var(--color-border-light); border-radius: 10px;
       font-size: 13px; cursor: pointer;
       transition: background 0.15s;
     }
-    .nudge-btn-monthly:hover { background: var(--regen-gray-50); }
+    .nudge-btn-monthly:hover { background: var(--color-card); }
 
-    /* Crypto checkout modal */
+    /* ---- Crypto checkout modal (dark) ---- */
     .crypto-overlay {
       display: none; position: fixed; inset: 0; z-index: 10000;
-      background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
     }
     .crypto-overlay.active { display: flex; }
     .crypto-box {
-      background: var(--regen-white); border-radius: var(--regen-radius-lg);
+      background: var(--color-surface); border: 1px solid var(--color-border-light);
+      border-radius: var(--regen-radius-lg);
       padding: 32px 28px; max-width: 480px; width: 92%;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.25); position: relative;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); position: relative;
       max-height: 90vh; overflow-y: auto;
     }
     .crypto-box h3 {
-      font-size: 20px; font-weight: 800; color: var(--regen-navy);
+      font-size: 20px; font-weight: 800; color: var(--color-cream);
       margin: 0 0 6px;
     }
     .crypto-box .crypto-subtitle {
-      font-size: 14px; color: var(--regen-gray-500); margin: 0 0 20px;
+      font-size: 14px; color: var(--color-muted); margin: 0 0 20px;
     }
     .crypto-close {
       position: absolute; top: 12px; right: 16px;
-      background: none; border: none; font-size: 22px; color: var(--regen-gray-400);
+      background: none; border: none; font-size: 22px; color: var(--color-dim);
       cursor: pointer; line-height: 1; padding: 4px;
     }
-    .crypto-close:hover { color: var(--regen-navy); }
+    .crypto-close:hover { color: var(--color-cream); }
     .crypto-step { display: none; }
     .crypto-step.active { display: block; }
     .crypto-plans {
@@ -333,28 +394,28 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     }
     .crypto-plan {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px; border: 2px solid var(--regen-gray-200);
+      padding: 14px 18px; border: 2px solid var(--color-border);
       border-radius: 10px; cursor: pointer; transition: all 0.15s;
     }
-    .crypto-plan:hover { border-color: var(--regen-green); background: rgba(79,181,115,0.04); }
-    .crypto-plan-name { font-weight: 700; color: var(--regen-navy); font-size: 15px; }
-    .crypto-plan-price { font-weight: 800; color: var(--regen-green); font-size: 16px; }
-    .crypto-plan-desc { font-size: 12px; color: var(--regen-gray-400); }
+    .crypto-plan:hover { border-color: var(--color-emerald); background: var(--color-emerald-dim); }
+    .crypto-plan-name { font-weight: 700; color: var(--color-cream); font-size: 15px; }
+    .crypto-plan-price { font-weight: 800; color: var(--color-emerald); font-size: 16px; }
+    .crypto-plan-desc { font-size: 12px; color: var(--color-dim); }
     .crypto-chain-tabs {
       display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
     }
     .crypto-chain-tab {
-      padding: 6px 14px; border: 1px solid var(--regen-gray-200);
+      padding: 6px 14px; border: 1px solid var(--color-border);
       border-radius: 8px; font-size: 13px; font-weight: 600;
-      cursor: pointer; background: var(--regen-white); color: var(--regen-gray-500);
+      cursor: pointer; background: var(--color-card); color: var(--color-muted);
       transition: all 0.15s;
     }
-    .crypto-chain-tab:hover { border-color: var(--regen-green); }
+    .crypto-chain-tab:hover { border-color: var(--color-emerald); }
     .crypto-chain-tab.active {
-      background: var(--regen-green); color: #fff; border-color: var(--regen-green);
+      background: var(--color-emerald); color: #fff; border-color: var(--color-emerald);
     }
     .crypto-addr-box {
-      background: var(--regen-gray-50); border: 1px solid var(--regen-gray-200);
+      background: var(--color-card); border: 1px solid var(--color-border);
       border-radius: 10px; padding: 16px; text-align: center;
     }
     .crypto-addr-box .qr-container {
@@ -363,39 +424,39 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     .crypto-addr-box .qr-container svg { width: 100%; height: 100%; }
     .crypto-addr-text {
       font-family: monospace; font-size: 12px; word-break: break-all;
-      color: var(--regen-navy); background: var(--regen-white);
-      padding: 8px 12px; border-radius: 6px; border: 1px solid var(--regen-gray-200);
+      color: var(--color-cream); background: var(--color-surface);
+      padding: 8px 12px; border-radius: 6px; border: 1px solid var(--color-border);
       cursor: pointer; position: relative;
     }
-    .crypto-addr-text:hover { border-color: var(--regen-green); }
+    .crypto-addr-text:hover { border-color: var(--color-emerald); }
     .crypto-copied {
       position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      background: var(--regen-green); color: #fff; border-radius: 6px;
-      font-family: var(--regen-font-primary); font-size: 13px; font-weight: 700;
+      background: var(--color-emerald); color: #fff; border-radius: 6px;
+      font-family: var(--font-body); font-size: 13px; font-weight: 700;
       opacity: 0; transition: opacity 0.2s; pointer-events: none;
     }
     .crypto-copied.show { opacity: 1; }
     .crypto-send-amount {
-      font-size: 14px; color: var(--regen-gray-500); margin: 12px 0 0;
+      font-size: 14px; color: var(--color-muted); margin: 12px 0 0;
     }
-    .crypto-send-amount strong { color: var(--regen-navy); }
+    .crypto-send-amount strong { color: var(--color-cream); }
     .crypto-evm-chain-select {
       margin-bottom: 12px;
     }
     .crypto-evm-chain-select select {
-      width: 100%; padding: 8px 12px; border: 1px solid var(--regen-gray-200);
-      border-radius: 8px; font-size: 14px; color: var(--regen-navy);
-      background: var(--regen-white); cursor: pointer;
+      width: 100%; padding: 8px 12px; border: 1px solid var(--color-border);
+      border-radius: 8px; font-size: 14px; color: var(--color-cream);
+      background: var(--color-card); cursor: pointer;
     }
     .crypto-input {
-      width: 100%; padding: 10px 14px; border: 1px solid var(--regen-gray-200);
+      width: 100%; padding: 10px 14px; border: 1px solid var(--color-border);
       border-radius: 8px; font-size: 14px; font-family: monospace;
-      box-sizing: border-box;
+      box-sizing: border-box; background: var(--color-card); color: var(--color-cream);
     }
-    .crypto-input:focus { outline: none; border-color: var(--regen-green); }
+    .crypto-input:focus { outline: none; border-color: var(--color-emerald); }
     .crypto-label {
       display: block; font-weight: 600; font-size: 14px;
-      color: var(--regen-navy); margin-bottom: 6px;
+      color: var(--color-cream); margin-bottom: 6px;
     }
     .crypto-field { margin-bottom: 14px; }
     .crypto-result {
@@ -406,119 +467,35 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto 12px; font-size: 28px;
     }
-    .crypto-result-icon.success { background: rgba(79,181,115,0.12); }
-    .crypto-result-icon.error { background: rgba(204,51,51,0.1); }
+    .crypto-result-icon.success { background: var(--color-emerald-dim); }
+    .crypto-result-icon.error { background: rgba(204,51,51,0.15); }
     .crypto-result h4 { font-size: 18px; font-weight: 800; margin: 0 0 8px; }
-    .crypto-result p { font-size: 14px; color: var(--regen-gray-500); margin: 0 0 16px; }
+    .crypto-result p { font-size: 14px; color: var(--color-muted); margin: 0 0 16px; }
     .crypto-spinner {
-      width: 32px; height: 32px; border: 3px solid var(--regen-gray-200);
-      border-top-color: var(--regen-green); border-radius: 50%;
+      width: 32px; height: 32px; border: 3px solid var(--color-border);
+      border-top-color: var(--color-emerald); border-radius: 50%;
       animation: crypto-spin 0.8s linear infinite; margin: 0 auto 12px;
     }
     @keyframes crypto-spin { to { transform: rotate(360deg); } }
     .crypto-back {
-      background: none; border: none; color: var(--regen-gray-400);
+      background: none; border: none; color: var(--color-dim);
       font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 16px;
       display: inline-flex; align-items: center; gap: 4px;
     }
-    .crypto-back:hover { color: var(--regen-navy); }
+    .crypto-back:hover { color: var(--color-cream); }
     .crypto-badge {
       display: inline-flex; align-items: center; gap: 8px;
-      font-size: 15px; font-weight: 600; color: var(--regen-gray-600);
-      cursor: pointer; transition: all 0.2s; margin-top: 16px;
-      border: 1.5px solid var(--regen-gray-200); border-radius: 10px;
-      padding: 12px 22px; background: var(--regen-white);
+      font-size: 14px; font-weight: 600; color: var(--color-muted);
+      cursor: pointer; transition: all 0.2s;
+      border: 1px solid var(--color-border); border-radius: 8px;
+      padding: 10px 18px; background: var(--color-card);
     }
-    .crypto-badge:hover { color: var(--regen-green); border-color: var(--regen-green); background: rgba(79,181,115,0.04); }
+    .crypto-badge:hover { color: var(--color-emerald); border-color: var(--color-emerald); background: var(--color-emerald-dim); }
     .crypto-badge svg { opacity: 0.7; transition: opacity 0.15s; }
     .crypto-badge:hover svg { opacity: 1; }
 
-    /* Stats section */
-    .stats-section { padding: 52px 0; border-top: 1px solid var(--regen-gray-200); }
-    .stats-bar {
-      display: flex; gap: 48px; flex-wrap: wrap;
-      justify-content: center; text-align: center;
-    }
-    .stats-bar__num {
-      font-size: 36px; font-weight: 800; color: var(--regen-green);
-      line-height: 1.1;
-    }
-    .stats-bar__label {
-      font-family: var(--regen-font-secondary);
-      font-size: 14px; color: var(--regen-gray-500); margin-top: 4px;
-    }
-
-    /* Credit basket section */
-    .basket-section { padding: 64px 0; border-top: 1px solid var(--regen-gray-200); }
-    .basket-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px; margin-top: 28px;
-    }
-    .basket-card {
-      background: var(--regen-white);
-      border: 1px solid var(--regen-gray-200);
-      border-radius: var(--regen-radius-lg);
-      overflow: hidden; text-align: left;
-      transition: box-shadow 0.3s ease, transform 0.3s ease;
-    }
-    .basket-card:hover {
-      box-shadow: var(--regen-shadow-card-hover);
-      transform: translateY(-3px);
-    }
-    .basket-img {
-      width: 100%; height: 180px; object-fit: cover;
-      display: block;
-    }
-    .basket-body { padding: 20px 24px 24px; }
-    .basket-badge {
-      display: inline-block;
-      font-family: var(--regen-font-secondary);
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.06em; padding: 3px 10px;
-      border-radius: 20px; margin-bottom: 8px;
-    }
-    .basket-name {
-      font-size: 17px; font-weight: 700; color: var(--regen-navy);
-      margin-bottom: 4px; line-height: 1.3;
-    }
-    .basket-location {
-      font-size: 13px; color: var(--regen-gray-400); margin-bottom: 10px;
-      font-weight: 500;
-    }
-    .basket-desc {
-      font-size: 13px; color: var(--regen-gray-500);
-      line-height: 1.6; margin: 0 0 14px;
-    }
-    .basket-meta {
-      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
-    }
-    .basket-meta-tag {
-      font-size: 11px; font-weight: 600; color: var(--regen-gray-500);
-      background: var(--regen-gray-100); padding: 2px 8px; border-radius: 4px;
-    }
-    .basket-links {
-      display: flex; gap: 16px; flex-wrap: wrap;
-    }
-    .basket-link {
-      font-family: var(--regen-font-secondary);
-      font-size: 13px; font-weight: 600; color: var(--regen-green);
-    }
-    .basket-link:hover { text-decoration: underline; }
-
-    /* Trust section */
-    .trust-section { padding: 64px 0; border-top: 1px solid var(--regen-gray-200); }
-    .trust-grid { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; }
-    .trust-item { flex: 1 1 220px; max-width: 260px; }
-    .trust-item h3 { font-size: 16px; margin: 0 0 6px; color: var(--regen-green); font-weight: 700; }
-    .trust-item p { font-size: 14px; color: var(--regen-gray-500); margin: 0; }
-
-    @media (max-width: 700px) {
-      .hiw-step { flex: 1 1 140px; }
-      .stats-bar { gap: 24px; }
-      .stats-bar__num { font-size: 28px; }
-      .trust-item { flex: 1 1 100%; max-width: 100%; }
-      .basket-grid { grid-template-columns: 1fr; }
-    }
+    /* ---- Orgs section ---- */
+    .orgs-section { padding: 64px 0; border-top: 1px solid var(--color-border); }
   </style>
 <script type="application/ld+json">
 {
@@ -559,240 +536,284 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       </div>
     </div>` })}
 
-  <!-- Hero -->
-  <section class="regen-hero">
-    <div class="regen-container">
-      <div class="regen-hero__label">${t(lang, "hero_label")}</div>
-      <h1>${t(lang, "hero_title")} <span>${t(lang, "hero_title_highlight")}</span> ${t(lang, "hero_title_suffix")}</h1>
-      <p>${t(lang, "hero_desc")}</p>
-      <a class="regen-btn regen-btn--solid" href="#pricing">${t(lang, "hero_cta")}</a>
-    </div>
-  </section>
-
-  <!-- Impact callout -->
-  <div style="text-align:center; padding: 18px 24px; background: linear-gradient(135deg, rgba(79,181,115,0.08), rgba(121,198,170,0.08)); border-top: 1px solid rgba(79,181,115,0.15); border-bottom: 1px solid rgba(79,181,115,0.15);">
-    <p style="margin:0; font-family: 'Inter', Arial, sans-serif; font-size: 15px; color: #374151; font-weight: 500;">
-      ${t(lang, "impact_prefix")} <strong style="color:#101570;">${t(lang, "impact_co2_daily")}</strong>. ${t(lang, "impact_middle")} <strong style="color:#101570;">${t(lang, "impact_co2_agentic")}</strong>.
-      <a href="/research" style="color:#4FB573; font-weight:600; margin-left:6px;">${t(lang, "impact_link")} &rarr;</a>
-    </p>
-  </div>
-
-  <!-- How it works -->
-  <section class="hiw-section">
-    <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "hiw_title")}</h2>
-      <div class="hiw-steps">
-        <div class="hiw-step">
-          <div class="hiw-num">1</div>
-          <h3>${t(lang, "hiw_step1_title")}</h3>
-          <p>${t(lang, "hiw_step1_desc")}</p>
+  <!-- ==================== HERO ==================== -->
+  <section class="hero-section">
+    <div class="hero-bg"></div>
+    <div class="hero-gradient"></div>
+    <div class="hero-content">
+      <!-- Left: Story -->
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;">
+          <span style="color:var(--color-cream);display:inline-flex;align-items:center;">${regenLogoSVG.replace('width="186" height="84"', 'width="auto" height="36"')}</span>
         </div>
-        <div class="hiw-step">
-          <div class="hiw-num">2</div>
-          <h3>${t(lang, "hiw_step2_title")}</h3>
-          <p>${t(lang, "hiw_step2_desc")}</p>
-        </div>
-        <div class="hiw-step">
-          <div class="hiw-num">3</div>
-          <h3>${t(lang, "hiw_step3_title")}</h3>
-          <p>${t(lang, "hiw_step3_desc")}</p>
-        </div>
+        <h1 style="font-family:var(--font-display);font-size:clamp(2.6rem,5vw,4rem);font-weight:700;line-height:1.08;letter-spacing:-0.01em;margin:0 0 28px;color:var(--color-cream);">
+          ${t(lang, "hero_title")}
+          <br>
+          <span style="background:linear-gradient(to bottom right,var(--color-emerald),var(--color-emerald-bright));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${t(lang, "hero_title_highlight")}</span>
+        </h1>
+        <p style="font-size:1.15rem;line-height:1.75;color:var(--color-cream-soft);margin:0 0 20px;max-width:540px;">
+          ${t(lang, "hero_desc")}
+        </p>
+        <p style="font-size:0.95rem;line-height:1.7;color:var(--color-muted);margin:0 0 36px;max-width:520px;">
+          No carbon-neutrality claims. No greenwashing. Every single credit retirement is permanently recorded on <a href="https://regen.network" target="_blank" style="color:var(--color-emerald);text-decoration:underline;text-decoration-color:rgba(43,153,79,0.3);">Regen Network</a>'s public ledger.
+        </p>
       </div>
-    </div>
-  </section>
 
-  <!-- Pricing -->
-  <section class="pricing-section" id="pricing">
-    <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "pricing_title")}</h2>
+      <!-- Right: Subscribe Card -->
+      <div id="pricing" class="subscribe-card" style="scroll-margin-top:96px;">
+        <h3 style="font-family:var(--font-ui);font-size:0.95rem;font-weight:600;color:var(--color-cream);margin:0 0 4px;">Choose your commitment</h3>
+        <p style="font-size:0.78rem;color:var(--color-muted);margin:0 0 20px;line-height:1.6;">100% funds verified ecological credit retirements. Cancel anytime.</p>
 
-      <!-- Monthly / Yearly toggle -->
-      <div style="display:flex;justify-content:center;margin-bottom:28px;">
-        <div id="interval-toggle" style="display:inline-flex;background:var(--regen-gray-100);border-radius:10px;padding:4px;">
+        <!-- Monthly/Yearly toggle -->
+        <div style="display:flex;align-items:center;gap:4px;padding:2px;background:var(--color-surface);border-radius:8px;margin-bottom:16px;width:fit-content;">
           <button id="toggle-monthly" onclick="setPricingInterval('monthly')" class="interval-btn interval-btn--active">${t(lang, "toggle_monthly")}</button>
-          <button id="toggle-yearly" onclick="setPricingInterval('yearly')" class="interval-btn interval-btn--yearly">${t(lang, "toggle_yearly")} <span style="font-size:11px;font-weight:700;color:var(--regen-green);">${t(lang, "toggle_save")}</span></button>
+          <button id="toggle-yearly" onclick="setPricingInterval('yearly')" class="interval-btn interval-btn--yearly">${t(lang, "toggle_yearly")} <span style="font-size:0.55rem;color:var(--color-emerald);font-family:var(--font-mono);">${t(lang, "toggle_save")}</span></button>
         </div>
-      </div>
 
-      <div class="regen-tiers">
-        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('dabbler')" : `window.location.href='${dabblerUrl}'`}">
-          <div class="regen-tier__name">${t(lang, "tier_dabbler")}</div>
-          <div class="regen-tier__price price-monthly">$1.25<span>/mo</span></div>
-          <div class="regen-tier__price price-yearly" style="display:none;">$12.50<span>/yr</span></div>
-          <div class="regen-tier__effective price-yearly" style="display:none;">$1.25/mo + ${t(lang, "tier_yearly_bonus")}</div>
-          <div class="regen-tier__desc">${t(lang, "tier_dabbler_desc")}${referralValid ? `<br><strong>${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
-          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">${t(lang, "tier_cta")}</div>
-        </div>
-        <div class="regen-tier tier-featured regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('builder')" : `window.location.href='${builderUrl}'`}">
-          <div class="tier-featured-badge">${t(lang, "tier_builder_badge")}</div>
-          <div class="regen-tier__name">${t(lang, "tier_builder")}</div>
-          <div class="regen-tier__price price-monthly">$2.50<span>/mo</span></div>
-          <div class="regen-tier__price price-yearly" style="display:none;">$25<span>/yr</span></div>
-          <div class="regen-tier__effective price-yearly" style="display:none;">$2.50/mo + ${t(lang, "tier_yearly_bonus")}</div>
-          <div class="regen-tier__desc">${t(lang, "tier_builder_desc")}${referralValid ? `<br><strong>${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
-          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">${t(lang, "tier_cta")}</div>
-        </div>
-        <div class="regen-tier regen-tier--clickable" onclick="${hasPriceIds ? "subscribe('agent')" : `window.location.href='${agentUrl}'`}">
-          <div class="regen-tier__name">${t(lang, "tier_agent")}</div>
-          <div class="regen-tier__price price-monthly">$5<span>/mo</span></div>
-          <div class="regen-tier__price price-yearly" style="display:none;">$50<span>/yr</span></div>
-          <div class="regen-tier__effective price-yearly" style="display:none;">$5/mo + ${t(lang, "tier_yearly_bonus")}</div>
-          <div class="regen-tier__desc">${t(lang, "tier_agent_desc")}${referralValid ? `<br><strong>${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
-          <div class="regen-btn regen-btn--solid regen-btn--block regen-tier__cta-btn">${t(lang, "tier_cta")}</div>
-        </div>
-      </div>
-
-      <!-- Team plan CTA -->
-      <div id="org-cta" style="background:var(--regen-white);border:2px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:20px 28px;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;cursor:pointer;transition:border-color 0.2s;" onclick="showOrgForm()" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--regen-gray-200)'">
-        <span style="font-weight:700;font-size:15px;color:var(--regen-navy);white-space:nowrap;">${t(lang, "org_cta_heading")}</span>
-        <span style="font-size:14px;color:var(--regen-gray-500);">${t(lang, "org_cta_desc")}</span>
-        <span class="regen-btn regen-btn--solid regen-btn--sm" style="white-space:nowrap;">${t(lang, "org_cta_btn")}</span>
-      </div>
-
-      <!-- Crypto payment badge -->
-      <div style="text-align:center;">
-        <span class="crypto-badge" onclick="openCryptoCheckout()">
-          <svg width="18" height="18" viewBox="0 0 256 417" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M127.96 0l-2.8 9.5v277.7l2.8 2.8 127.96-75.6z" fill="#343434"/><path d="M127.96 0L0 214.4l127.96 75.6V155.5z" fill="#8C8C8C"/><path d="M127.96 312.2l-1.6 1.9v98.2l1.6 4.6L256 236.6z" fill="#3C3C3B"/><path d="M127.96 416.9V312.2L0 236.6z" fill="#8C8C8C"/></svg>
-          Pay with crypto — ETH, BTC, SOL, USDC, or any token
-          <svg width="18" height="18" viewBox="0 0 2000 2000" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="1000" cy="1000" r="1000" fill="#2775CA"/><path d="M1275 1158.3c0-145.8-87.5-195.8-262.5-216.6-125-16.7-150-50-150-108.4 0-58.3 41.7-95.8 125-95.8 75 0 116.7 25 137.5 87.5 4.2 12.5 16.7 20.8 29.2 20.8h66.6c16.7 0 29.2-12.5 29.2-29.2v-4.2c-16.7-91.6-91.7-162.5-191.7-175V550c0-16.7-12.5-29.2-33.3-33.3h-62.5c-16.7 0-29.2 12.5-33.3 33.3v83.3c-129.2 16.7-212.5 95.8-212.5 204.2 0 137.5 83.3 191.7 258.3 212.5 120.8 20.8 154.2 45.8 154.2 112.5s-58.3 112.5-137.5 112.5c-108.3 0-145.8-45.8-158.3-108.3-4.2-16.7-16.7-25-29.2-25h-70.8c-16.7 0-29.2 12.5-29.2 29.2v4.2c20.8 100 83.3 175 225 200v87.5c0 16.7 12.5 29.2 33.3 33.3h62.5c16.7 0 29.2-12.5 33.3-33.3v-87.5c129.2-20.8 216.7-104.2 216.7-220.8z" fill="white"/></svg>
-        </span>
-      </div>
-
-      <!-- Organization form (revealed on click) -->
-      <div id="org-form" style="display:none;margin-top:16px;">
-        <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:28px 32px;max-width:560px;margin:0 auto;">
-          <h3 style="margin:0 0 4px;font-size:18px;color:var(--regen-navy);font-weight:700;">${t(lang, "org_title")}</h3>
-          <p style="color:var(--regen-gray-500);font-size:14px;margin:0 0 20px;">${t(lang, "org_desc")}</p>
-          <div style="margin-bottom:18px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_name")}</label>
-            <input id="org-name" type="text" placeholder="${t(lang, "org_placeholder_name")}" style="width:100%;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;box-sizing:border-box;">
+        <!-- Plan options -->
+        <div class="plan-option" onclick="${hasPriceIds ? "subscribe('dabbler')" : `window.location.href='${dabblerUrl}'`}">
+          <div>
+            <div class="plan-option__name">${t(lang, "tier_dabbler")}</div>
+            <div class="plan-option__desc">${t(lang, "tier_dabbler_desc")}${referralValid ? ` &mdash; <strong style="color:var(--color-emerald);">${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
           </div>
-          <div style="margin-bottom:18px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_devs")} <span style="font-weight:400;color:var(--regen-gray-500);">${t(lang, "org_hint_devs")}</span></label>
-            <input id="org-devs" type="number" min="0" value="0" style="width:100px;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;text-align:center;">
+          <div>
+            <span class="plan-option__price price-monthly">$1.25<span style="font-size:11px;color:var(--color-muted);font-weight:400;">/mo</span></span>
+            <span class="plan-option__price price-yearly" style="display:none;">$12.50<span style="font-size:11px;color:var(--color-muted);font-weight:400;">/yr</span></span>
           </div>
-          <div style="margin-bottom:18px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_agents")} <span style="font-weight:400;color:var(--regen-gray-500);">${t(lang, "org_hint_agents")}</span></label>
-            <input id="org-agents" type="number" min="0" value="0" style="width:100px;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;text-align:center;">
-          </div>
-          <div style="margin-bottom:24px;">
-            <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">${t(lang, "org_label_parttime")} <span style="font-weight:400;color:var(--regen-gray-500);">${t(lang, "org_hint_parttime")}</span></label>
-            <input id="org-parttime" type="number" min="0" value="0" style="width:100px;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:15px;text-align:center;">
-          </div>
-
-          <!-- Calculated estimate -->
-          <div id="org-estimate" style="display:none;background:linear-gradient(135deg, rgba(79,181,115,0.06), rgba(16,21,112,0.04));border:1px solid rgba(79,181,115,0.2);border-radius:10px;padding:20px 24px;margin-bottom:20px;">
-            <div style="font-size:13px;color:var(--regen-gray-500);margin-bottom:4px;">${t(lang, "org_estimate_label")}</div>
-            <div style="display:flex;align-items:baseline;gap:8px;">
-              <span id="org-price" style="font-size:32px;font-weight:800;color:var(--regen-navy);">$0</span>
-              <span style="font-size:14px;color:var(--regen-gray-500);">${t(lang, "org_estimate_unit")}</span>
-            </div>
-            <div id="org-breakdown" style="margin-top:10px;font-size:13px;color:var(--regen-gray-600);line-height:1.6;"></div>
-            <div style="margin-top:12px;font-size:12px;color:var(--regen-gray-400);">${t(lang, "org_estimate_note")}</div>
-          </div>
-
-          <button id="org-subscribe-btn" onclick="subscribeOrg()" class="regen-btn regen-btn--solid regen-btn--block" style="font-size:16px;padding:14px;">${t(lang, "org_submit")}</button>
-          <p id="org-error" style="color:#c33;font-size:13px;margin:8px 0 0;display:none;text-align:center;"></p>
-          <p style="text-align:center;margin:16px 0 0;font-size:14px;color:var(--regen-gray-500);">Have questions? <a href="https://calendar.app.google/PQV1pY7kjiBPN5eZ8" target="_blank" rel="noopener" style="color:var(--regen-green);font-weight:600;">Schedule a call</a> with our team.</p>
         </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Live Stats -->
-  <section class="stats-section">
-    <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "stats_title")}</h2>
-      <p class="regen-section-subtitle" style="text-align:center;">${t(lang, "stats_desc")}</p>
-      <div class="stats-bar">
-        <div>
-          <div class="stats-bar__num">${totalRetirements}</div>
-          <div class="stats-bar__label">${t(lang, "stats_credits")}</div>
+        <div class="plan-option selected" onclick="${hasPriceIds ? "subscribe('builder')" : `window.location.href='${builderUrl}'`}">
+          <div>
+            <div class="plan-option__name">${t(lang, "tier_builder")} <span style="font-size:10px;background:var(--color-emerald);color:#fff;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:700;">${t(lang, "tier_builder_badge")}</span></div>
+            <div class="plan-option__desc">${t(lang, "tier_builder_desc")}${referralValid ? ` &mdash; <strong style="color:var(--color-emerald);">${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
+          </div>
+          <div>
+            <span class="plan-option__price price-monthly">$2.50<span style="font-size:11px;color:var(--color-muted);font-weight:400;">/mo</span></span>
+            <span class="plan-option__price price-yearly" style="display:none;">$25<span style="font-size:11px;color:var(--color-muted);font-weight:400;">/yr</span></span>
+          </div>
         </div>
-        <div>
-          <div class="stats-bar__num">9+</div>
-          <div class="stats-bar__label">${t(lang, "stats_countries")}</div>
+        <div class="plan-option" onclick="${hasPriceIds ? "subscribe('agent')" : `window.location.href='${agentUrl}'`}">
+          <div>
+            <div class="plan-option__name">${t(lang, "tier_agent")}</div>
+            <div class="plan-option__desc">${t(lang, "tier_agent_desc")}${referralValid ? ` &mdash; <strong style="color:var(--color-emerald);">${t(lang, "tier_first_month_free")}</strong>` : ""}</div>
+          </div>
+          <div>
+            <span class="plan-option__price price-monthly">$5<span style="font-size:11px;color:var(--color-muted);font-weight:400;">/mo</span></span>
+            <span class="plan-option__price price-yearly" style="display:none;">$50<span style="font-size:11px;color:var(--color-muted);font-weight:400;">/yr</span></span>
+          </div>
         </div>
-        <div>
-          <div class="stats-bar__num">5</div>
-          <div class="stats-bar__label">${t(lang, "stats_credit_types")}</div>
+
+        <!-- Yearly effective rates (hidden by default) -->
+        <div class="regen-tier__effective price-yearly" style="display:none;text-align:center;margin-top:8px;">+ ${t(lang, "tier_yearly_bonus")}</div>
+
+        <!-- Crypto + one-time links -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border);">
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+            <span class="crypto-badge" onclick="openCryptoCheckout()" style="margin:0;">
+              <svg width="14" height="14" viewBox="0 0 256 417" fill="none"><path d="M127.96 0l-2.8 9.5v277.7l2.8 2.8 127.96-75.6z" fill="#888"/><path d="M127.96 0L0 214.4l127.96 75.6V155.5z" fill="#aaa"/><path d="M127.96 312.2l-1.6 1.9v98.2l1.6 4.6L256 236.6z" fill="#888"/><path d="M127.96 416.9V312.2L0 236.6z" fill="#aaa"/></svg>
+              Pay with crypto
+            </span>
+            <a href="https://app.regen.network/projects/1?buying_options_filters=credit_card" target="_blank" rel="noopener" style="font-family:var(--font-ui);font-size:13px;color:var(--color-muted);text-decoration:underline;text-decoration-color:var(--color-border-light);">${t(lang, "onetime_title")}</a>
+          </div>
+        </div>
+
+        <!-- Team plan link -->
+        <div style="margin-top:12px;text-align:center;">
+          <a href="#" onclick="event.preventDefault();showOrgForm()" style="font-family:var(--font-ui);font-size:12px;color:var(--color-dim);">${t(lang, "org_cta_heading")} &rarr;</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- What Your Subscription Funds — Credit Basket -->
-  <section class="basket-section">
-    <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "basket_title")}</h2>
-      <p class="regen-section-subtitle" style="text-align:center;">${t(lang, "basket_desc")}</p>
-      <div class="basket-grid">
-        ${PROJECTS.map(p => `
-        <div class="basket-card">
-          <img class="basket-img" src="${p.imageUrl}" alt="${p.name}" loading="lazy">
-          <div class="basket-body">
-            <span class="basket-badge" style="background: ${p.accentColor}22; color: ${p.accentColor};">${p.creditTypeLabel} (${p.creditType})</span>
-            <div class="basket-name">${p.name}</div>
-            <div class="basket-location">${p.location}</div>
-            <p class="basket-desc">${p.description.length > 180 ? p.description.slice(0, 180) + '&hellip;' : p.description}</p>
-            <div class="basket-meta">
-              <span class="basket-meta-tag">${p.creditClassId}</span>
-              <span class="basket-meta-tag">${p.projectId}</span>
-            </div>
-            <div class="basket-links">
-              <a class="basket-link" href="${p.projectPageUrl}" target="_blank" rel="noopener">${t(lang, "basket_view_project")} &rarr;</a>
-              <a class="basket-link" href="https://app.regen.network/credit-classes/${p.creditClassId}" target="_blank" rel="noopener">${t(lang, "basket_credit_class")}</a>
-            </div>
-          </div>
-        </div>`).join('')}
+  <!-- ==================== PROBLEM / STATS ==================== -->
+  <section class="problem-section">
+    <canvas class="problem-canvas" id="ripple-canvas"></canvas>
+    <div class="problem-content">
+      <p style="font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-emerald);margin:0 0 16px;">${t(lang, "stats_title")}</p>
+      <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--color-cream);margin:0 0 16px;max-width:600px;line-height:1.15;">The Uncomfortable Math</h2>
+      <p style="font-size:1rem;color:var(--color-muted);max-width:560px;line-height:1.7;margin:0;">
+        ${t(lang, "impact_prefix")} <strong style="color:var(--color-cream);">${t(lang, "impact_co2_daily")}</strong>. ${t(lang, "impact_middle")} <strong style="color:var(--color-cream);">${t(lang, "impact_co2_agentic")}</strong>.
+        <a href="/research" style="color:var(--color-emerald);font-weight:600;margin-left:4px;">${t(lang, "impact_link")} &rarr;</a>
+      </p>
+      <div class="stats-grid-dark">
+        <div class="stat-card-dark">
+          <div class="stat-num">${totalRetirements}</div>
+          <div class="stat-label">${t(lang, "stats_credits")}</div>
+        </div>
+        <div class="stat-card-dark">
+          <div class="stat-num">6</div>
+          <div class="stat-label">Verified Projects</div>
+        </div>
+        <div class="stat-card-dark">
+          <div class="stat-num">5</div>
+          <div class="stat-label">${t(lang, "stats_credit_types")}</div>
+        </div>
+        <div class="stat-card-dark">
+          <div class="stat-num">9+</div>
+          <div class="stat-label">${t(lang, "stats_countries")}</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Trust -->
-  <section class="trust-section">
-    <div class="regen-container">
-      <h2 class="regen-section-title" style="text-align:center;">${t(lang, "trust_title")}</h2>
-      <div class="trust-grid">
-        <div class="trust-item">
-          <h3>${t(lang, "trust_auditable_title")}</h3>
-          <p>${t(lang, "trust_auditable_desc")}</p>
+  <!-- ==================== PROJECTS ==================== -->
+  <section class="projects-section" id="projects">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px;">
+      <p style="font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-emerald);margin:0 0 16px;text-align:center;">${t(lang, "basket_title")}</p>
+      <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--color-cream);margin:0 0 16px;text-align:center;">Where your money goes</h2>
+      <p style="font-size:1rem;color:var(--color-muted);max-width:560px;margin:0 auto 64px;text-align:center;line-height:1.7;">${t(lang, "basket_desc")}</p>
+
+      ${PROJECTS.map((p, i) => `
+      <div class="project-spread${i % 2 === 1 ? ' project-spread--reverse' : ''}">
+        <img class="project-spread__img" src="${p.imageUrl}" alt="${p.name}" loading="lazy">
+        <div class="project-spread__text">
+          <span class="project-spread__badge" style="background:${p.accentColor}22;color:${p.accentColor};">${p.creditTypeLabel} (${p.creditType})</span>
+          <h3 class="project-spread__name">${p.name}</h3>
+          <p class="project-spread__location">${p.location}</p>
+          <p class="project-spread__desc">${p.description}</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+            <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--color-muted);background:var(--color-surface);padding:3px 10px;border-radius:4px;border:1px solid var(--color-border);">${p.creditClassId}</span>
+            <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--color-muted);background:var(--color-surface);padding:3px 10px;border-radius:4px;border:1px solid var(--color-border);">${p.projectId}</span>
+          </div>
+          <div class="project-spread__links">
+            <a class="project-spread__link" href="${p.projectPageUrl}" target="_blank" rel="noopener">${t(lang, "basket_view_project")} &rarr;</a>
+            <a class="project-spread__link" href="https://app.regen.network/credit-classes/${p.creditClassId}" target="_blank" rel="noopener">${t(lang, "basket_credit_class")}</a>
+          </div>
         </div>
-        <div class="trust-item">
-          <h3>${t(lang, "trust_beyond_title")}</h3>
-          <p>${t(lang, "trust_beyond_desc")}</p>
+      </div>`).join('')}
+    </div>
+  </section>
+
+  <!-- ==================== HOW IT WORKS ==================== -->
+  <section class="hiw-section-dark" id="how">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px;">
+      <p style="font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-emerald);margin:0 0 16px;text-align:center;">${t(lang, "hiw_title")}</p>
+      <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--color-cream);margin:0 0 8px;text-align:center;">Three steps to ecological accountability</h2>
+      <div class="hiw-cards">
+        <div class="hiw-card">
+          <div class="hiw-card__num">01 SUBSCRIBE</div>
+          <h3 class="hiw-card__title">${t(lang, "hiw_step1_title")}</h3>
+          <p class="hiw-card__desc">${t(lang, "hiw_step1_desc")}</p>
         </div>
-        <div class="trust-item">
-          <h3>${t(lang, "trust_open_title")}</h3>
-          <p>${t(lang, "trust_open_desc")}</p>
+        <div class="hiw-card">
+          <div class="hiw-card__num">02 CONNECT</div>
+          <h3 class="hiw-card__title">${t(lang, "hiw_step2_title")}</h3>
+          <p class="hiw-card__desc">${t(lang, "hiw_step2_desc")}</p>
         </div>
+        <div class="hiw-card">
+          <div class="hiw-card__num">03 VERIFY</div>
+          <h3 class="hiw-card__title">${t(lang, "hiw_step3_title")}</h3>
+          <p class="hiw-card__desc">${t(lang, "hiw_step3_desc")}</p>
+        </div>
+      </div>
+
+      <!-- Install command -->
+      <div class="install-block">
+        <code id="install-cmd">claude mcp add -s user regen-compute -- npx regen-compute</code>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('install-cmd').textContent);this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500);">Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TRUST COMPARISON ==================== -->
+  <section class="trust-compare-section">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;">
+      <p style="font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-emerald);margin:0 0 16px;">${t(lang, "trust_title")}</p>
+      <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--color-cream);margin:0;">Not all offsets are created equal</h2>
+    </div>
+    <div class="trust-table" id="trust-table">
+      <div class="trust-table-header">
+        <div>Traditional Offsets</div>
+        <div>Regen Compute</div>
+      </div>
+      <div class="trust-row">
+        <div>Opaque registries &mdash; hard to verify claims independently</div>
+        <div>${t(lang, "trust_auditable_desc")}</div>
+      </div>
+      <div class="trust-row">
+        <div>Carbon-only &mdash; ignores biodiversity, species, soil health</div>
+        <div>${t(lang, "trust_beyond_desc")}</div>
+      </div>
+      <div class="trust-row">
+        <div>Proprietary data behind paywalls</div>
+        <div>${t(lang, "trust_open_desc")}</div>
+      </div>
+      <div class="trust-row">
+        <div>Middlemen take 30-50% in fees</div>
+        <div>75% goes directly to credit purchases. 5% burns REGEN supply. 20% operations.</div>
+      </div>
+      <div class="trust-row">
+        <div>One-time purchase, no ongoing accountability</div>
+        <div>Monthly retirements with on-chain proof and retirement certificates you can share.</div>
       </div>
     </div>
   </section>
 
   ${publicOrgs.length > 0 ? `
-  <!-- Organizations committed to Regenerative AI -->
-  <section class="hiw-section">
-    <div class="regen-container" style="text-align:center;">
-      <h2 class="regen-section-title">${t(lang, "orgs_title")}</h2>
-      <p class="regen-section-subtitle">${t(lang, "orgs_desc")}</p>
-      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin-top:24px;">
-        ${publicOrgs.map(o => `<div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:10px;padding:16px 24px;font-weight:600;color:var(--regen-navy);font-size:15px;">${o.name.replace(/</g, "&lt;")}</div>`).join("")}
+  <!-- ==================== ORGANIZATIONS ==================== -->
+  <section class="orgs-section">
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;">
+      <h2 style="font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;color:var(--color-cream);margin:0 0 12px;">${t(lang, "orgs_title")}</h2>
+      <p style="font-size:1rem;color:var(--color-muted);margin:0 0 32px;">${t(lang, "orgs_desc")}</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;">
+        ${publicOrgs.map(o => `<div style="background:var(--color-card);border:1px solid var(--color-border);border-radius:10px;padding:14px 24px;font-weight:600;color:var(--color-cream);font-size:15px;font-family:var(--font-ui);">${o.name.replace(/</g, "&lt;")}</div>`).join("")}
       </div>
     </div>
   </section>
   ` : ""}
 
-  <!-- One-time purchase -->
-  <section class="hiw-section" style="background:var(--regen-gray-50);">
-    <div class="regen-container" style="max-width:640px;text-align:center;">
-      <h2 class="regen-section-title">${t(lang, "onetime_title")}</h2>
-      <p style="color:var(--regen-gray-500);margin-bottom:24px;">${t(lang, "onetime_desc")}</p>
-      <a class="regen-btn regen-btn--primary" href="https://app.regen.network/projects/1?buying_options_filters=credit_card" target="_blank" rel="noopener">${t(lang, "onetime_cta")}</a>
+  <!-- ==================== ORGANIZATION FORM (hidden) ==================== -->
+  <div id="org-cta" style="display:none;"></div>
+  <div id="org-form" style="display:none;padding:48px 24px;">
+    <div style="background:var(--color-surface);border:1px solid var(--color-border-light);border-radius:var(--regen-radius-lg);padding:28px 32px;max-width:560px;margin:0 auto;">
+      <h3 style="margin:0 0 4px;font-size:18px;color:var(--color-cream);font-weight:700;">${t(lang, "org_title")}</h3>
+      <p style="color:var(--color-muted);font-size:14px;margin:0 0 20px;">${t(lang, "org_desc")}</p>
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-weight:600;font-size:14px;color:var(--color-cream);margin-bottom:6px;">${t(lang, "org_label_name")}</label>
+        <input id="org-name" type="text" placeholder="${t(lang, "org_placeholder_name")}" class="regen-input">
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-weight:600;font-size:14px;color:var(--color-cream);margin-bottom:6px;">${t(lang, "org_label_devs")} <span style="font-weight:400;color:var(--color-muted);">${t(lang, "org_hint_devs")}</span></label>
+        <input id="org-devs" type="number" min="0" value="0" class="regen-input" style="width:100px;text-align:center;">
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-weight:600;font-size:14px;color:var(--color-cream);margin-bottom:6px;">${t(lang, "org_label_agents")} <span style="font-weight:400;color:var(--color-muted);">${t(lang, "org_hint_agents")}</span></label>
+        <input id="org-agents" type="number" min="0" value="0" class="regen-input" style="width:100px;text-align:center;">
+      </div>
+      <div style="margin-bottom:24px;">
+        <label style="display:block;font-weight:600;font-size:14px;color:var(--color-cream);margin-bottom:6px;">${t(lang, "org_label_parttime")} <span style="font-weight:400;color:var(--color-muted);">${t(lang, "org_hint_parttime")}</span></label>
+        <input id="org-parttime" type="number" min="0" value="0" class="regen-input" style="width:100px;text-align:center;">
+      </div>
+
+      <!-- Calculated estimate -->
+      <div id="org-estimate" style="display:none;background:var(--color-emerald-dim);border:1px solid var(--color-border-emerald);border-radius:10px;padding:20px 24px;margin-bottom:20px;">
+        <div style="font-size:13px;color:var(--color-muted);margin-bottom:4px;">${t(lang, "org_estimate_label")}</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span id="org-price" style="font-size:32px;font-weight:800;color:var(--color-cream);">$0</span>
+          <span style="font-size:14px;color:var(--color-muted);">${t(lang, "org_estimate_unit")}</span>
+        </div>
+        <div id="org-breakdown" style="margin-top:10px;font-size:13px;color:var(--color-cream-soft);line-height:1.6;"></div>
+        <div style="margin-top:12px;font-size:12px;color:var(--color-dim);">${t(lang, "org_estimate_note")}</div>
+      </div>
+
+      <button id="org-subscribe-btn" onclick="subscribeOrg()" class="regen-btn regen-btn--solid regen-btn--block" style="font-size:16px;padding:14px;">${t(lang, "org_submit")}</button>
+      <p id="org-error" style="color:#fca5a5;font-size:13px;margin:8px 0 0;display:none;text-align:center;"></p>
+      <p style="text-align:center;margin:16px 0 0;font-size:14px;color:var(--color-muted);">Have questions? <a href="https://calendar.app.google/PQV1pY7kjiBPN5eZ8" target="_blank" rel="noopener" style="color:var(--color-emerald);font-weight:600;">Schedule a call</a> with our team.</p>
+    </div>
+  </div>
+
+  <!-- ==================== FINAL CTA ==================== -->
+  <section class="cta-section">
+    <div class="cta-bg"></div>
+    <div class="cta-gradient"></div>
+    <div class="cta-content">
+      <h2 style="font-family:var(--font-display);font-size:clamp(2rem,4vw,3rem);font-weight:700;color:var(--color-cream);margin:0 0 16px;line-height:1.1;">Join the movement</h2>
+      <p style="font-size:1.05rem;color:var(--color-cream-soft);margin:0 0 32px;line-height:1.7;">Every AI session can fund real ecological regeneration. Start for $1.25/month.</p>
+      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+        <a class="regen-btn regen-btn--solid" href="#pricing" style="font-size:16px;padding:14px 32px;">Subscribe Now</a>
+        <a class="regen-btn regen-btn--dark" href="https://github.com/regen-network/regen-compute" target="_blank" rel="noopener" style="font-size:16px;padding:14px 32px;">View on GitHub</a>
+      </div>
     </div>
   </section>
-
 
   ${brandFooter({ showInstall: false, links: [
     { label: "Regen Network", href: "https://regen.network" },
@@ -800,7 +821,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     { label: "GitHub", href: "https://github.com/regen-network/regen-compute" },
   ] })}
 
-  <button onclick="window.location.href='/?view=agent'" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:#1a1a2e;color:#4FB573;border:1px solid #4FB573;border-radius:8px;padding:10px 18px;cursor:pointer;font-family:monospace;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.2s;" onmouseover="this.style.background='#2a2a4e'" onmouseout="this.style.background='#1a1a2e'">&#129302; Agent View</button>
+  <button onclick="window.location.href='/?view=agent'" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--color-surface);color:var(--color-emerald);border:1px solid var(--color-border-emerald);border-radius:8px;padding:10px 18px;cursor:pointer;font-family:var(--font-mono);font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.2s;" onmouseover="this.style.background='var(--color-card)'" onmouseout="this.style.background='var(--color-surface)'">&#129302; Agent View</button>
 
   <script>
     // Close language picker when clicking outside
@@ -909,6 +930,77 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       document.getElementById('toggle-monthly').className = 'interval-btn' + (interval === 'monthly' ? ' interval-btn--active' : '');
       document.getElementById('toggle-yearly').className = 'interval-btn interval-btn--yearly' + (interval === 'yearly' ? ' interval-btn--active' : '');
     }
+  </script>
+
+  <!-- Ripple canvas animation -->
+  <script>
+    (function() {
+      var canvas = document.getElementById('ripple-canvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var ripples = [];
+      var w, h;
+
+      function resize() {
+        var rect = canvas.parentElement.getBoundingClientRect();
+        w = canvas.width = rect.width;
+        h = canvas.height = rect.height;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function spawnRipple() {
+        ripples.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: 0,
+          maxR: 80 + Math.random() * 120,
+          alpha: 0.12 + Math.random() * 0.08,
+          speed: 0.3 + Math.random() * 0.4
+        });
+        if (ripples.length > 8) ripples.shift();
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        for (var i = ripples.length - 1; i >= 0; i--) {
+          var rp = ripples[i];
+          rp.r += rp.speed;
+          var progress = rp.r / rp.maxR;
+          if (progress >= 1) { ripples.splice(i, 1); continue; }
+          var alpha = rp.alpha * (1 - progress);
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(43, 153, 79, ' + alpha + ')';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      setInterval(spawnRipple, 1200);
+      spawnRipple();
+      draw();
+    })();
+  </script>
+
+  <!-- IntersectionObserver for trust table rows -->
+  <script>
+    (function() {
+      var rows = document.querySelectorAll('.trust-row');
+      if (!rows.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.2 });
+      rows.forEach(function(row, i) {
+        row.style.transitionDelay = (i * 0.12) + 's';
+        observer.observe(row);
+      });
+    })();
   </script>
 
   <!-- Crypto checkout modal -->
@@ -1197,11 +1289,11 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
         var cellSize = Math.floor(160 / (size + 8));
         var offset = Math.floor((160 - cellSize * size) / 2);
         var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">';
-        svg += '<rect width="160" height="160" fill="white"/>';
+        svg += '<rect width="160" height="160" fill="#0E1018"/>';
         for (var y = 0; y < size; y++) {
           for (var x = 0; x < size; x++) {
             if (modules[y][x]) {
-              svg += '<rect x="' + (offset + x * cellSize) + '" y="' + (offset + y * cellSize) + '" width="' + cellSize + '" height="' + cellSize + '" fill="#101570"/>';
+              svg += '<rect x="' + (offset + x * cellSize) + '" y="' + (offset + y * cellSize) + '" width="' + cellSize + '" height="' + cellSize + '" fill="#F0ECE2"/>';
             }
           }
         }
@@ -2147,14 +2239,14 @@ ${betaBannerJS()}
     .profile-prompt { background: linear-gradient(135deg, var(--regen-gray-50), #f0faf4); border: 1px solid #d0e8d8; border-radius: 12px; padding: 20px 24px; }
     .profile-prompt h2 { color: var(--regen-green); margin: 0 0 6px; font-size: 18px; font-weight: 700; }
     .profile-prompt p { color: var(--regen-gray-700); font-size: 14px; margin: 0 0 14px; }
-    .profile-prompt input { width: 100%; padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; font-family: inherit; box-sizing: border-box; }
-    .profile-prompt input:focus { outline: none; border-color: var(--regen-green); box-shadow: 0 0 0 2px rgba(76,175,80,0.15); }
+    .profile-prompt input { width: 100%; padding: 10px 14px; border: 1px solid var(--color-border-light); border-radius: 8px; font-size: 15px; font-family: inherit; box-sizing: border-box; background: var(--color-surface); color: var(--color-cream); }
+    .profile-prompt input:focus { outline: none; border-color: var(--color-emerald); box-shadow: 0 0 0 2px var(--color-emerald-glow); }
     .profile-prompt .btn-row { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
-    .profile-prompt .save-btn { background: var(--regen-green); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .profile-prompt .save-btn:hover { background: var(--regen-teal); }
+    .profile-prompt .save-btn { background: var(--color-emerald); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .profile-prompt .save-btn:hover { background: var(--color-emerald-bright); }
     .profile-prompt .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .profile-prompt .skip-btn { background: none; border: none; color: var(--regen-gray-500); font-size: 13px; cursor: pointer; text-decoration: underline; }
-    .profile-saved { display: none; padding: 14px 20px; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px; color: var(--regen-green); font-weight: 600; font-size: 14px; }
+    .profile-prompt .skip-btn { background: none; border: none; color: var(--color-muted); font-size: 13px; cursor: pointer; text-decoration: underline; }
+    .profile-saved { display: none; padding: 14px 20px; background: var(--color-emerald-dim); border: 1px solid var(--color-border-emerald); border-radius: 10px; color: var(--color-emerald-bright); font-weight: 600; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -2163,8 +2255,8 @@ ${betaBannerJS()}
 
   <div class="regen-container--narrow" style="padding-top:32px;">
     <div style="text-align:center;padding:32px 0 8px;">
-      <h1 style="margin:0 0 12px;font-size:36px;font-weight:800;color:var(--regen-navy);">Thank You</h1>
-      <p style="margin:0 auto;font-size:18px;color:var(--regen-gray-600);max-width:460px;line-height:1.6;">You're now funding real ecological regeneration every month. Welcome aboard.</p>
+      <h1 style="margin:0 0 12px;font-size:36px;font-weight:700;color:var(--color-cream);font-family:var(--font-display);">Thank You</h1>
+      <p style="margin:0 auto;font-size:18px;color:var(--color-cream-soft);max-width:460px;line-height:1.6;font-family:var(--font-body);">You're now funding real ecological regeneration every month. Welcome aboard.</p>
     </div>
 
     <div class="profile-prompt" id="profilePrompt" style="margin-top:28px;">

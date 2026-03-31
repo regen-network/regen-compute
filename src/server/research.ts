@@ -43,65 +43,68 @@ export function createResearchRoutes(baseUrl: string): Router {
     .research-hero {
       padding: 64px 0 48px;
       text-align: center;
-      border-bottom: 1px solid var(--regen-gray-200);
+      border-bottom: 1px solid var(--color-border);
     }
     .research-hero h1 {
-      font-size: 36px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display); font-size: 36px; font-weight: 800;
+      color: var(--color-cream);
       margin: 0 0 12px; line-height: 1.15; letter-spacing: -0.02em;
     }
     .research-hero h1 span {
-      background: linear-gradient(180deg, #4fb573, #b9e1c7);
+      background: linear-gradient(180deg, var(--color-emerald-bright), var(--color-emerald));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .research-hero .subtitle {
-      font-size: 17px; color: var(--regen-gray-500);
+      font-family: var(--font-body); font-size: 17px; color: var(--color-cream-soft);
       max-width: 600px; margin: 0 auto;
     }
     .research-meta {
-      font-family: var(--regen-font-secondary);
-      font-size: 12px; color: var(--regen-gray-500);
+      font-family: var(--font-ui);
+      font-size: 12px; color: var(--color-muted);
       margin-top: 16px; letter-spacing: 0.02em;
     }
 
     .research-body { padding: 48px 0 0; }
     .research-body h2 {
-      font-size: 22px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display); font-size: 22px; font-weight: 800;
+      color: var(--color-cream);
       margin: 40px 0 12px; letter-spacing: -0.01em;
     }
     .research-body h2:first-child { margin-top: 0; }
     .research-body h3 {
-      font-size: 16px; font-weight: 700; color: var(--regen-gray-700);
+      font-family: var(--font-display); font-size: 16px; font-weight: 700;
+      color: var(--color-cream-soft);
       margin: 24px 0 8px;
     }
     .research-body p {
-      font-size: 15px; color: var(--regen-gray-700); line-height: 1.7;
-      margin: 10px 0;
+      font-family: var(--font-body); font-size: 15px; color: var(--color-cream-soft);
+      line-height: 1.7; margin: 10px 0;
     }
     .research-body ul, .research-body ol {
-      font-size: 15px; color: var(--regen-gray-700); line-height: 1.7;
-      margin: 8px 0 8px 24px;
+      font-family: var(--font-body); font-size: 15px; color: var(--color-cream-soft);
+      line-height: 1.7; margin: 8px 0 8px 24px;
     }
     .research-body li { margin-bottom: 6px; }
-    .research-body a { color: var(--regen-green); font-weight: 500; }
+    .research-body a { color: var(--color-emerald-bright); font-weight: 500; }
     .research-body a:hover { text-decoration: underline; }
 
     .research-formula {
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 14px; background: var(--regen-gray-100);
-      border: 1px solid var(--regen-gray-200); border-radius: 10px;
-      padding: 14px 16px; overflow-x: auto; color: var(--regen-navy);
+      font-family: var(--font-mono);
+      font-size: 14px; background: var(--color-surface);
+      border: 1px solid var(--color-border); border-radius: 10px;
+      padding: 14px 16px; overflow-x: auto; color: var(--color-cream);
       margin: 14px 0;
     }
 
     .research-callout {
-      background: var(--regen-green-bg);
-      border-left: 4px solid var(--regen-green);
+      background: rgba(43, 153, 79, 0.08);
+      border-left: 4px solid var(--color-emerald);
       border-radius: 0 8px 8px 0;
       padding: 16px 20px; margin: 20px 0;
-      font-size: 15px; color: var(--regen-gray-700);
+      font-size: 15px; color: var(--color-cream-soft);
     }
-    .research-callout strong { color: var(--regen-navy); }
+    .research-callout strong { color: var(--color-cream); }
 
     .profiles-grid {
       display: grid;
@@ -109,42 +112,47 @@ export function createResearchRoutes(baseUrl: string): Router {
       gap: 16px; margin: 20px 0;
     }
     .profile-card {
-      background: var(--regen-white);
-      border: 1px solid var(--regen-gray-200);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius);
       padding: 20px; text-align: left;
-      transition: box-shadow 0.3s ease;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
     }
-    .profile-card:hover { box-shadow: var(--regen-shadow-card-hover); }
+    .profile-card:hover {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      border-color: rgba(240,236,226,0.12);
+    }
     .profile-card h3 {
-      margin: 0 0 4px; font-size: 15px; color: var(--regen-green);
+      font-family: var(--font-display);
+      margin: 0 0 4px; font-size: 15px; color: var(--color-emerald-bright);
     }
     .profile-card .usage {
-      font-family: var(--regen-font-secondary);
-      font-size: 12px; color: var(--regen-gray-500); margin: 0 0 10px;
+      font-family: var(--font-ui);
+      font-size: 12px; color: var(--color-muted); margin: 0 0 10px;
     }
-    .profile-card ul { margin: 0 0 0 16px; font-size: 13px; }
+    .profile-card ul { margin: 0 0 0 16px; font-size: 13px; color: var(--color-cream-soft); }
     .profile-card li { margin-bottom: 2px; }
 
     .ref-list { counter-reset: refs; list-style: none; margin: 0; padding: 0; }
     .ref-list li {
       counter-increment: refs; margin-bottom: 8px; padding-left: 32px;
       position: relative; font-size: 14px; line-height: 1.5;
+      color: var(--color-cream-soft);
     }
     .ref-list li::before {
       content: counter(refs) "."; position: absolute; left: 0;
-      font-weight: 700; color: var(--regen-green);
+      font-weight: 700; color: var(--color-emerald);
     }
 
     .research-cta {
       text-align: center; margin: 48px 0 0;
       padding: 32px 24px;
-      background: var(--regen-green-bg);
-      border: 1px solid var(--regen-green-light);
+      background: rgba(43, 153, 79, 0.06);
+      border: 1px solid rgba(43, 153, 79, 0.15);
       border-radius: var(--regen-radius-lg);
     }
     .research-cta p {
-      color: var(--regen-gray-700); margin: 0 0 16px; font-size: 16px;
+      color: var(--color-cream-soft); margin: 0 0 16px; font-size: 16px;
     }
 
     @media (max-width: 640px) {

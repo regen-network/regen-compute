@@ -251,9 +251,9 @@ function renderApiDashboard(opts: {
     ${brandCSS()}
     .api-dash { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
     .status-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
-    .status-badge--success { background: #d1fae5; color: #065f46; }
-    .status-badge--redirect { background: #ede9fe; color: #5b21b6; }
-    .status-badge--error { background: #fee2e2; color: #991b1b; }
+    .status-badge--success { background: rgba(43,153,79,0.15); color: #33b35c; }
+    .status-badge--redirect { background: rgba(124,58,237,0.15); color: #a78bfa; }
+    .status-badge--error { background: rgba(220,38,38,0.15); color: #f87171; }
     .api-dash__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; }
     .api-dash__title { font-size: 26px; font-weight: 800; color: var(--regen-navy); margin: 0; }
     .api-dash__sub { font-size: 14px; color: var(--regen-gray-500); margin: 4px 0 0; }
@@ -315,12 +315,12 @@ function renderApiDashboard(opts: {
     }
     .api-table tr:last-child td { border-bottom: none; }
     .api-table td code { font-family: monospace; font-size: 12px; color: var(--regen-green); background: var(--regen-green-bg); padding: 2px 6px; border-radius: 4px; }
-    .api-table .method-get  { color: #059669; font-family: monospace; font-size: 11px; font-weight: 700; }
-    .api-table .method-post { color: #7c3aed; font-family: monospace; font-size: 11px; font-weight: 700; }
+    .api-table .method-get  { color: var(--color-emerald-bright, #33b35c); font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 700; }
+    .api-table .method-post { color: #a78bfa; font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 700; }
     .empty-state { text-align: center; padding: 48px 24px; color: var(--regen-gray-500); }
     .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--regen-navy); margin: 0 0 8px; }
     .empty-state p { font-size: 14px; margin: 0 0 20px; line-height: 1.6; }
-    .empty-curl { font-family: monospace; font-size: 13px; background: #1a1a2e; color: #a5f3c4; border-radius: 8px; padding: 14px 18px; text-align: left; max-width: 520px; margin: 0 auto; line-height: 1.8; }
+    .empty-curl { font-family: var(--font-mono, monospace); font-size: 13px; background: var(--color-surface, #0A0C12); color: var(--color-emerald-bright, #33b35c); border: 1px solid var(--color-border, rgba(240,236,226,0.07)); border-radius: 8px; padding: 14px 18px; text-align: left; max-width: 520px; margin: 0 auto; line-height: 1.8; }
     @media (max-width: 600px) {
       .api-dash { padding: 24px 16px 64px; }
       .api-key-box { flex-direction: column; align-items: stretch; }
@@ -462,16 +462,16 @@ ${byDay.length > 0 ? `
     data: {
       labels: ${dayLabels},
       datasets: [
-        { label: 'Calls', data: ${dayCallData}, backgroundColor: 'rgba(79,181,115,0.6)', borderColor: 'rgba(79,181,115,1)', borderWidth: 1, borderRadius: 4 },
-        { label: 'Errors', data: ${dayErrorData}, backgroundColor: 'rgba(220,38,38,0.4)', borderColor: 'rgba(220,38,38,0.8)', borderWidth: 1, borderRadius: 4 }
+        { label: 'Calls', data: ${dayCallData}, backgroundColor: 'rgba(43,153,79,0.6)', borderColor: 'rgba(51,179,92,1)', borderWidth: 1, borderRadius: 4 },
+        { label: 'Errors', data: ${dayErrorData}, backgroundColor: 'rgba(248,113,113,0.4)', borderColor: 'rgba(248,113,113,0.8)', borderWidth: 1, borderRadius: 4 }
       ]
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: '#6b7280', font: { size: 12 } } } },
+      plugins: { legend: { labels: { color: '#8B90A0', font: { size: 12 } } } },
       scales: {
-        x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' } },
-        y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(0,0,0,0.05)' }, beginAtZero: true }
+        x: { ticks: { color: '#8B90A0' }, grid: { color: 'rgba(240,236,226,0.05)' } },
+        y: { ticks: { color: '#8B90A0' }, grid: { color: 'rgba(240,236,226,0.05)' }, beginAtZero: true }
       }
     }
   });
@@ -643,7 +643,7 @@ function renderDashboardPage(opts: {
         : `Expires ${formattedExpiry}`;
 
     cryptoRenewalBanner = `
-    <div style="margin-bottom:24px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid ${urgencyColor}33;border-left:4px solid ${urgencyColor};border-radius:var(--regen-radius-lg);padding:24px 28px;">
+    <div style="margin-bottom:24px;background:var(--color-card, #0E1018);border:2px solid ${urgencyColor}33;border-left:4px solid ${urgencyColor};border-radius:var(--regen-radius-lg);padding:24px 28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
         <div>
           <div style="font-size:13px;font-weight:700;color:${urgencyColor};text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">${urgencyText}</div>
@@ -673,7 +673,7 @@ function renderDashboardPage(opts: {
       ? ` by ${communityGoal.goal_deadline}` : "";
     goalHtml = `
     <div style="margin-bottom:32px;">
-      <div style="background:linear-gradient(135deg,#f0f7f2,#e8f5ec);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius-lg);padding:28px 32px;">
+      <div style="background:var(--color-card, #0E1018);border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:var(--regen-radius-lg);padding:28px 32px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
           <div>
             <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--regen-green);margin-bottom:4px;">Community Goal</div>
@@ -684,8 +684,8 @@ function renderDashboardPage(opts: {
             <div style="font-size:12px;color:var(--regen-gray-500);">${communitySubscriberCount} subscriber${communitySubscriberCount !== 1 ? "s" : ""} contributing</div>
           </div>
         </div>
-        <div style="background:var(--regen-green-light);border-radius:8px;height:12px;overflow:hidden;">
-          <div style="background:linear-gradient(90deg,#4FB573,#79C6AA);height:100%;width:${pct}%;border-radius:8px;transition:width 0.5s ease;"></div>
+        <div style="background:rgba(43,153,79,0.12);border-radius:8px;height:12px;overflow:hidden;">
+          <div style="background:linear-gradient(90deg,var(--color-emerald, #2b994f),var(--color-emerald-bright, #33b35c));height:100%;width:${pct}%;border-radius:8px;transition:width 0.5s ease;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--regen-gray-500);">
           <span>${formatCredits(communityTotalCredits)} credits retired</span>
@@ -739,7 +739,7 @@ function renderDashboardPage(opts: {
     // Add a "coming soon" card if odd number of projects, to fill out the grid
     const comingSoonCard = projectCards.length % 2 !== 0 ? `
       <div class="project-card" style="border-color:var(--regen-gray-200);display:flex;flex-direction:column;">
-        <div class="project-card__img" style="background:linear-gradient(135deg,var(--regen-green-bg),#e0ede4);display:flex;align-items:center;justify-content:center;">
+        <div class="project-card__img" style="background:linear-gradient(135deg,rgba(43,153,79,0.08),rgba(43,153,79,0.04));display:flex;align-items:center;justify-content:center;">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="color:var(--regen-green);opacity:0.6;">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
           </svg>
@@ -816,7 +816,7 @@ function renderDashboardPage(opts: {
     }
     .project-card__badge {
       position: absolute; top: 12px; left: 12px;
-      font-size: 11px; font-weight: 700; color: #fff;
+      font-size: 11px; font-weight: 700; color: var(--color-cream, #F0ECE2);
       padding: 4px 10px; border-radius: 6px;
       letter-spacing: 0.03em;
     }
@@ -886,7 +886,7 @@ function renderDashboardPage(opts: {
       <p style="font-size:15px;color:var(--regen-gray-500);margin:0 0 4px;">Member since ${escapeHtml(memberSince)}</p>
     </div>
     <div style="margin-bottom:32px;">
-      <div style="background:linear-gradient(135deg,#f0f7f2,#e8f5ec);border:1px solid var(--regen-green-light);border-radius:var(--regen-radius);padding:28px 32px;text-align:center;">
+      <div style="background:var(--color-card, #0E1018);border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:var(--regen-radius);padding:28px 32px;text-align:center;">
         <div style="font-size:36px;margin-bottom:8px;">&#10003;</div>
         <div style="font-size:18px;font-weight:800;color:var(--regen-navy);margin-bottom:8px;">Payment received &mdash; thank you!</div>
         <p style="font-size:14px;color:var(--regen-gray-500);margin:0;max-width:480px;display:inline-block;">
@@ -924,12 +924,12 @@ function renderDashboardPage(opts: {
       <div style="background:var(--regen-white);border:1px solid var(--regen-gray-200);border-radius:var(--regen-radius-lg);padding:24px 28px;">
         <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 16px;">Choose a project and make a one-time contribution to retire more credits.</p>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <select id="boost-project" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--regen-gray-300);border-radius:8px;font-size:14px;font-family:var(--regen-font-primary);color:var(--regen-navy);">
+          <select id="boost-project" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:8px;font-size:14px;font-family:var(--font-body, var(--regen-font-primary));color:var(--regen-navy);background:var(--color-surface, #0A0C12);">
             ${boostOptions}
           </select>
           <div style="display:flex;align-items:center;gap:6px;">
             <span style="font-size:16px;font-weight:700;color:var(--regen-navy);">$</span>
-            <input id="boost-amount" type="number" min="1" step="0.50" value="5" style="width:80px;padding:10px 12px;border:1px solid var(--regen-gray-300);border-radius:8px;font-size:16px;text-align:center;font-family:var(--regen-font-primary);">
+            <input id="boost-amount" type="number" min="1" step="0.50" value="5" style="width:80px;padding:10px 12px;border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:8px;font-size:16px;text-align:center;font-family:var(--font-body, var(--regen-font-primary));color:var(--regen-navy);background:var(--color-surface, #0A0C12);">
           </div>
           <button onclick="boostProject()" class="regen-btn regen-btn--solid regen-btn--sm">Retire Now</button>
         </div>
@@ -964,8 +964,8 @@ function renderDashboardPage(opts: {
               const typeColor = isReferralBonus ? "#7c3aed" : t.type === "subscription" ? "var(--regen-teal)" : t.type === "topup" ? "var(--regen-green)" : "var(--regen-navy)";
               const hasRetirementTx = !!t.retirement_tx_hash;
               const statusLabel = isReferralBonus ? (hasRetirementTx ? "Executed" : "Pending") : hasRetirementTx ? "Retired" : "Paid";
-              const statusBg = isReferralBonus ? (hasRetirementTx ? "#f5f3ff" : "#fef3c7") : hasRetirementTx ? "#f0f7f2" : "#eff6ff";
-              const statusColor = isReferralBonus ? (hasRetirementTx ? "#5b21b6" : "#92400e") : hasRetirementTx ? "#2d6a4f" : "#1e40af";
+              const statusBg = isReferralBonus ? (hasRetirementTx ? "rgba(124,58,237,0.12)" : "rgba(245,158,11,0.12)") : hasRetirementTx ? "rgba(43,153,79,0.12)" : "rgba(59,130,246,0.12)";
+              const statusColor = isReferralBonus ? (hasRetirementTx ? "#a78bfa" : "#fbbf24") : hasRetirementTx ? "var(--color-emerald-bright, #33b35c)" : "#60a5fa";
               const proofLink = hasRetirementTx
                 ? ` <a href="https://www.mintscan.io/regen/tx/${escapeHtml(t.retirement_tx_hash!)}" target="_blank" rel="noopener" style="font-size:11px;">proof</a>`
                 : "";
@@ -998,11 +998,11 @@ function renderDashboardPage(opts: {
         <!-- Stats + encouragement -->
         <div style="padding:0 24px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:8px;">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:#f5f3ff;border-radius:50%;font-size:16px;font-weight:800;color:#7c3aed;">${referralCount}</span>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:rgba(124,58,237,0.12);border-radius:50%;font-size:16px;font-weight:800;color:#a78bfa;">${referralCount}</span>
             <span style="font-size:14px;color:var(--regen-gray-600);font-weight:600;">${referralCount === 1 ? "referral" : "referrals"}</span>
           </div>
           ${isTopReferrer ? `
-          <span style="display:inline-block;font-size:12px;font-weight:700;background:#f0fdf4;color:#166534;padding:4px 12px;border-radius:10px;">
+          <span style="display:inline-block;font-size:12px;font-weight:700;background:rgba(43,153,79,0.12);color:var(--color-emerald-bright, #33b35c);padding:4px 12px;border-radius:10px;">
             Top referrer — keep it up!
           </span>
           ` : referralCount > 0 ? `
@@ -1017,11 +1017,11 @@ function renderDashboardPage(opts: {
         </div>
 
         <!-- Referral link -->
-        <div style="padding:16px 24px;background:#f0fdf4;border-top:1px solid #bbf7d0;">
-          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#166534;">Your referral link</p>
+        <div style="padding:16px 24px;background:rgba(43,153,79,0.08);border-top:1px solid var(--color-border, rgba(240,236,226,0.07));">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:var(--color-emerald-bright, #33b35c);">Your referral link</p>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <code id="refLink" style="flex:1;min-width:200px;padding:8px 12px;background:#fff;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:var(--regen-navy);word-break:break-all;">${baseUrl}/r/${escapeHtml(referralCode)}</code>
-            <button onclick="copyRefLink()" style="padding:8px 16px;background:#4FB573;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">Copy</button>
+            <code id="refLink" style="flex:1;min-width:200px;padding:8px 12px;background:var(--color-surface, #0A0C12);border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:6px;font-size:13px;color:var(--regen-navy);word-break:break-all;">${baseUrl}/r/${escapeHtml(referralCode)}</code>
+            <button onclick="copyRefLink()" style="padding:8px 16px;background:var(--color-emerald, #2b994f);color:var(--color-cream, #F0ECE2);border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">Copy</button>
           </div>
         </div>
 
@@ -1080,7 +1080,7 @@ function renderDashboardPage(opts: {
             <label style="display:block;font-size:13px;font-weight:600;color:var(--regen-gray-500);margin-bottom:6px;">Your API Key</label>
             <div style="display:flex;align-items:center;gap:8px;">
               <code id="api-key-value" style="flex:1;font-size:13px;background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);border-radius:6px;padding:10px 12px;word-break:break-all;color:var(--regen-navy);cursor:pointer;" onclick="copyApiKey()" title="Click to copy">${escapeHtml(apiKey)}</code>
-              <button onclick="copyApiKey()" style="padding:8px 14px;background:var(--regen-green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" id="api-key-copy-btn">Copy</button>
+              <button onclick="copyApiKey()" style="padding:8px 14px;background:var(--color-emerald, #2b994f);color:var(--color-cream, #F0ECE2);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'" id="api-key-copy-btn">Copy</button>
             </div>
           </div>
           <div style="margin-bottom:16px;">
@@ -1089,11 +1089,11 @@ function renderDashboardPage(opts: {
           </div>
           <div style="margin-bottom:12px;">
             <label style="display:block;font-size:13px;font-weight:600;color:var(--regen-gray-500);margin-bottom:6px;">Example</label>
-            <pre style="font-size:12px;background:#1a1a2e;color:#a5f3c4;border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0;line-height:1.6;">curl -H "Authorization: Bearer ${escapeHtml(apiKey.slice(0, 12))}..." \\
+            <pre style="font-size:12px;background:var(--color-surface, #0A0C12);color:var(--color-emerald-bright, #33b35c);border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0;line-height:1.6;font-family:var(--font-mono, monospace);">curl -H "Authorization: Bearer ${escapeHtml(apiKey.slice(0, 12))}..." \\
   ${escapeHtml(baseUrl)}/api/v1/subscription</pre>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
-            <a href="/dashboard/api" style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,181,115,0.1);border:1px solid rgba(79,181,115,0.3);color:var(--regen-green);font-size:12px;font-weight:700;padding:7px 14px;border-radius:7px;text-decoration:none;">
+            <a href="/dashboard/api" style="display:inline-flex;align-items:center;gap:6px;background:rgba(43,153,79,0.1);border:1px solid rgba(43,153,79,0.25);color:var(--regen-green);font-size:12px;font-weight:700;padding:7px 14px;border-radius:7px;text-decoration:none;">
               API Usage Dashboard →
             </a>
             <a href="/developers" style="display:inline-flex;align-items:center;gap:6px;background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);color:var(--regen-gray-600);font-size:12px;font-weight:600;padding:7px 14px;border-radius:7px;text-decoration:none;">
@@ -1121,18 +1121,18 @@ function renderDashboardPage(opts: {
         data: {
           labels: raw.labels,
           datasets: [
-            { label: 'Carbon', data: raw.carbon, backgroundColor: '#4FB573', borderRadius: 4 },
-            { label: 'Biodiversity', data: raw.biodiversity, backgroundColor: '#527984', borderRadius: 4 },
-            { label: 'USS/Marine', data: raw.uss, backgroundColor: '#79C6AA', borderRadius: 4 }
+            { label: 'Carbon', data: raw.carbon, backgroundColor: 'rgba(43,153,79,0.7)', borderRadius: 4 },
+            { label: 'Biodiversity', data: raw.biodiversity, backgroundColor: 'rgba(82,121,132,0.7)', borderRadius: 4 },
+            { label: 'USS/Marine', data: raw.uss, backgroundColor: 'rgba(51,179,92,0.5)', borderRadius: 4 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: true,
-          plugins: { legend: { position: 'bottom' } },
+          plugins: { legend: { position: 'bottom', labels: { color: '#8B90A0' } } },
           scales: {
-            x: { stacked: true, grid: { display: false } },
-            y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Credits Retired' } }
+            x: { stacked: true, grid: { display: false }, ticks: { color: '#8B90A0' } },
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Credits Retired', color: '#8B90A0' }, ticks: { color: '#8B90A0' }, grid: { color: 'rgba(240,236,226,0.05)' } }
           }
         }
       });
@@ -1182,24 +1182,24 @@ function renderDashboardPage(opts: {
   </script>
 
   <!-- Crypto extend modal -->
-  <div id="crypto-extend-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;" onclick="if(event.target===this)closeCryptoExtend()">
-    <div style="background:var(--regen-white);border-radius:var(--regen-radius-lg);padding:32px 28px;max-width:480px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.25);position:relative;max-height:90vh;overflow-y:auto;">
+  <div id="crypto-extend-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(5,6,10,0.8);align-items:center;justify-content:center;" onclick="if(event.target===this)closeCryptoExtend()">
+    <div style="background:var(--color-card, #0E1018);border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:var(--regen-radius-lg);padding:32px 28px;max-width:480px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.5);position:relative;max-height:90vh;overflow-y:auto;">
       <button onclick="closeCryptoExtend()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:22px;color:var(--regen-gray-400);cursor:pointer;">&times;</button>
 
       <div id="ce-step-1">
         <h3 style="font-size:20px;font-weight:800;color:var(--regen-navy);margin:0 0 6px;">Extend Your Subscription</h3>
         <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 20px;">Choose a plan to extend for another year.</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div onclick="selectExtendPlan('dabbler',1250,'Dabbler — 1 year')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border:2px solid var(--regen-gray-200);border-radius:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--regen-gray-200)'">
-            <div><div style="font-weight:700;color:var(--regen-navy);font-size:15px;">Dabbler</div><div style="font-size:12px;color:var(--regen-gray-400);">1 year extension</div></div>
+          <div onclick="selectExtendPlan('dabbler',1250,'Dabbler — 1 year')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border:2px solid var(--color-border, rgba(240,236,226,0.07));border-radius:10px;cursor:pointer;transition:all 0.15s;background:var(--color-surface, #0A0C12);" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--color-border, rgba(240,236,226,0.07))'">
+            <div><div style="font-weight:700;color:var(--regen-navy);font-size:15px;">Dabbler</div><div style="font-size:12px;color:var(--color-muted, #8B90A0);">1 year extension</div></div>
             <div style="font-weight:800;color:var(--regen-green);font-size:16px;">$12.50</div>
           </div>
-          <div onclick="selectExtendPlan('builder',2500,'Builder — 1 year')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border:2px solid var(--regen-gray-200);border-radius:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--regen-gray-200)'">
-            <div><div style="font-weight:700;color:var(--regen-navy);font-size:15px;">Builder</div><div style="font-size:12px;color:var(--regen-gray-400);">1 year extension</div></div>
+          <div onclick="selectExtendPlan('builder',2500,'Builder — 1 year')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border:2px solid var(--color-border, rgba(240,236,226,0.07));border-radius:10px;cursor:pointer;transition:all 0.15s;background:var(--color-surface, #0A0C12);" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--color-border, rgba(240,236,226,0.07))'">
+            <div><div style="font-weight:700;color:var(--regen-navy);font-size:15px;">Builder</div><div style="font-size:12px;color:var(--color-muted, #8B90A0);">1 year extension</div></div>
             <div style="font-weight:800;color:var(--regen-green);font-size:16px;">$25</div>
           </div>
-          <div onclick="selectExtendPlan('agent',5000,'Agent — 1 year')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border:2px solid var(--regen-gray-200);border-radius:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--regen-gray-200)'">
-            <div><div style="font-weight:700;color:var(--regen-navy);font-size:15px;">Agent</div><div style="font-size:12px;color:var(--regen-gray-400);">1 year extension</div></div>
+          <div onclick="selectExtendPlan('agent',5000,'Agent — 1 year')" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border:2px solid var(--color-border, rgba(240,236,226,0.07));border-radius:10px;cursor:pointer;transition:all 0.15s;background:var(--color-surface, #0A0C12);" onmouseover="this.style.borderColor='var(--regen-green)'" onmouseout="this.style.borderColor='var(--color-border, rgba(240,236,226,0.07))'">
+            <div><div style="font-weight:700;color:var(--regen-navy);font-size:15px;">Agent</div><div style="font-size:12px;color:var(--color-muted, #8B90A0);">1 year extension</div></div>
             <div style="font-weight:800;color:var(--regen-green);font-size:16px;">$50</div>
           </div>
         </div>
@@ -1211,14 +1211,14 @@ function renderDashboardPage(opts: {
         <p id="ce-plan-label" style="font-size:14px;color:var(--regen-gray-500);margin:0 0 16px;"></p>
 
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-          <button class="ce-chain-tab" data-chain="evm" onclick="ceSwitchChain('evm')" style="padding:6px 14px;border:1px solid var(--regen-green);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--regen-green);color:#fff;">EVM</button>
-          <button class="ce-chain-tab" data-chain="bitcoin" onclick="ceSwitchChain('bitcoin')" style="padding:6px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--regen-white);color:var(--regen-gray-500);">Bitcoin</button>
-          <button class="ce-chain-tab" data-chain="solana" onclick="ceSwitchChain('solana')" style="padding:6px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--regen-white);color:var(--regen-gray-500);">Solana</button>
-          <button class="ce-chain-tab" data-chain="tron" onclick="ceSwitchChain('tron')" style="padding:6px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--regen-white);color:var(--regen-gray-500);">Tron</button>
+          <button class="ce-chain-tab" data-chain="evm" onclick="ceSwitchChain('evm')" style="padding:6px 14px;border:1px solid var(--regen-green);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--regen-green);color:var(--color-cream, #F0ECE2);">EVM</button>
+          <button class="ce-chain-tab" data-chain="bitcoin" onclick="ceSwitchChain('bitcoin')" style="padding:6px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--color-card, #0E1018);color:var(--regen-gray-500);">Bitcoin</button>
+          <button class="ce-chain-tab" data-chain="solana" onclick="ceSwitchChain('solana')" style="padding:6px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--color-card, #0E1018);color:var(--regen-gray-500);">Solana</button>
+          <button class="ce-chain-tab" data-chain="tron" onclick="ceSwitchChain('tron')" style="padding:6px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--color-card, #0E1018);color:var(--regen-gray-500);">Tron</button>
         </div>
 
         <div id="ce-evm-select" style="margin-bottom:12px;">
-          <select id="ce-evm-chain" onchange="var s=document.getElementById('ce-confirm-chain');for(var i=0;i<s.options.length;i++)if(s.options[i].value===this.value){s.selectedIndex=i;break;}" style="width:100%;padding:8px 12px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:14px;">
+          <select id="ce-evm-chain" onchange="var s=document.getElementById('ce-confirm-chain');for(var i=0;i<s.options.length;i++)if(s.options[i].value===this.value){s.selectedIndex=i;break;}" style="width:100%;padding:8px 12px;border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:8px;font-size:14px;color:var(--regen-navy);background:var(--color-surface, #0A0C12);">
             <option value="base" selected>Base (recommended)</option>
             <option value="ethereum">Ethereum</option>
             <option value="arbitrum">Arbitrum</option>
@@ -1230,7 +1230,7 @@ function renderDashboardPage(opts: {
         <div style="background:var(--regen-gray-50);border:1px solid var(--regen-gray-200);border-radius:10px;padding:16px;text-align:center;">
           <div id="ce-addr" onclick="navigator.clipboard.writeText(document.getElementById('ce-addr-val').textContent).then(function(){var c=document.getElementById('ce-copied');c.style.opacity='1';setTimeout(function(){c.style.opacity='0';},1200);})" style="font-family:monospace;font-size:12px;word-break:break-all;color:var(--regen-navy);background:var(--regen-white);padding:8px 12px;border-radius:6px;border:1px solid var(--regen-gray-200);cursor:pointer;position:relative;">
             <span id="ce-addr-val"></span>
-            <div id="ce-copied" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--regen-green);color:#fff;border-radius:6px;font-size:13px;font-weight:700;opacity:0;transition:opacity 0.2s;pointer-events:none;">Copied!</div>
+            <div id="ce-copied" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--color-emerald, #2b994f);color:var(--color-cream, #F0ECE2);border-radius:6px;font-size:13px;font-weight:700;opacity:0;transition:opacity 0.2s;pointer-events:none;">Copied!</div>
           </div>
           <p style="font-size:14px;color:var(--regen-gray-500);margin:12px 0 0;">Send <strong id="ce-amount" style="color:var(--regen-navy);"></strong> worth of any token</p>
         </div>
@@ -1245,7 +1245,7 @@ function renderDashboardPage(opts: {
 
         <div style="margin-bottom:14px;">
           <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">Chain</label>
-          <select id="ce-confirm-chain" style="width:100%;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:14px;box-sizing:border-box;">
+          <select id="ce-confirm-chain" style="width:100%;padding:10px 14px;border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:8px;font-size:14px;box-sizing:border-box;color:var(--regen-navy);background:var(--color-surface, #0A0C12);">
             <option value="base" selected>Base</option>
             <option value="ethereum">Ethereum</option>
             <option value="arbitrum">Arbitrum</option>
@@ -1258,7 +1258,7 @@ function renderDashboardPage(opts: {
         </div>
         <div style="margin-bottom:14px;">
           <label style="display:block;font-weight:600;font-size:14px;color:var(--regen-navy);margin-bottom:6px;">Transaction Hash</label>
-          <input type="text" id="ce-tx-hash" placeholder="0x..." style="width:100%;padding:10px 14px;border:1px solid var(--regen-gray-200);border-radius:8px;font-size:14px;font-family:monospace;box-sizing:border-box;">
+          <input type="text" id="ce-tx-hash" placeholder="0x..." style="width:100%;padding:10px 14px;border:1px solid var(--color-border, rgba(240,236,226,0.07));border-radius:8px;font-size:14px;font-family:var(--font-mono, monospace);box-sizing:border-box;color:var(--regen-navy);background:var(--color-surface, #0A0C12);">
         </div>
         <p id="ce-error" style="color:#c33;font-size:13px;display:none;margin:0 0 12px;"></p>
         <button id="ce-confirm-btn" onclick="ceConfirm()" class="regen-btn regen-btn--solid regen-btn--block" style="font-size:15px;padding:12px;">Verify & Extend</button>
@@ -1301,8 +1301,8 @@ function renderDashboardPage(opts: {
       var tabs = document.querySelectorAll('.ce-chain-tab');
       for (var i = 0; i < tabs.length; i++) {
         var isActive = tabs[i].getAttribute('data-chain') === chain;
-        tabs[i].style.background = isActive ? 'var(--regen-green)' : 'var(--regen-white)';
-        tabs[i].style.color = isActive ? '#fff' : 'var(--regen-gray-500)';
+        tabs[i].style.background = isActive ? 'var(--regen-green)' : 'var(--color-card, #0E1018)';
+        tabs[i].style.color = isActive ? 'var(--color-cream, #F0ECE2)' : 'var(--regen-gray-500)';
         tabs[i].style.borderColor = isActive ? 'var(--regen-green)' : 'var(--regen-gray-200)';
       }
       document.getElementById('ce-evm-select').style.display = chain === 'evm' ? 'block' : 'none';

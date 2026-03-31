@@ -281,29 +281,33 @@ function badgesPageHTML(baseUrl: string): string {
 
     .badges-hero {
       padding: 64px 0 48px; text-align: center;
-      border-bottom: 1px solid var(--regen-gray-200);
+      border-bottom: 1px solid var(--color-border);
     }
     .badges-hero h1 {
-      font-size: 36px; font-weight: 800; color: var(--regen-navy);
+      font-size: 36px; font-weight: 800; color: var(--color-cream);
+      font-family: var(--font-display), serif;
       margin: 0 0 16px; line-height: 1.15; letter-spacing: -0.02em;
     }
     .badges-hero h1 span {
-      background: linear-gradient(180deg, #4fb573, #b9e1c7);
+      background: linear-gradient(180deg, var(--color-emerald-bright), var(--color-emerald));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .badges-hero .subtitle {
-      font-size: 17px; color: var(--regen-gray-500);
+      font-size: 17px; color: var(--color-muted);
+      font-family: var(--font-body), serif;
       max-width: 580px; margin: 0 auto; line-height: 1.65;
     }
 
     .section { padding: 56px 0; }
     .section h2 {
-      font-size: 22px; font-weight: 800; color: var(--regen-navy);
+      font-size: 22px; font-weight: 800; color: var(--color-cream);
+      font-family: var(--font-display), serif;
       margin: 0 0 6px; letter-spacing: -0.01em;
     }
     .section-lead {
-      font-size: 15px; color: var(--regen-gray-500); margin: 0 0 32px; line-height: 1.6;
+      font-size: 15px; color: var(--color-muted); margin: 0 0 32px; line-height: 1.6;
+      font-family: var(--font-body), serif;
     }
 
     .badge-grid {
@@ -313,9 +317,9 @@ function badgesPageHTML(baseUrl: string): string {
     }
 
     .badge-card {
-      border: 1px solid var(--regen-gray-200);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius-lg);
-      overflow: hidden; background: var(--regen-white);
+      overflow: hidden; background: var(--color-card);
     }
     .badge-preview {
       padding: 36px 24px;
@@ -323,88 +327,90 @@ function badgesPageHTML(baseUrl: string): string {
       min-height: 100px;
     }
     .badge-preview--black  { background: #111; }
-    .badge-preview--white  { background: #fff; border-bottom: 1px solid var(--regen-gray-200); }
+    .badge-preview--white  { background: #fff; border-bottom: 1px solid var(--color-border); }
     .badge-preview--green  { background: linear-gradient(135deg, #1a5c3a, #0d7a5f); }
     .badge-preview--seal-black { background: #111; }
-    .badge-preview--seal-white { background: #fff; border-bottom: 1px solid var(--regen-gray-200); }
+    .badge-preview--seal-white { background: #fff; border-bottom: 1px solid var(--color-border); }
     .badge-preview--seal-green { background: linear-gradient(135deg, #1a5c3a, #0d7a5f); }
 
-    .badge-info { padding: 18px 18px 22px; border-top: 1px solid var(--regen-gray-100); }
-    .badge-info h3 { font-size: 14px; font-weight: 700; color: var(--regen-navy); margin: 0 0 4px; }
-    .badge-info p  { font-size: 13px; color: var(--regen-gray-500); margin: 0 0 14px; line-height: 1.5; }
+    .badge-info { padding: 18px 18px 22px; border-top: 1px solid var(--color-border); }
+    .badge-info h3 { font-size: 14px; font-weight: 700; color: var(--color-cream); margin: 0 0 4px; font-family: var(--font-ui), sans-serif; }
+    .badge-info p  { font-size: 13px; color: var(--color-muted); margin: 0 0 14px; line-height: 1.5; font-family: var(--font-body), serif; }
 
     .snippet-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
     .tab-btn {
       font-size: 11px; font-weight: 600; padding: 3px 9px;
-      border-radius: 4px; border: 1px solid var(--regen-gray-200);
-      background: var(--regen-white); color: var(--regen-gray-500);
-      cursor: pointer;
+      border-radius: 4px; border: 1px solid var(--color-border);
+      background: var(--color-surface); color: var(--color-muted);
+      cursor: pointer; font-family: var(--font-ui), sans-serif;
     }
     .tab-btn.active {
-      background: var(--regen-green-bg); color: var(--regen-green);
-      border-color: var(--regen-green-light);
+      background: var(--color-emerald-dim); color: var(--color-emerald-bright);
+      border-color: var(--color-border-emerald);
     }
     .snippet-block {
       position: relative;
-      background: #f8fafc; border: 1px solid var(--regen-gray-200);
+      background: var(--color-surface); border: 1px solid var(--color-border);
       border-radius: 6px; padding: 9px 40px 9px 11px;
-      font-family: 'Monaco','Menlo','Consolas',monospace;
-      font-size: 10.5px; color: #334155; line-height: 1.6;
+      font-family: var(--font-mono), 'Monaco','Menlo','Consolas',monospace;
+      font-size: 10.5px; color: var(--color-cream-soft); line-height: 1.6;
       word-break: break-all; white-space: pre-wrap;
       display: none;
     }
     .snippet-block.visible { display: block; }
     .copy-btn {
       position: absolute; top: 7px; right: 7px;
-      background: var(--regen-white); border: 1px solid var(--regen-gray-200);
+      background: var(--color-card); border: 1px solid var(--color-border);
       border-radius: 4px; padding: 2px 7px;
-      font-size: 11px; font-weight: 600; color: var(--regen-gray-500);
-      cursor: pointer;
+      font-size: 11px; font-weight: 600; color: var(--color-muted);
+      cursor: pointer; font-family: var(--font-ui), sans-serif;
     }
-    .copy-btn:hover { background: var(--regen-green-bg); color: var(--regen-green); border-color: var(--regen-green-light); }
-    .copy-btn.copied { color: var(--regen-green); border-color: var(--regen-green-light); }
+    .copy-btn:hover { background: var(--color-emerald-dim); color: var(--color-emerald-bright); border-color: var(--color-border-emerald); }
+    .copy-btn.copied { color: var(--color-emerald-bright); border-color: var(--color-border-emerald); }
 
     .download-btn {
       display: inline-flex; align-items: center; gap: 5px;
-      font-size: 12px; font-weight: 600; color: var(--regen-green);
+      font-size: 12px; font-weight: 600; color: var(--color-emerald-bright);
       text-decoration: none; padding: 5px 11px;
-      border: 1px solid var(--regen-green-light);
-      border-radius: 6px; background: var(--regen-green-bg);
-      margin-top: 10px;
+      border: 1px solid var(--color-border-emerald);
+      border-radius: 6px; background: var(--color-emerald-dim);
+      margin-top: 10px; font-family: var(--font-ui), sans-serif;
     }
-    .download-btn:hover { background: #d1fae5; }
+    .download-btn:hover { background: var(--color-emerald-glow); }
 
     .icon-pick-btn {
-      padding: 14px 18px; border-radius: 10px; border: 2px solid var(--regen-gray-200);
-      background: var(--regen-white); cursor: pointer; text-align: center;
+      padding: 14px 18px; border-radius: 10px; border: 2px solid var(--color-border);
+      background: var(--color-card); cursor: pointer; text-align: center;
       min-width: 100px; transition: all 0.15s; font-family: inherit;
     }
-    .icon-pick-btn:hover { border-color: #4fb573; background: #f0faf4; }
+    .icon-pick-btn:hover { border-color: var(--color-emerald); background: var(--color-emerald-dim); }
 
     /* Usage badge section */
     .usage-explainer {
-      background: linear-gradient(135deg, #0a2e1f, #0d4a38);
+      background: var(--color-card);
+      border: 1px solid var(--color-border-emerald);
       border-radius: var(--regen-radius-lg);
-      padding: 40px; margin-bottom: 32px; color: #fff;
+      padding: 40px; margin-bottom: 32px; color: var(--color-cream);
     }
-    .usage-explainer h2 { color: #fff; font-size: 20px; margin: 0 0 12px; }
-    .usage-explainer p  { color: rgba(255,255,255,0.8); font-size: 15px; line-height: 1.7; margin: 0 0 20px; }
+    .usage-explainer h2 { color: var(--color-cream); font-size: 20px; margin: 0 0 12px; font-family: var(--font-display), serif; }
+    .usage-explainer p  { color: var(--color-cream-soft); font-size: 15px; line-height: 1.7; margin: 0 0 20px; font-family: var(--font-body), serif; }
     .usage-key-form { display: flex; gap: 10px; flex-wrap: wrap; }
     .usage-key-input {
       flex: 1; min-width: 240px;
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      background: var(--color-surface); border: 1px solid var(--color-border-light);
       border-radius: 6px; padding: 10px 14px;
-      font-size: 13px; color: #fff; font-family: 'Monaco','Menlo','Consolas',monospace;
+      font-size: 13px; color: var(--color-cream); font-family: var(--font-mono), 'Monaco','Menlo','Consolas',monospace;
       outline: none;
     }
-    .usage-key-input::placeholder { color: rgba(255,255,255,0.4); }
-    .usage-key-input:focus { border-color: #4fb573; }
+    .usage-key-input::placeholder { color: var(--color-dim); }
+    .usage-key-input:focus { border-color: var(--color-emerald); }
     .usage-preview-btn {
-      background: #4fb573; color: #fff; border: none;
+      background: var(--color-emerald); color: var(--color-cream); border: none;
       border-radius: 6px; padding: 10px 20px;
       font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: var(--font-ui), sans-serif;
     }
-    .usage-preview-btn:hover { background: #3da862; }
+    .usage-preview-btn:hover { background: var(--color-emerald-bright); }
     .usage-preview-area { margin-top: 24px; display: none; }
     .usage-preview-area.visible { display: block; }
     .usage-preview-frames {
@@ -415,38 +421,38 @@ function badgesPageHTML(baseUrl: string): string {
       display: flex; align-items: center; justify-content: center;
     }
     .usage-frame--black { background: #111; }
-    .usage-frame--white { background: #fff; border: 1px solid #e2e8f0; }
+    .usage-frame--white { background: #fff; border: 1px solid var(--color-border); }
     .usage-frame--green { background: linear-gradient(135deg, #1a5c3a, #0d7a5f); }
 
     .usage-snippet {
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      background: var(--color-surface); border: 1px solid var(--color-border-light);
       border-radius: 6px; padding: 12px 40px 12px 14px; position: relative;
-      font-family: 'Monaco','Menlo','Consolas',monospace;
-      font-size: 11px; color: rgba(255,255,255,0.85); line-height: 1.6;
+      font-family: var(--font-mono), 'Monaco','Menlo','Consolas',monospace;
+      font-size: 11px; color: var(--color-cream-soft); line-height: 1.6;
       word-break: break-all; white-space: pre-wrap;
     }
     .usage-snippet .copy-btn {
-      background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);
+      background: var(--color-card); border-color: var(--color-border-light); color: var(--color-muted);
     }
 
     .what-it-means {
-      background: var(--regen-green-bg);
-      border: 1px solid var(--regen-green-light);
+      background: var(--color-emerald-dim);
+      border: 1px solid var(--color-border-emerald);
       border-radius: var(--regen-radius-lg);
       padding: 40px; margin-bottom: 56px;
     }
-    .what-it-means h2 { font-size: 20px; color: var(--regen-navy); margin: 0 0 12px; }
+    .what-it-means h2 { font-size: 20px; color: var(--color-cream); margin: 0 0 12px; font-family: var(--font-display), serif; }
     .what-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 16px; margin-top: 20px;
     }
     .what-card {
-      background: var(--regen-white); border: 1px solid var(--regen-green-light);
+      background: var(--color-card); border: 1px solid var(--color-border-emerald);
       border-radius: var(--regen-radius); padding: 16px 18px;
     }
     .what-card .icon { font-size: 18px; margin-bottom: 6px; }
-    .what-card h3 { font-size: 13px; font-weight: 700; color: var(--regen-navy); margin: 0 0 4px; }
-    .what-card p  { font-size: 13px; color: var(--regen-gray-600); line-height: 1.55; margin: 0; }
+    .what-card h3 { font-size: 13px; font-weight: 700; color: var(--color-cream); margin: 0 0 4px; font-family: var(--font-ui), sans-serif; }
+    .what-card p  { font-size: 13px; color: var(--color-muted); line-height: 1.55; margin: 0; font-family: var(--font-body), serif; }
 
     @media (max-width: 640px) {
       .badges-hero { padding: 48px 0 36px; }
@@ -526,10 +532,10 @@ function badgesPageHTML(baseUrl: string): string {
       <!-- Icon selector -->
       <div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
         ${ICONS.map(icon => `
-        <button class="icon-pick-btn" id="pick-${icon.id}" onclick="selectIcon('${icon.id}','${baseUrl}/public/${icon.file}')" style="${icon.id === "1" ? "border-color:#4fb573;background:#f0faf4;" : ""}">
+        <button class="icon-pick-btn" id="pick-${icon.id}" onclick="selectIcon('${icon.id}','${baseUrl}/public/${icon.file}')" style="${icon.id === "1" ? "border-color:var(--color-emerald);background:var(--color-emerald-dim);" : ""}">
           <img src="data:image/png;base64,${ICON_DATA_URIS[icon.id].replace("data:image/png;base64,","")}" width="64" height="64" style="display:block;margin:0 auto 8px;">
-          <div style="font-size:12px;font-weight:700;color:#0a2e1f">${icon.label}</div>
-          <div style="font-size:11px;color:#64748b">${icon.desc}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--color-cream)">${icon.label}</div>
+          <div style="font-size:11px;color:var(--color-dim)">${icon.desc}</div>
         </button>`).join("")}
       </div>
 
@@ -567,7 +573,7 @@ function badgesPageHTML(baseUrl: string): string {
         <h2>Live Usage Badge</h2>
         <p>
           A dynamic badge that shows your actual credits retired — updated live from your subscription.
-          Paste your <strong style="color:#a3f0c0">badge token</strong> (from your dashboard) to preview and get your embed code.
+          Paste your <strong style="color:var(--color-emerald-bright)">badge token</strong> (from your dashboard) to preview and get your embed code.
           Your badge token is read-only and safe to embed in public HTML.
         </p>
         <div class="usage-key-form">
@@ -595,9 +601,9 @@ function badgesPageHTML(baseUrl: string): string {
       <!-- What it means -->
       <div class="what-it-means">
         <h2>What Does the Badge Mean?</h2>
-        <p style="color:var(--regen-gray-700);font-size:15px;line-height:1.7;margin:0 0 4px;">
+        <p style="color:var(--color-cream-soft);font-size:15px;line-height:1.7;margin:0 0 4px;font-family:var(--font-body),serif;">
           When you display the Regen Compute badge, you&rsquo;re telling your users that your AI usage
-          is backed by verified ecological credit retirements on <a href="https://regen.network" target="_blank" rel="noopener" style="color:var(--regen-green)">Regen Network</a>.
+          is backed by verified ecological credit retirements on <a href="https://regen.network" target="_blank" rel="noopener" style="color:var(--color-emerald-bright)">Regen Network</a>.
           Not a pledge — real credits, retired permanently on-chain.
         </p>
         <div class="what-grid">
@@ -645,7 +651,7 @@ function badgesPageHTML(baseUrl: string): string {
         b.style.background = '';
       });
       const picked = document.getElementById('pick-' + id);
-      if (picked) { picked.style.borderColor = '#4fb573'; picked.style.background = '#f0faf4'; }
+      if (picked) { picked.style.borderColor = 'var(--color-emerald)'; picked.style.background = 'var(--color-emerald-dim)'; }
 
       // Update all seal preview images
       document.querySelectorAll('.seal-preview-img').forEach(img => img.src = url);

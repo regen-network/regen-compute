@@ -42,19 +42,21 @@ export function createAboutRoutes(baseUrl: string): Router {
     .about-hero {
       padding: 72px 0 56px;
       text-align: center;
-      border-bottom: 1px solid var(--regen-gray-200);
+      border-bottom: 1px solid var(--color-border);
     }
     .about-hero h1 {
-      font-size: 38px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 38px; font-weight: 800; color: var(--color-cream);
       margin: 0 0 16px; line-height: 1.15; letter-spacing: -0.02em;
     }
     .about-hero h1 span {
-      background: linear-gradient(180deg, #4fb573, #b9e1c7);
+      background: linear-gradient(180deg, var(--color-emerald-bright), var(--color-emerald));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .about-hero .subtitle {
-      font-size: 18px; color: var(--regen-gray-500);
+      font-family: var(--font-body);
+      font-size: 18px; color: var(--color-muted);
       max-width: 640px; margin: 0 auto; line-height: 1.6;
     }
 
@@ -65,28 +67,31 @@ export function createAboutRoutes(baseUrl: string): Router {
     }
     .about-body { padding: 32px 0 0; }
     .about-body h2 {
-      font-size: 24px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 24px; font-weight: 800; color: var(--color-cream);
       margin: 56px 0 16px; letter-spacing: -0.01em;
     }
     .about-body h2:first-child { margin-top: 0; }
     .about-body p {
-      font-size: 16px; color: var(--regen-gray-700); line-height: 1.75;
+      font-family: var(--font-body);
+      font-size: 16px; color: var(--color-cream-soft); line-height: 1.75;
       margin: 12px 0;
     }
     .about-body p.lead {
-      font-size: 18px; line-height: 1.7; color: var(--regen-gray-600);
+      font-size: 18px; line-height: 1.7; color: var(--color-muted);
     }
-    .about-body a { color: var(--regen-green); font-weight: 500; }
+    .about-body a { color: var(--color-emerald-bright); font-weight: 500; }
     .about-body a:hover { text-decoration: underline; }
 
     .about-callout {
-      background: var(--regen-green-bg);
-      border-left: 4px solid var(--regen-green);
+      background: var(--color-card);
+      border-left: 4px solid var(--color-emerald);
       border-radius: 0 8px 8px 0;
       padding: 20px 24px; margin: 24px 0;
-      font-size: 15px; color: var(--regen-gray-700); line-height: 1.7;
+      font-family: var(--font-body);
+      font-size: 15px; color: var(--color-cream-soft); line-height: 1.7;
     }
-    .about-callout strong { color: var(--regen-navy); }
+    .about-callout strong { color: var(--color-cream); }
 
     /* People section */
     .people-grid {
@@ -99,34 +104,39 @@ export function createAboutRoutes(baseUrl: string): Router {
     .person-photo {
       flex-shrink: 0; width: 96px; height: 96px;
       border-radius: 50%; overflow: hidden;
-      background: linear-gradient(135deg, #1a5c3a 0%, #0d7a5f 100%);
+      background: linear-gradient(135deg, var(--color-emerald) 0%, #0d7a5f 100%);
       display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--color-border);
     }
     .person-photo img {
       width: 100%; height: 100%; object-fit: cover;
     }
     .person-photo .initials {
-      font-size: 32px; font-weight: 800; color: rgba(255,255,255,0.9);
+      font-family: var(--font-display);
+      font-size: 32px; font-weight: 800; color: rgba(240,236,226,0.9);
       letter-spacing: -0.02em;
     }
     .person-info h3 {
-      font-size: 18px; font-weight: 700; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700; color: var(--color-cream);
       margin: 0 0 2px;
     }
     .person-info .role {
-      font-size: 13px; font-weight: 600; color: var(--regen-green);
+      font-family: var(--font-ui);
+      font-size: 13px; font-weight: 600; color: var(--color-emerald-bright);
       text-transform: uppercase; letter-spacing: 0.04em;
       margin: 0 0 10px;
     }
     .person-info p {
-      font-size: 15px; color: var(--regen-gray-700); line-height: 1.7;
+      font-family: var(--font-body);
+      font-size: 15px; color: var(--color-cream-soft); line-height: 1.7;
       margin: 0;
     }
 
     /* Milestone timeline */
     .timeline {
       position: relative; margin: 32px 0 0; padding-left: 28px;
-      border-left: 2px solid var(--regen-green-light);
+      border-left: 2px solid var(--color-emerald);
     }
     .timeline-item {
       position: relative; margin-bottom: 28px;
@@ -134,74 +144,84 @@ export function createAboutRoutes(baseUrl: string): Router {
     .timeline-item::before {
       content: ""; position: absolute; left: -34px; top: 6px;
       width: 12px; height: 12px; border-radius: 50%;
-      background: var(--regen-green); border: 2px solid var(--regen-white);
+      background: var(--color-emerald-bright); border: 2px solid var(--color-surface);
     }
     .timeline-item .year {
-      font-size: 13px; font-weight: 700; color: var(--regen-green);
+      font-family: var(--font-mono);
+      font-size: 13px; font-weight: 700; color: var(--color-emerald-bright);
       text-transform: uppercase; letter-spacing: 0.04em;
     }
     .timeline-item p {
-      font-size: 15px; color: var(--regen-gray-700); line-height: 1.6;
+      font-family: var(--font-body);
+      font-size: 15px; color: var(--color-cream-soft); line-height: 1.6;
       margin: 4px 0 0;
     }
 
     /* Developer CTA */
     .dev-section {
-      background: linear-gradient(135deg, #0a2e1f 0%, #0d4a38 50%, #0a3d2e 100%);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius-lg);
       padding: 48px 40px; margin: 56px 0 0;
-      color: #fff;
+      color: var(--color-cream);
     }
     .dev-section h2 {
-      color: #fff; margin-top: 0; font-size: 26px;
+      font-family: var(--font-display);
+      color: var(--color-cream); margin-top: 0; font-size: 26px;
     }
     .dev-section p {
-      color: rgba(255,255,255,0.85); font-size: 16px; line-height: 1.7;
+      font-family: var(--font-body);
+      color: var(--color-cream-soft); font-size: 16px; line-height: 1.7;
     }
-    .dev-section a { color: #4ade80; }
-    .dev-section a:hover { color: #86efac; }
+    .dev-section a { color: var(--color-emerald-bright); }
+    .dev-section a:hover { color: var(--color-emerald); }
     .dev-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px; margin: 24px 0 0;
     }
     .dev-card {
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      background: var(--color-surface); border: 1px solid var(--color-border);
       border-radius: var(--regen-radius); padding: 20px;
     }
     .dev-card h3 {
-      font-size: 15px; font-weight: 700; color: #4ade80;
+      font-family: var(--font-ui);
+      font-size: 15px; font-weight: 700; color: var(--color-emerald-bright);
       margin: 0 0 8px;
     }
     .dev-card p {
-      font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6;
+      font-size: 14px; color: var(--color-muted); line-height: 1.6;
       margin: 0;
     }
     .dev-section .btn-row {
       display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap;
     }
     .dev-section .regen-btn--light {
-      background: #fff; color: var(--regen-navy); font-weight: 700;
+      background: var(--color-cream); color: var(--color-void); font-weight: 700;
     }
     .dev-section .regen-btn--light:hover {
-      background: #f0fdf4;
+      background: var(--color-cream-soft);
     }
     .dev-section .regen-btn--ghost {
-      background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3);
+      background: transparent; color: var(--color-cream); border: 1px solid var(--color-border);
     }
     .dev-section .regen-btn--ghost:hover {
-      background: rgba(255,255,255,0.08);
+      background: rgba(240,236,226,0.05);
     }
 
     .about-cta {
       text-align: center; margin: 56px 0 0;
       padding: 40px 24px;
-      background: var(--regen-green-bg);
-      border: 1px solid var(--regen-green-light);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius-lg);
     }
-    .about-cta h2 { margin-top: 0; font-size: 22px; }
+    .about-cta h2 {
+      font-family: var(--font-display);
+      margin-top: 0; font-size: 22px; color: var(--color-cream);
+    }
     .about-cta p {
-      color: var(--regen-gray-700); margin: 0 0 20px; font-size: 16px;
+      font-family: var(--font-body);
+      color: var(--color-cream-soft); margin: 0 0 20px; font-size: 16px;
       max-width: 520px; margin-left: auto; margin-right: auto;
     }
     .about-cta .btn-row {

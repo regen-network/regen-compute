@@ -343,6 +343,26 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     res.sendFile(`public/team/${filename}`, { root: process.cwd() });
   });
 
+  // Hero and CTA background images (clean URLs with 1-year cache)
+  app.get("/images/hero.webp", (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.sendFile("public/hero.webp", { root: process.cwd() });
+  });
+  app.get("/images/cta-bg.webp", (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.sendFile("public/cta-bg.webp", { root: process.cwd() });
+  });
+
+  // General image route (catch-all for /images/:filename, restricted to image extensions)
+  app.get("/images/:filename", (req, res) => {
+    const filename = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
+    if (!filename.match(/\.(webp|png|jpg)$/i)) {
+      return res.status(404).send("Not found");
+    }
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.sendFile(`public/${filename}`, { root: process.cwd() });
+  });
+
   // Always init DB and config — display-only pages need them
   const db = getDb(dbPath);
   const config = loadConfig();

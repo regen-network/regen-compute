@@ -43,53 +43,58 @@ export function createAiPluginRoutes(baseUrl: string): Router {
     .plugin-hero {
       padding: 64px 0 48px;
       text-align: center;
-      border-bottom: 1px solid var(--regen-gray-200);
+      border-bottom: 1px solid var(--color-border);
     }
     .plugin-hero h1 {
-      font-size: 36px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 36px; font-weight: 800; color: var(--color-cream);
       margin: 0 0 12px; line-height: 1.15; letter-spacing: -0.02em;
     }
     .plugin-hero h1 span {
-      background: linear-gradient(180deg, #4fb573, #b9e1c7);
+      background: linear-gradient(180deg, var(--color-emerald-bright), var(--color-emerald));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .plugin-hero p {
-      font-size: 18px; color: var(--regen-gray-500);
+      font-family: var(--font-body);
+      font-size: 18px; color: var(--color-muted);
       max-width: 560px; margin: 0 auto;
     }
 
     .plugin-section {
       padding: 48px 0;
-      border-bottom: 1px solid var(--regen-gray-200);
+      border-bottom: 1px solid var(--color-border);
     }
     .plugin-section:last-of-type { border-bottom: none; }
 
     .plugin-section h2 {
-      font-size: 24px; font-weight: 800; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 24px; font-weight: 800; color: var(--color-cream);
       margin: 0 0 16px; letter-spacing: -0.01em;
     }
     .plugin-section h3 {
-      font-size: 16px; font-weight: 700; color: var(--regen-navy);
+      font-family: var(--font-display);
+      font-size: 16px; font-weight: 700; color: var(--color-cream);
       margin: 16px 0 8px;
     }
     .plugin-section p, .plugin-section li {
-      font-size: 15px; color: var(--regen-gray-700); line-height: 1.7;
+      font-family: var(--font-body);
+      font-size: 15px; color: var(--color-cream-soft); line-height: 1.7;
     }
     .plugin-section ul { padding-left: 20px; margin: 8px 0 16px; }
     .plugin-section li { margin-bottom: 6px; }
 
     /* Install blocks */
     .install-block {
-      background: var(--regen-white);
-      border: 1px solid var(--regen-gray-200);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius);
       padding: 20px 24px;
       margin-bottom: 16px;
     }
     .install-block__label {
-      font-family: var(--regen-font-secondary);
-      font-size: 13px; font-weight: 700; color: var(--regen-green);
+      font-family: var(--font-ui);
+      font-size: 13px; font-weight: 700; color: var(--color-emerald);
       text-transform: uppercase; letter-spacing: 0.05em;
       margin-bottom: 8px;
     }
@@ -97,14 +102,15 @@ export function createAiPluginRoutes(baseUrl: string): Router {
       position: relative;
     }
     .install-block__cmd pre {
-      background: var(--regen-navy); color: #e0e0e0;
+      background: var(--color-void); color: var(--color-cream-soft);
       padding: 14px 16px; border-radius: 8px;
       overflow-x: auto; font-size: 13px; margin: 0;
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      font-family: var(--font-mono);
+      border: 1px solid var(--color-border);
     }
     .install-block__cmd button {
       position: absolute; top: 8px; right: 8px;
-      background: var(--regen-green); color: #fff; border: none;
+      background: var(--color-emerald); color: var(--color-void); border: none;
       border-radius: 6px; padding: 4px 10px; font-size: 11px;
       font-weight: 600; cursor: pointer;
     }
@@ -112,32 +118,34 @@ export function createAiPluginRoutes(baseUrl: string): Router {
     /* Tools table */
     .tools-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
     .tools-table th {
-      font-family: var(--regen-font-secondary);
-      font-size: 11px; font-weight: 700; color: var(--regen-gray-500);
+      font-family: var(--font-ui);
+      font-size: 11px; font-weight: 700; color: var(--color-muted);
       text-transform: uppercase; letter-spacing: 0.05em;
       text-align: left; padding: 10px 14px;
-      border-bottom: 2px solid var(--regen-gray-200);
-      background: var(--regen-gray-50);
+      border-bottom: 2px solid var(--color-border);
+      background: var(--color-surface);
     }
     .tools-table td {
+      font-family: var(--font-body);
       font-size: 14px; padding: 10px 14px;
-      border-bottom: 1px solid var(--regen-gray-100);
+      border-bottom: 1px solid var(--color-border);
       vertical-align: top;
+      color: var(--color-cream-soft);
     }
     .tools-table tr:last-child td { border-bottom: none; }
     .tools-table code {
-      background: var(--regen-gray-100); padding: 2px 6px; border-radius: 4px;
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 12px; color: var(--regen-navy); white-space: nowrap;
+      background: var(--color-surface); padding: 2px 6px; border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px; color: var(--color-cream); white-space: nowrap;
     }
     .tools-table .badge-ro {
       display: inline-block; font-size: 10px; font-weight: 700;
-      background: var(--regen-green-bg); color: var(--regen-green);
+      background: var(--color-emerald-dim); color: var(--color-emerald-bright);
       padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
     }
     .tools-table .badge-write {
       display: inline-block; font-size: 10px; font-weight: 700;
-      background: #fef3c7; color: #92400e;
+      background: rgba(251,191,36,0.1); color: #FBBF24;
       padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
     }
 
@@ -147,21 +155,27 @@ export function createAiPluginRoutes(baseUrl: string): Router {
       gap: 16px; margin: 16px 0;
     }
     .credit-card {
-      background: var(--regen-white);
-      border: 1px solid var(--regen-gray-200);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius); padding: 18px 20px;
+      transition: border-color 0.2s;
+    }
+    .credit-card:hover {
+      border-color: var(--color-border-light);
     }
     .credit-card__code {
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
-      font-size: 12px; font-weight: 700; color: var(--regen-green);
+      font-family: var(--font-mono);
+      font-size: 12px; font-weight: 700; color: var(--color-emerald);
       text-transform: uppercase; letter-spacing: 0.05em;
       margin-bottom: 4px;
     }
     .credit-card__name {
-      font-size: 15px; font-weight: 700; color: var(--regen-navy); margin-bottom: 4px;
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700; color: var(--color-cream); margin-bottom: 4px;
     }
     .credit-card__desc {
-      font-size: 13px; color: var(--regen-gray-500); line-height: 1.5;
+      font-family: var(--font-body);
+      font-size: 13px; color: var(--color-muted); line-height: 1.5;
     }
 
     /* Supported tools logos */
@@ -171,26 +185,32 @@ export function createAiPluginRoutes(baseUrl: string): Router {
     }
     .supported-tool {
       display: flex; align-items: center; gap: 10px;
-      background: var(--regen-white);
-      border: 1px solid var(--regen-gray-200);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
       border-radius: var(--regen-radius); padding: 12px 20px;
-      font-size: 15px; font-weight: 600; color: var(--regen-navy);
+      font-family: var(--font-ui);
+      font-size: 15px; font-weight: 600; color: var(--color-cream);
+      transition: border-color 0.2s;
+    }
+    .supported-tool:hover {
+      border-color: var(--color-border-light);
     }
     .supported-tool__icon {
       width: 28px; height: 28px; border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; font-weight: 800; color: #fff;
+      font-size: 16px; font-weight: 800; color: var(--color-void);
     }
 
     /* Try-it prompt */
     .try-prompt {
-      background: var(--regen-green-bg);
-      border: 1px solid var(--regen-green-light);
+      background: var(--color-emerald-dim);
+      border: 1px solid var(--color-border-emerald);
       border-radius: var(--regen-radius-lg);
       padding: 24px; margin: 16px 0;
     }
     .try-prompt__label {
-      font-size: 13px; font-weight: 700; color: var(--regen-green);
+      font-family: var(--font-ui);
+      font-size: 13px; font-weight: 700; color: var(--color-emerald-bright);
       text-transform: uppercase; letter-spacing: 0.05em;
       margin-bottom: 10px;
     }
@@ -198,13 +218,13 @@ export function createAiPluginRoutes(baseUrl: string): Router {
       position: relative;
     }
     .try-prompt__text code {
-      display: block; font-size: 14px; color: var(--regen-navy);
+      display: block; font-size: 14px; color: var(--color-cream);
       white-space: pre-wrap; line-height: 1.6;
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      font-family: var(--font-mono);
     }
     .try-prompt__text button {
       position: absolute; top: 0; right: 0;
-      background: var(--regen-green); color: #fff; border: none;
+      background: var(--color-emerald); color: var(--color-void); border: none;
       border-radius: 6px; padding: 4px 10px; font-size: 11px;
       font-weight: 600; cursor: pointer;
     }
@@ -259,15 +279,15 @@ export function createAiPluginRoutes(baseUrl: string): Router {
           Claude Code
         </div>
         <div class="supported-tool">
-          <div class="supported-tool__icon" style="background:#000;">C</div>
+          <div class="supported-tool__icon" style="background:var(--color-cream);">C</div>
           Cursor
         </div>
         <div class="supported-tool">
-          <div class="supported-tool__icon" style="background:#24292f;">W</div>
+          <div class="supported-tool__icon" style="background:var(--color-dim);">W</div>
           Windsurf
         </div>
         <div class="supported-tool">
-          <div class="supported-tool__icon" style="background:linear-gradient(135deg,#4fb573,#79C6AA);">+</div>
+          <div class="supported-tool__icon" style="background:linear-gradient(135deg,var(--color-emerald),var(--color-emerald-bright));">+</div>
           Any MCP Client
         </div>
       </div>
@@ -288,7 +308,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
 
       <div class="install-block">
         <div class="install-block__label">Cursor / Windsurf / Other MCP Clients</div>
-        <p style="font-size:14px;color:var(--regen-gray-500);margin:0 0 8px;">Add to your MCP settings JSON:</p>
+        <p style="font-size:14px;color:var(--color-muted);margin:0 0 8px;">Add to your MCP settings JSON:</p>
         <div class="install-block__cmd">
           <pre id="install-cursor">{
   "mcpServers": {
@@ -448,12 +468,12 @@ export function createAiPluginRoutes(baseUrl: string): Router {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
         <div class="install-block" style="margin:0;">
           <div class="install-block__label">Subscription</div>
-          <p style="font-size:14px;color:var(--regen-gray-700);margin:0 0 8px;">From $1.25/month or $12.50/year (save 17%). Automatic credit retirements with attribution. Yearly subscribers get 85% of their payment funding ecology (vs 75% monthly).</p>
+          <p style="font-size:14px;color:var(--color-cream-soft);margin:0 0 8px;">From $1.25/month or $12.50/year (save 17%). Automatic credit retirements with attribution. Yearly subscribers get 85% of their payment funding ecology (vs 75% monthly).</p>
           <a class="regen-btn regen-btn--solid regen-btn--sm" href="/#pricing">See Plans</a>
         </div>
         <div class="install-block" style="margin:0;">
           <div class="install-block__label">One-Time Purchase</div>
-          <p style="font-size:14px;color:var(--regen-gray-700);margin:0 0 8px;">Browse credits on Regen Marketplace and choose exactly which projects to support. Pay with credit card or crypto.</p>
+          <p style="font-size:14px;color:var(--color-cream-soft);margin:0 0 8px;">Browse credits on Regen Marketplace and choose exactly which projects to support. Pay with credit card or crypto.</p>
           <a class="regen-btn regen-btn--outline regen-btn--sm" href="https://app.regen.network" target="_blank" rel="noopener">Marketplace</a>
         </div>
       </div>
@@ -467,7 +487,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
         <a class="regen-btn regen-btn--outline regen-btn--sm" href="https://github.com/regen-network/regen-compute" target="_blank" rel="noopener">GitHub</a>
         <a class="regen-btn regen-btn--outline regen-btn--sm" href="https://www.npmjs.com/package/regen-compute" target="_blank" rel="noopener">npm</a>
       </div>
-      <p style="font-size:13px;color:var(--regen-gray-500);">Current version: <code class="regen-code">v0.3.4</code> &middot; License: MIT &middot; Node.js &ge; 20</p>
+      <p style="font-size:13px;color:var(--color-muted);">Current version: <code class="regen-code">v0.3.4</code> &middot; License: MIT &middot; Node.js &ge; 20</p>
     </section>
 
   </div>
