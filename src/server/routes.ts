@@ -302,8 +302,10 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     .trust-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--color-border); opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
     .trust-row.visible { opacity: 1; transform: translateY(0); }
     .trust-row div { padding: 16px 28px; font-size: 14px; line-height: 1.6; }
-    .trust-row div:first-child { color: var(--color-muted); background: var(--color-surface); border-right: 1px solid var(--color-border); }
-    .trust-row div:last-child { color: var(--color-cream-soft); background: var(--color-card); }
+    .trust-row div:first-child { color: var(--color-muted); background: var(--color-surface); border-right: 1px solid var(--color-border); transition: background 0.3s ease; }
+    .trust-row div:last-child { color: var(--color-cream-soft); background: var(--color-card); transition: background 0.3s ease; }
+    .trust-row:hover div:first-child { background: rgba(255,255,255,0.03); }
+    .trust-row:hover div:last-child { background: rgba(255,255,255,0.04); }
 
     /* ---- Subscribe card (hero) ---- */
     .subscribe-card {
