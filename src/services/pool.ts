@@ -385,7 +385,7 @@ export async function executePoolRun(options: {
         },
         disableAutoRetire: false,
         retirementJurisdiction: config.defaultJurisdiction,
-        retirementReason: `Monthly pool retirement — Regenerative Compute`,
+        retirementReason: `Monthly pool retirement — Regen Compute`,
       }));
 
       const msg = {

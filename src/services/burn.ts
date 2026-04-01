@@ -189,7 +189,7 @@ export async function executeBurn(options: {
       value: {
         burner: address,
         amount: burnUregen.toString(),
-        reason: `Monthly pool burn — Regenerative Compute (pool run #${options.poolRunId})`,
+        reason: `Monthly pool burn — Regen Compute (pool run #${options.poolRunId})`,
       },
     };
 

@@ -103,7 +103,7 @@ function buildPaymentRequirements(baseUrl: string): object {
       network,
       maxAmountRequired: PRICE_USDC,
       resource: `${baseUrl}/api/v1/*`,
-      description: "Regenerative Compute API — per-request payment",
+      description: "Regen Compute API — per-request payment",
       mimeType: "application/json",
       payTo: EVM_PAY_TO,
       maxTimeoutSeconds: 300,
@@ -119,7 +119,7 @@ function buildPaymentRequirements(baseUrl: string): object {
     x402Version: 1,
     accepts,
     error: "X-PAYMENT-REQUIRED",
-    description: "Payment required to access Regenerative Compute API",
+    description: "Payment required to access Regen Compute API",
     // Also include full payment info for clients that prefer the custom flow
     paymentInfo: {
       payTo: EVM_PAY_TO,

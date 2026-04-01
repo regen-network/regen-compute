@@ -41,11 +41,11 @@ export async function checkSubscriptionStatus(): Promise<{
         {
           type: "text" as const,
           text: [
-            "## Regenerative Compute — Subscription Status",
+            "## Regen Compute — Subscription Status",
             "",
             "No API key configured. To check your subscription or subscribe:",
             "",
-            "1. Visit the Regenerative Compute landing page to subscribe",
+            "1. Visit the Regen Compute landing page to subscribe",
             "2. After subscribing, set your API key:",
             "   ```",
             "   export REGEN_API_KEY=rfa_your_key_here",
@@ -90,7 +90,7 @@ export async function checkSubscriptionStatus(): Promise<{
         (data.cumulative_uss_credits ?? 0);
 
       const lines: string[] = [
-        `## Regenerative Compute — Active Subscription`,
+        `## Regen Compute — Active Subscription`,
         ``,
         `You're covered! Your **${planName}** plan ($${data.amount_dollars}/mo) funds verified ecological regeneration every month.`,
         ``,
@@ -134,7 +134,7 @@ export async function checkSubscriptionStatus(): Promise<{
     } else {
       // Not subscribed
       const lines: string[] = [
-        `## Regenerative Compute — Not Subscribed`,
+        `## Regen Compute — Not Subscribed`,
         ``,
         `You don't have an active subscription yet. Subscribe to fund verified ecological regeneration from your AI sessions:`,
         ``,

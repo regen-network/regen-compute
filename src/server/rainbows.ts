@@ -58,7 +58,7 @@ export function createRainbowRoutes(db: Database.Database, baseUrl: string, conf
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Save the Rainbows — Regenerative Compute</title>
+  <title>Save the Rainbows — Regen Compute</title>
   <meta name="description" content="The rainbows are losing their color. Your AI is draining the spectrum. Or is it? Discover the real ecological impact — and what you can do.">
   <meta property="og:title" content="The Rainbows Are Losing Their Color">
   <meta property="og:description" content="Your AI is draining the color spectrum. Scientists project full grayscale by 2031. Act now.">

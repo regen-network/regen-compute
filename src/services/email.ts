@@ -64,7 +64,7 @@ function emailFooter(manageUrl?: string, unsubscribeEmailUrl?: string): string {
                     </p>
                     ` : ""}
                     <p style="margin: 0; font-family: Arial, sans-serif; font-size: 11px; color: #d1d5db;">
-                      Regenerative Compute &middot; Regenerative AI
+                      Regen Compute &middot; Regenerative AI
                     </p>
                   </td>
                 </tr>`;
@@ -175,7 +175,7 @@ function renderEmailHtml(data: EmailData): string {
   const impactDescription = describeRetiredTypes(data.thisMonth);
 
   const shareText = encodeURIComponent(
-    `I just retired ecological credits through @raboratory's Regenerative Compute to account for my AI usage. ${formatCredits(totalCumulative)} credits retired and counting. compute.regen.network`
+    `I just retired ecological credits through @raboratory's Regen Compute to account for my AI usage. ${formatCredits(totalCumulative)} credits retired and counting. compute.regen.network`
   );
   const shareUrl = data.certificateUrl ? encodeURIComponent(data.certificateUrl) : "";
 
@@ -202,7 +202,7 @@ function renderEmailHtml(data: EmailData): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Your Monthly Impact Report - Regenerative Compute</title>
+  <title>Your Monthly Impact Report - Regen Compute</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -523,7 +523,7 @@ export async function sendMonthlyEmails(
     };
 
     const html = renderEmailHtml(emailData);
-    const subject = `Your ${runDate} Impact Report - Regenerative Compute`;
+    const subject = `Your ${runDate} Impact Report - Regen Compute`;
 
     try {
       await sendViaPostmark(
@@ -566,7 +566,7 @@ export async function sendMagicLinkEmail(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Log in to Regenerative Compute</title>
+  <title>Log in to Regen Compute</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f9fafb; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; font-family: 'Mulish', Arial, sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f9fafb;">
@@ -620,7 +620,7 @@ export async function sendMagicLinkEmail(
       From: config.emailFromAddress,
       To: email,
       ...(config.emailReplyToAddress ? { ReplyTo: config.emailReplyToAddress } : {}),
-      Subject: "Log in to your Regenerative Compute Dashboard",
+      Subject: "Log in to your Regen Compute Dashboard",
       HtmlBody: html,
       MessageStream: "outbound",
     }),
@@ -656,7 +656,7 @@ export async function sendWelcomeEmail(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Welcome to Regenerative Compute</title>
+  <title>Welcome to Regen Compute</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f9fafb; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; font-family: 'Mulish', Arial, sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f9fafb;">
@@ -679,7 +679,7 @@ export async function sendWelcomeEmail(
                 <!-- Body -->
                 <tr>
                   <td style="padding: 36px 32px;">
-                    <h1 style="margin: 0 0 16px; font-family: 'Mulish', Arial, sans-serif; font-size: 24px; font-weight: 800; color: #101570; text-align: center;">Welcome to Regenerative Compute</h1>
+                    <h1 style="margin: 0 0 16px; font-family: 'Mulish', Arial, sans-serif; font-size: 24px; font-weight: 800; color: #101570; text-align: center;">Welcome to Regen Compute</h1>
                     <p style="margin: 0 0 20px; font-family: 'Inter', Arial, sans-serif; font-size: 15px; color: #374151; line-height: 1.7;">
                       You're now on the <strong style="color: #4FB573;">${escapeHtml(planName)}</strong> plan. Every month, your subscription funds verified ecological regeneration &mdash; carbon removal, biodiversity protection, and more &mdash; with permanent, on-chain proof.
                     </p>
@@ -753,7 +753,7 @@ export async function sendWelcomeEmail(
       From: config.emailFromAddress,
       To: email,
       ...(config.emailReplyToAddress ? { ReplyTo: config.emailReplyToAddress } : {}),
-      Subject: "Welcome to Regenerative Compute",
+      Subject: "Welcome to Regen Compute",
       HtmlBody: html,
       MessageStream: "outbound",
     }),

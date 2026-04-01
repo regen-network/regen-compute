@@ -193,8 +193,8 @@ async function main() {
       retiredAmount: s.quantity,
       retirementJurisdiction: config.defaultJurisdiction,
       retirementReason: displayName
-        ? `Regenerative Compute — ${displayName}'s monthly ecological contribution`
-        : "Regenerative Compute subscription — ecological accountability for AI",
+        ? `Regen Compute — ${displayName}'s monthly ecological contribution`
+        : "Regen Compute subscription — ecological accountability for AI",
     }));
 
     const msgs = [

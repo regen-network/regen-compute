@@ -103,7 +103,7 @@ function compactBadgeSVG(theme: "dark" | "light" | "green", iconUrl: string = IC
   };
   const t = themes[theme];
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="32" viewBox="0 0 240 32" role="img" aria-label="Powered by Regenerative Compute">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="32" viewBox="0 0 240 32" role="img" aria-label="Powered by Regen Compute">
   <defs>
     <clipPath id="rc-clip-${theme}"><rect width="240" height="32" rx="6"/></clipPath>
     <linearGradient id="rc-left-${theme}" x1="0" y1="0" x2="1" y2="1">
@@ -265,7 +265,7 @@ function badgesPageHTML(baseUrl: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Badge Pack — Regenerative Compute</title>
+  <title>Badge Pack — Regen Compute</title>
   <meta name="description" content="Display your commitment to ecological AI. Download the Regen Compute badge or seal for your README, website, or product docs.">
   <meta property="og:title" content="Regen Compute — Badge Pack">
   <meta property="og:description" content="Show your commitment to regenerative AI. Free badge assets for your README, website, or product.">
@@ -513,8 +513,8 @@ function badgesPageHTML(baseUrl: string): string {
               <button class="tab-btn" onclick="showTab(this,'${theme}','html')">HTML</button>
               <button class="tab-btn" onclick="showTab(this,'${theme}','url')">URL</button>
             </div>
-            <div class="snippet-block visible" id="${theme}-markdown">[![Powered by Regenerative Compute](${svgUrl})](${baseUrl})<button class="copy-btn" onclick="copySnippet(this,'${theme}-markdown')">Copy</button></div>
-            <div class="snippet-block" id="${theme}-html">&lt;a href="${baseUrl}" target="_blank" rel="noopener"&gt;\n  &lt;img src="${svgUrl}" alt="Powered by Regenerative Compute" width="240" height="32"&gt;\n&lt;/a&gt;<button class="copy-btn" onclick="copySnippet(this,'${theme}-html')">Copy</button></div>
+            <div class="snippet-block visible" id="${theme}-markdown">[![Powered by Regen Compute](${svgUrl})](${baseUrl})<button class="copy-btn" onclick="copySnippet(this,'${theme}-markdown')">Copy</button></div>
+            <div class="snippet-block" id="${theme}-html">&lt;a href="${baseUrl}" target="_blank" rel="noopener"&gt;\n  &lt;img src="${svgUrl}" alt="Powered by Regen Compute" width="240" height="32"&gt;\n&lt;/a&gt;<button class="copy-btn" onclick="copySnippet(this,'${theme}-html')">Copy</button></div>
             <div class="snippet-block" id="${theme}-url">${svgUrl}<button class="copy-btn" onclick="copySnippet(this,'${theme}-url')">Copy</button></div>
             <a class="download-btn" href="${svgUrl}" download="regen-compute-badge-${theme}.svg">
               <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 5l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>

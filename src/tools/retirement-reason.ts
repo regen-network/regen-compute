@@ -19,7 +19,7 @@ export async function getRetirementReasonTool(
   try {
     // Build example reasons for each source type
     const mcpExample = buildRetirementReason({
-      note: note || "Regenerative contribution via Regenerative Compute",
+      note: note || "Regenerative contribution via Regen Compute",
       source: "mcp_tool",
     });
     const subExample = buildRetirementReason({
@@ -44,7 +44,7 @@ export async function getRetirementReasonTool(
       `## Structured Retirement Reason Format`,
       ``,
       `Every credit retirement on Regen Network includes a \`reason\` field written on-chain.`,
-      `Regenerative Compute uses a JSON-LD-compatible structure for machine-readable attribution.`,
+      `Regen Compute uses a JSON-LD-compatible structure for machine-readable attribution.`,
       ``,
       `### Schema`,
       ``,

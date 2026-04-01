@@ -8,7 +8,7 @@ Two messaging tracks: **Website-first** (for general AI users) and **MCP-first**
 
 **Target**: Developers, technical audience, people who care about verifiable claims
 
-**Title**: Show HN: Regenerative Compute — Ecological accountability for AI, verified on-chain
+**Title**: Show HN: Regen Compute — Ecological accountability for AI, verified on-chain
 
 **Post**:
 
@@ -38,7 +38,7 @@ Open source (Apache-2.0): https://github.com/regen-network/regen-compute
 
 Every AI session uses energy. I wanted a way to do something about it that wasn't just hand-waving.
 
-Regenerative Compute (compute.regen.network) lets you fund verified ecological projects — forests, soil, biodiversity — with permanent proof on a public ledger.
+Regen Compute (compute.regen.network) lets you fund verified ecological projects — forests, soil, biodiversity — with permanent proof on a public ledger.
 
 **Easiest way**: Subscribe at compute.regen.network. Plans start at $1.25/month or $12.50/year (save 17% — and 85% of your yearly payment goes to ecology vs 75% monthly). You get a dashboard tracking your impact with on-chain proof.
 
@@ -69,7 +69,7 @@ GitHub: https://github.com/regen-network/regen-compute
 
 The AI energy conversation usually stops at "data centers use a lot of electricity." Luccioni et al. (2023) and Epoch AI (2025) have put real numbers on per-query energy costs (0.3-2.9 Wh per typical query, ~40 Wh for 100k-token contexts). But individual users have had no mechanism to act on these numbers from inside their workflow.
 
-We built Regenerative Compute (compute.regen.network) to close that gap.
+We built Regen Compute (compute.regen.network) to close that gap.
 
 It connects AI usage to verified ecological credit retirement on Regen Network — a purpose-built blockchain for ecological assets. Two entry points:
 
@@ -97,7 +97,7 @@ Research page: https://compute.regen.network/research
 **Tweet 1**:
 Your AI has an ecological footprint. Now you can do something about it — with proof.
 
-Introducing Regenerative Compute: ecological accountability for AI, verified on a public ledger.
+Introducing Regen Compute: ecological accountability for AI, verified on a public ledger.
 
 Subscribe: compute.regen.network
 Install the AI plugin: npx regen-compute
@@ -212,7 +212,7 @@ canonical_url: https://compute.regen.network/blog/launch
 
 **Post**:
 
-Regenerative Compute is live — the first product that channels AI compute spending into Regen Network credit retirements.
+Regen Compute is live — the first product that channels AI compute spending into Regen Network credit retirements.
 
 **For the broader AI audience**: compute.regen.network has subscription plans ($1.25-$5/mo (or yearly, save 17%)). No wallet needed. Credit card payments fund monthly batch retirements on Regen Ledger. Dashboard shows on-chain proof.
 

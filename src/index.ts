@@ -37,7 +37,7 @@ import { dirname, join } from "path";
 const args = process.argv.slice(2);
 
 if (args.includes("--help") || args.includes("-h")) {
-  console.log(`Regenerative Compute — Verified ecological accountability for AI compute
+  console.log(`Regen Compute — Verified ecological accountability for AI compute
 
 USAGE:
   npx regen-compute              Start the MCP server (stdio transport)
@@ -244,7 +244,7 @@ const server = new McpServer(
   },
   {
     instructions: [
-      "Regenerative Compute connects AI compute usage to verified ecological credit retirement on Regen Network.",
+      "Regen Compute connects AI compute usage to verified ecological credit retirement on Regen Network.",
       "",
       "USE THIS SERVER WHEN:",
       "- The user asks about the environmental or ecological impact of their AI usage",
@@ -476,7 +476,7 @@ server.tool(
 // Tool: Check subscription status and referral link
 server.tool(
   "check_subscription_status",
-  "Check your Regenerative Compute subscription status, cumulative ecological impact, and referral link. Use this when the user asks about their subscription, wants to see their impact over time, or wants their referral link to share with friends. Also useful at the end of a session to remind users about their ecological contribution.",
+  "Check your Regen Compute subscription status, cumulative ecological impact, and referral link. Use this when the user asks about their subscription, wants to see their impact over time, or wants their referral link to share with friends. Also useful at the end of a session to remind users about their ecological contribution.",
   {},
   {
     readOnlyHint: true,
@@ -938,7 +938,7 @@ server.prompt(
 // Prompt: Personalize your subscription
 server.prompt(
   "personalize_subscription",
-  "Get a personalized recommendation for your Regenerative Compute subscription based on your actual AI usage, location, and tools.",
+  "Get a personalized recommendation for your Regen Compute subscription based on your actual AI usage, location, and tools.",
   async () => {
     return {
       messages: [
@@ -947,7 +947,7 @@ server.prompt(
           content: {
             type: "text" as const,
             text: [
-              `I'd like to figure out the right Regenerative Compute subscription amount for me.`,
+              `I'd like to figure out the right Regen Compute subscription amount for me.`,
               ``,
               `Please walk me through this step by step:`,
               ``,
@@ -959,7 +959,7 @@ server.prompt(
               `   - **Dabbler** — "I chat with AI sometimes" (~casual usage coverage)`,
               `   - **Builder** — "I regularly use AI for work" (~full usage coverage)`,
               `   - **Agent** — "For autonomous agents and power users" (~maximum autonomy, maximum impact)`,
-              `6. **Share** the link to subscribe: the Regenerative Compute landing page`,
+              `6. **Share** the link to subscribe: the Regen Compute landing page`,
               ``,
               `Keep the tone encouraging and informative — this is about empowering the user, not guilt-tripping them.`,
               `Explain that these are estimates based on published research, and any level of contribution matters.`,
@@ -1054,7 +1054,7 @@ server.prompt(
           content: {
             type: "text" as const,
             text: [
-              `Show me the history of Regenerative Compute pool retirements.`,
+              `Show me the history of Regen Compute pool retirements.`,
               ``,
               `Please:`,
               `1. Use get_pool_history to pull recent pool runs`,
@@ -1105,7 +1105,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(
-    `Regenerative Compute MCP server running (wallet mode: ${walletMode ? "enabled" : "disabled"}, ecoBridge: ${ecoBridgeEnabled ? "enabled" : "disabled"}, prepaid: ${config.balanceApiKey ? "enabled" : "disabled"})`
+    `Regen Compute MCP server running (wallet mode: ${walletMode ? "enabled" : "disabled"}, ecoBridge: ${ecoBridgeEnabled ? "enabled" : "disabled"}, prepaid: ${config.balanceApiKey ? "enabled" : "disabled"})`
   );
 }
 

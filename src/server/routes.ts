@@ -1,5 +1,5 @@
 /**
- * Express routes for the Regenerative Compute payment service.
+ * Express routes for the Regen Compute payment service.
  *
  * GET  /                  — Subscription landing page with live stats
  * POST /checkout          — Create a Stripe Checkout session
@@ -540,7 +540,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Regenerative Compute",
+  "name": "Regen Compute",
   "applicationCategory": "DeveloperApplication",
   "description": "Ecological accountability for AI compute — retire verified ecocredits on Regen Network. MCP server for Claude, Cursor, and any MCP-compatible AI tool.",
   "operatingSystem": "Any",
@@ -1906,7 +1906,7 @@ ${betaBannerJS()}
               recurring: { interval: "month" },
               unit_amount: cents,
               product_data: {
-                name: `Regenerative Compute — ${org_name.trim()} (Organization)`,
+                name: `Regen Compute — ${org_name.trim()} (Organization)`,
                 description: `Monthly ecological credit retirement for ${devs + agents + parttime} team members/agents`,
               },
             },
@@ -2011,7 +2011,7 @@ ${betaBannerJS()}
               currency: "usd",
               unit_amount: amount_cents,
               product_data: {
-                name: "Regenerative Compute — Ecological Credit Balance",
+                name: "Regen Compute — Ecological Credit Balance",
                 description: `$${amountDollars} prepaid balance for retiring verified ecocredits via your AI assistant`,
               },
             },
@@ -2280,7 +2280,7 @@ ${betaBannerJS()}
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regenerative Compute — Thank You!</title>
+  <title>Regen Compute — Thank You!</title>
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -2474,7 +2474,7 @@ ${betaBannerJS()}
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regenerative Compute — Payment Successful</title>
+  <title>Regen Compute — Payment Successful</title>
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -2487,7 +2487,7 @@ ${betaBannerJS()}
 
   <div class="regen-container--narrow" style="padding-top:40px;padding-bottom:40px;">
     <h1 style="color:var(--regen-navy);font-size:28px;font-weight:800;margin:0 0 8px;">Payment Successful</h1>
-    <p>You've added <strong>$${amountDollars.toFixed(2)}</strong> to your Regenerative Compute balance.</p>
+    <p>You've added <strong>$${amountDollars.toFixed(2)}</strong> to your Regen Compute balance.</p>
     <p>Current balance: <span style="font-size:24px;font-weight:800;color:var(--regen-green);">$${(user.balance_cents / 100).toFixed(2)}</span></p>
 
     <div class="regen-card" style="margin:24px 0;">
@@ -2540,7 +2540,7 @@ ${betaBannerJS()}
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regenerative Compute — Checkout Cancelled</title>
+  <title>Regen Compute — Checkout Cancelled</title>
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}

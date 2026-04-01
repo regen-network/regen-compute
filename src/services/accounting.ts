@@ -1,5 +1,5 @@
 /**
- * Accounting service for Regenerative Compute.
+ * Accounting service for Regen Compute.
  *
  * Provides a unified financial summary across all revenue streams,
  * credit purchases, REGEN burns, and operational allocations.

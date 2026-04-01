@@ -361,7 +361,7 @@ export async function swapAndBurn(options: {
     receiver: regenAddress,
     timeoutHeight: { revisionNumber: BigInt(0), revisionHeight: BigInt(0) },
     timeoutTimestamp,
-    memo: "Regenerative Compute — REGEN buy-back-and-burn",
+    memo: "Regen Compute — REGEN buy-back-and-burn",
   });
 
   console.log(`\nStep 2: IBC transfer ${Number(ibcAmount) / 1e6} REGEN → ${regenAddress}...`);
@@ -418,7 +418,7 @@ export async function swapAndBurn(options: {
       value: {
         burner: regenAddress,
         amount: burnAmount,
-        reason: `Buy-back-and-burn — Regenerative Compute ($${allocationUsd.toFixed(2)} allocation, ${Number(burnAmount) / 1e6} REGEN at $${regenPriceUsd.toFixed(6)})`,
+        reason: `Buy-back-and-burn — Regen Compute ($${allocationUsd.toFixed(2)} allocation, ${Number(burnAmount) / 1e6} REGEN at $${regenPriceUsd.toFixed(6)})`,
       },
     };
 

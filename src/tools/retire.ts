@@ -98,7 +98,7 @@ function marketplaceFallback(
       ``,
       `The easiest way to fund ecological regeneration from your AI sessions:`,
       ``,
-      `**[Subscribe to Regenerative Compute](${subscribeUrl})**`,
+      `**[Subscribe to Regen Compute](${subscribeUrl})**`,
       ``,
       `Plans from $1.25/mo — credits retired on-chain monthly with verifiable proof. No crypto wallet needed.`,
       ``,

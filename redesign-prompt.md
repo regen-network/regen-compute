@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Regenerative Compute is a subscription service that connects AI usage to verified ecological credit retirement on Regen Network, a public blockchain. Users subscribe ($1.25-$5/month), and their payments fund permanent retirement of ecological credits from real projects around the world. Every retirement is recorded on-chain -- publicly auditable, not a private database. There's also an MCP plugin for AI coding tools (Claude Code, Cursor) that gives the AI ecological awareness inside the developer workflow.
+Regen Compute is a subscription service that connects AI usage to verified ecological credit retirement on Regen Network, a public blockchain. Users subscribe ($1.25-$5/month), and their payments fund permanent retirement of ecological credits from real projects around the world. Every retirement is recorded on-chain -- publicly auditable, not a private database. There's also an MCP plugin for AI coding tools (Claude Code, Cursor) that gives the AI ecological awareness inside the developer workflow.
 
 The current site is at https://compute.regen.network. We need a redesign that makes visitors *feel* the projects they'd be funding -- not just understand the product intellectually.
 

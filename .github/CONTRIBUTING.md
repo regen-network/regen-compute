@@ -1,4 +1,4 @@
-# Contributing to Regenerative Compute
+# Contributing to Regen Compute
 
 Thank you for your interest in contributing! This project connects AI compute usage to verified ecological regeneration through Regen Network.
 

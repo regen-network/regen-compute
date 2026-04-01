@@ -1,4 +1,4 @@
-# Regenerative Compute
+# Regen Compute
 
 **Add Regenerative AI to your AI coding assistant in 30 seconds.**
 
@@ -125,7 +125,7 @@ Add to `~/.gemini/settings.json`:
 Create `.continue/mcpServers/regen-compute.yaml` in your workspace:
 
 ```yaml
-name: Regenerative Compute
+name: Regen Compute
 version: 0.0.1
 schema: v1
 mcpServers:
@@ -184,7 +184,7 @@ Most MCP clients accept this standard config:
 
 </details>
 
-> **ChatGPT and OpenAI API**: These platforms require a remote HTTP MCP server (streamable HTTP or SSE transport). Regenerative Compute currently uses stdio transport. HTTP transport support is on the [roadmap](ROADMAP.md).
+> **ChatGPT and OpenAI API**: These platforms require a remote HTTP MCP server (streamable HTTP or SSE transport). Regen Compute currently uses stdio transport. HTTP transport support is on the [roadmap](ROADMAP.md).
 
 ## Quick Start
 
@@ -222,7 +222,7 @@ Your AI Assistant (Claude Code / Cursor / etc.)
     │
     │ MCP Protocol (stdio)
     ▼
-Regenerative Compute MCP Server
+Regen Compute MCP Server
     │
     ├─ Footprint estimation (heuristic, clearly labeled as approximate)
     ├─ Credit browsing (live sell order data from Regen Ledger)

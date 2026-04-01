@@ -1,5 +1,5 @@
 /**
- * Regenerative Compute — Payment & Balance Server
+ * Regen Compute — Payment & Balance Server
  *
  * A small Express server that handles:
  * - Shareable retirement certificate pages (/impact/:nodeId)
@@ -199,7 +199,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Cache-Control", "public, max-age=86400");
     res.json({
-      name: "Regenerative Compute",
+      name: "Regen Compute",
       description: "Retire verified ecological credits on behalf of AI compute usage on Regen Network",
       url: "https://compute.regen.network",
       version: "1.0",
@@ -234,7 +234,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     res.setHeader("Cache-Control", "public, max-age=86400");
     res.json({
       version: "1.0",
-      name: "Regenerative Compute",
+      name: "Regen Compute",
       description: "Ecological accountability for AI compute via verified credit retirement on Regen Network",
       api_base: "https://compute.regen.network/api/v1",
       openapi: "https://compute.regen.network/api/v1/openapi.json",
@@ -497,7 +497,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     }
     res.send(`<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Strategy — Regenerative Compute</title>
+<title>Strategy — Regen Compute</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -532,7 +532,7 @@ button:hover{background:rgba(255,255,255,0.25)}
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Page Not Found — Regenerative Compute</title>
+  <title>Page Not Found — Regen Compute</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -553,14 +553,14 @@ button:hover{background:rgba(255,255,255,0.25)}
     <h1>404</h1>
     <h2>Page not found</h2>
     <p>The page you're looking for doesn't exist. It may have been moved or removed.</p>
-    <a href="/">Back to Regenerative Compute</a>
+    <a href="/">Back to Regen Compute</a>
   </div>
 </body>
 </html>`);
   });
 
   app.listen(port, () => {
-    console.log(`Regenerative Compute server running on ${baseUrl}`);
+    console.log(`Regen Compute server running on ${baseUrl}`);
     console.log(`  Certificates: ${baseUrl}/impact/:nodeId`);
     if (stripeKey) {
       console.log(`  Landing page: ${baseUrl}/`);

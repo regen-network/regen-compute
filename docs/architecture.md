@@ -14,7 +14,7 @@
                        │ MCP Protocol (stdio)
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Regenerative Compute MCP Server                           │
+│  Regen Compute MCP Server                           │
 │                                                             │
 │  Tools:                                                     │
 │  ┌─────────────────────┐  ┌────────────────────────┐       │

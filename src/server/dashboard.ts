@@ -169,7 +169,7 @@ function renderApiKeyLoginPage(): string {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>API Dashboard — Regenerative Compute</title>
+  <title>API Dashboard — Regen Compute</title>
   ${brandFonts()}
   <style>
     ${brandCSS()}
@@ -245,7 +245,7 @@ function renderApiDashboard(opts: {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>API Dashboard — Regenerative Compute</title>
+  <title>API Dashboard — Regen Compute</title>
   ${brandFonts()}
   <style>
     ${brandCSS()}
@@ -506,7 +506,7 @@ function renderLoginPage(error?: string, success?: string, info?: string): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Login - Regenerative Compute</title>
+  <title>Dashboard Login - Regen Compute</title>
   <meta name="robots" content="noindex, nofollow">
   ${brandFonts()}
   <style>
@@ -551,7 +551,7 @@ function renderLoginPage(error?: string, success?: string, info?: string): strin
         <button type="submit" class="regen-btn regen-btn--solid regen-btn--block" style="margin-top:16px;">Send Login Link</button>
       </form>
       <div style="text-align:center;margin-top:24px;font-size:13px;">
-        <a href="/">Back to Regenerative Compute</a>
+        <a href="/">Back to Regen Compute</a>
       </div>
     </div>
   </div>
@@ -783,7 +783,7 @@ function renderDashboardPage(opts: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Impact Dashboard - Regenerative Compute</title>
+  <title>Your Impact Dashboard - Regen Compute</title>
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -882,7 +882,7 @@ function renderDashboardPage(opts: {
     ${!hasRetirements ? `
     <!-- ====== PRE-RETIREMENT WELCOME ====== -->
     <div style="padding:40px 0 24px;text-align:center;">
-      <h1 style="font-size:28px;font-weight:800;margin:0 0 8px;color:var(--regen-navy);">Welcome to the Regenerative Compute Community</h1>
+      <h1 style="font-size:28px;font-weight:800;margin:0 0 8px;color:var(--regen-navy);">Welcome to the Regen Compute Community</h1>
       <p style="font-size:15px;color:var(--regen-gray-500);margin:0 0 4px;">Member since ${escapeHtml(memberSince)}</p>
     </div>
     <div style="margin-bottom:32px;">

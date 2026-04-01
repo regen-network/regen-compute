@@ -20,9 +20,9 @@ export function createResearchRoutes(baseUrl: string): Router {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Emissions Research — Regenerative Compute</title>
+  <title>AI Emissions Research — Regen Compute</title>
   <meta name="description" content="A transparent, citation-backed look at the ecological footprint of AI usage — energy per query, CO2 estimates, water, hardware lifecycle, and why regenerative contribution matters.">
-  <meta property="og:title" content="AI Emissions Research — Regenerative Compute">
+  <meta property="og:title" content="AI Emissions Research — Regen Compute">
   <meta property="og:description" content="How much energy does one person's AI usage consume? A transparent review with citations.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="${baseUrl}/research">
@@ -32,7 +32,7 @@ export function createResearchRoutes(baseUrl: string): Router {
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@RegenChristian">
-  <meta name="twitter:title" content="AI Emissions Research — Regenerative Compute">
+  <meta name="twitter:title" content="AI Emissions Research — Regen Compute">
   <meta name="twitter:description" content="How much energy does one person's AI usage consume? A transparent review with citations.">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
   ${brandFonts()}
@@ -324,7 +324,7 @@ export function createResearchRoutes(baseUrl: string): Router {
         <li><strong>Encourage measurement where possible</strong> &mdash; for local compute, tooling like <a href="https://docs.codecarbon.io/" target="_blank" rel="noopener">CodeCarbon</a> helps build measurement norms.</li>
       </ul>
       <p>
-        This is why Regenerative Compute frames its work as <strong>regenerative contribution</strong>, not carbon offsetting.
+        This is why Regen Compute frames its work as <strong>regenerative contribution</strong>, not carbon offsetting.
         We fund verified ecological regeneration alongside AI usage &mdash; covering carbon, biodiversity, marine, and species stewardship credits &mdash;
         because the real impacts of AI go well beyond CO&#x2082;.
       </p>

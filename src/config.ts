@@ -1,5 +1,5 @@
 /**
- * Centralized configuration for Regenerative Compute.
+ * Centralized configuration for Regen Compute.
  *
  * Reads all environment variables once and exports a typed config object.
  * The key gate is `isWalletConfigured()` — when true, the server can

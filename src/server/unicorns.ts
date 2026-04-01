@@ -58,7 +58,7 @@ export function createUnicornRoutes(db: Database.Database, baseUrl: string, conf
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Save the Unicorns — Regenerative Compute</title>
+  <title>Save the Unicorns — Regen Compute</title>
   <meta name="description" content="The unicorns need your help. Your AI has an impact — and the magic is running out. Or is it?">
   <meta property="og:title" content="The Last Unicorns Need Your Help">
   <meta property="og:description" content="Your AI is draining the cosmic sparkle reserves. The unicorns are endangered. Act now before it's too late.">

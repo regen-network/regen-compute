@@ -28,8 +28,8 @@ function developersPageHTML(): string {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Developers — Regenerative Compute</title>
-  <meta name="description" content="Build on Regenerative Compute. MCP server, REST API, and API reference docs."/>
+  <title>Developers — Regen Compute</title>
+  <meta name="description" content="Build on Regen Compute. MCP server, REST API, and API reference docs."/>
   ${brandFonts()}
   <style>
     ${brandCSS()}
@@ -364,7 +364,7 @@ ${brandHeader({ nav: NAV })}
 <!-- Hero -->
 <section class="dev-hero">
   <span class="dev-hero__eyebrow">Developer Docs</span>
-  <h1>Build on Regenerative Compute</h1>
+  <h1>Build on Regen Compute</h1>
   <p>Embed verified ecological credit retirement into any app, agent, or AI workflow. Three integration paths — pick the one that fits.</p>
   <div class="dev-hero__pills">
     <span class="dev-hero__pill">MCP Server</span>
@@ -681,7 +681,7 @@ Authorization: Bearer rfa_your_api_key_here</div>
   <span class="nm">"batch_denom"</span>: <span class="st">"C01-001-20230101-20231231-001"</span>,
   <span class="nm">"owner"</span>: <span class="st">"regen1..."</span>,
   <span class="nm">"jurisdiction"</span>: <span class="st">"US"</span>,
-  <span class="nm">"reason"</span>: <span class="st">"AI session — Regenerative Compute"</span>,
+  <span class="nm">"reason"</span>: <span class="st">"AI session — Regen Compute"</span>,
   <span class="nm">"timestamp"</span>: <span class="st">"2026-03-23T14:32:00Z"</span>,
   <span class="nm">"tx_hash"</span>: <span class="st">"A3F2...9C1D"</span>,
   <span class="nm">"certificate_url"</span>: <span class="st">"https://compute.regen.network/impact/bWVhbmluZ..."</span>

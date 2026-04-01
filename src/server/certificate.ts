@@ -154,14 +154,14 @@ function renderCertificatePage(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${theme.label} — Regenerative Compute</title>
+  <title>${theme.label} — Regen Compute</title>
 
   <meta property="og:title" content="Ecological Regeneration Certificate" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${escapeHtml(certUrl)}" />
   <meta property="og:image" content="${escapeHtml(badgeUrl)}" />
-  <meta property="og:site_name" content="Regenerative Compute" />
+  <meta property="og:site_name" content="Regen Compute" />
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Ecological Regeneration Certificate" />
@@ -358,7 +358,7 @@ function renderErrorPage(status: number, message: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} — Regenerative Compute</title>
+  <title>${title} — Regen Compute</title>
   <style>
     body {
       font-family: 'Source Serif 4', serif;

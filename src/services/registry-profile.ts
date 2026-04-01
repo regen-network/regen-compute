@@ -131,7 +131,7 @@ export async function updateRegistryProfile(
 
     // 2. Get nonce (may need to create account first)
     const description = profile.description ??
-      "Regenerative Compute subscriber — funding verified ecological regeneration through AI at https://compute.regen.network/";
+      "Regen Compute subscriber — funding verified ecological regeneration through AI at https://compute.regen.network/";
 
     let nonceRes = await fetch(
       `${REGISTRY_API}/marketplace/v1/wallet-auth/nonce?` +

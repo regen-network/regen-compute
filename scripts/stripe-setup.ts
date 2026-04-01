@@ -2,7 +2,7 @@
 /**
  * Stripe Product + Price Setup Script
  *
- * Creates the "Regenerative Compute" product and three monthly subscription
+ * Creates the "Regen Compute" product and three monthly subscription
  * prices (Seedling $1.25, Grove $2.50, Forest $5) in your Stripe account.
  *
  * Prerequisites:
@@ -14,12 +14,12 @@
  *   npx tsx scripts/stripe-setup.ts
  *
  * The script is idempotent — it checks for an existing product named
- * "Regenerative Compute" before creating a new one.
+ * "Regen Compute" before creating a new one.
  */
 
 import Stripe from "stripe";
 
-const PRODUCT_NAME = "Regenerative Compute";
+const PRODUCT_NAME = "Regen Compute";
 const TIERS = [
   { name: "Seedling", amount: 125, envVar: "STRIPE_PRICE_ID_SEEDLING" },
   { name: "Grove", amount: 250, envVar: "STRIPE_PRICE_ID_GROVE" },

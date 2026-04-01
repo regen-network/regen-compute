@@ -1,6 +1,6 @@
 # Agent Discovery Endpoints
 
-Regenerative Compute exposes three machine-readable discovery endpoints that allow autonomous AI agents, orchestration platforms, and crawlers to discover capabilities without human intervention.
+Regen Compute exposes three machine-readable discovery endpoints that allow autonomous AI agents, orchestration platforms, and crawlers to discover capabilities without human intervention.
 
 All three are served by the web server (`npx regen-compute serve`) and require no authentication.
 
@@ -72,7 +72,7 @@ Follows the [Google Agent-to-Agent (A2A) protocol](https://google.github.io/A2A/
 
 ```json
 {
-  "name": "Regenerative Compute",
+  "name": "Regen Compute",
   "description": "Retire verified ecological credits on behalf of AI compute usage on Regen Network",
   "url": "https://compute.regen.network",
   "version": "1.0",
@@ -140,7 +140,7 @@ Custom endpoint that describes complete API workflows. Designed for orchestratio
 ```json
 {
   "version": "1.0",
-  "name": "Regenerative Compute",
+  "name": "Regen Compute",
   "description": "Ecological accountability for AI compute via verified credit retirement on Regen Network",
   "api_base": "https://compute.regen.network/api/v1",
   "openapi": "https://compute.regen.network/api/v1/openapi.json",
@@ -211,7 +211,7 @@ Custom endpoint that describes complete API workflows. Designed for orchestratio
 ```mermaid
 sequenceDiagram
     participant Agent
-    participant Server as Regenerative Compute
+    participant Server as Regen Compute
 
     Note over Agent,Server: Zero-config discovery
 

@@ -1,6 +1,6 @@
 # x402 Autonomous Agent Payment Flow
 
-Regenerative Compute implements a self-settling [x402 payment protocol](https://www.x402.org/) for its Developer API. This allows autonomous AI agents to pay for API access with USDC on EVM chains — no API key, no signup, no human in the loop.
+Regen Compute implements a self-settling [x402 payment protocol](https://www.x402.org/) for its Developer API. This allows autonomous AI agents to pay for API access with USDC on EVM chains — no API key, no signup, no human in the loop.
 
 ## Overview
 
@@ -32,7 +32,7 @@ The x402 middleware intercepts unauthenticated requests to protected `/api/v1/` 
 ```mermaid
 sequenceDiagram
     participant Agent
-    participant API as Regenerative Compute API
+    participant API as Regen Compute API
     participant Chain as EVM Chain (Base)
     participant Verify as On-Chain Verifier
 

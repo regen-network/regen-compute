@@ -6,9 +6,9 @@ The "green AI" solutions that exist today fall into two categories: corporate ma
 
 We built one.
 
-## Introducing Regenerative Compute
+## Introducing Regen Compute
 
-[Regenerative Compute](https://compute.regen.network) is the first ecological accountability platform built for AI users. It connects your AI usage to verified ecological credit retirement on [Regen Network](https://regen.network) — with permanent, publicly auditable proof of every contribution.
+[Regen Compute](https://compute.regen.network) is the first ecological accountability platform built for AI users. It connects your AI usage to verified ecological credit retirement on [Regen Network](https://regen.network) — with permanent, publicly auditable proof of every contribution.
 
 There are two ways in:
 
@@ -26,7 +26,7 @@ Plans start at $1.25/month or $12.50/year (save 17%). Yearly subscribers get a b
 
 ### 2. Install the AI Plugin
 
-For developers using Claude Code, Cursor, or any MCP-compatible AI assistant, there's a deeper integration. The Regenerative Compute MCP plugin gives your AI ecological awareness — it can estimate session footprint, browse live credit inventory, and retire credits, all without leaving your workflow.
+For developers using Claude Code, Cursor, or any MCP-compatible AI assistant, there's a deeper integration. The Regen Compute MCP plugin gives your AI ecological awareness — it can estimate session footprint, browse live credit inventory, and retire credits, all without leaving your workflow.
 
 One command:
 
@@ -119,4 +119,4 @@ That is what Regenerative AI looks like.
 
 ---
 
-*Regenerative Compute is live at [compute.regen.network](https://compute.regen.network). The AI plugin is on [npm](https://www.npmjs.com/package/regen-compute) as v0.3.4. Source code: [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute). Licensed Apache-2.0.*
+*Regen Compute is live at [compute.regen.network](https://compute.regen.network). The AI plugin is on [npm](https://www.npmjs.com/package/regen-compute) as v0.3.4. Source code: [github.com/regen-network/regen-compute](https://github.com/regen-network/regen-compute). Licensed Apache-2.0.*

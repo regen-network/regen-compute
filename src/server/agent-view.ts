@@ -3,7 +3,7 @@
  *
  * When any page is loaded with ?view=agent, this middleware intercepts
  * the request and renders a machine-readable, terminal-aesthetic view
- * of Regenerative Compute's capabilities, endpoints, and live stats.
+ * of Regen Compute's capabilities, endpoints, and live stats.
  */
 
 import { Router, Request, Response } from "express";
@@ -32,7 +32,7 @@ export function createAgentViewRoutes(baseUrl: string): Router {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent View — Regenerative Compute</title>
+  <title>Agent View — Regen Compute</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -1,13 +1,13 @@
-# Regenerative Compute — Roadmap & Action Plan
+# Regen Compute — Roadmap & Action Plan
 
-> **Product**: Regenerative Compute
+> **Product**: Regen Compute
 > **Category**: Regenerative AI — Verified Ecological Accountability for AI Compute
 > **Status**: Phase 1.5 complete, go-to-market execution underway
 > **Last updated**: Feb 25, 2026
 
 ## What This Is
 
-Regenerative Compute is the first ecological accountability platform built for AI users. It has two channels:
+Regen Compute is the first ecological accountability platform built for AI users. It has two channels:
 
 1. **Website** ([compute.regen.network](https://compute.regen.network)) — Subscribe for $1.25–$5/month. Your payment funds verified ecological credit retirement on Regen Network. Dashboard tracks cumulative impact with on-chain proof. No wallet, no crypto, no complexity. **This is the primary conversion target.**
 
@@ -39,7 +39,7 @@ User's AI Assistant (Claude Code / Cursor / Copilot)
          │ MCP Protocol
          ▼
 ┌─────────────────────────────────────┐
-│  Regenerative Compute MCP Server            │
+│  Regen Compute MCP Server            │
 │  7 tools, 3 prompts                 │
 ├─────────────────────────────────────┤
 │  Services:                          │

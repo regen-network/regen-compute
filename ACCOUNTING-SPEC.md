@@ -1,6 +1,6 @@
-# Regenerative Compute — Accounting System Spec
+# Regen Compute — Accounting System Spec
 
-**Purpose:** Build a Google Sheets accounting workbook and a matching `/admin/accounting` endpoint that serve as the financial source of truth for Regenerative Compute. This spec contains everything needed to build both.
+**Purpose:** Build a Google Sheets accounting workbook and a matching `/admin/accounting` endpoint that serve as the financial source of truth for Regen Compute. This spec contains everything needed to build both.
 
 **Audience for the spreadsheet:** Christian Shearer (co-founder) and his CFO. Must be human-readable, not just machine-parseable.
 
@@ -10,7 +10,7 @@
 
 ## 1. System Overview
 
-Regenerative Compute is a subscription service. Subscribers pay via Stripe. Revenue is split three ways:
+Regen Compute is a subscription service. Subscribers pay via Stripe. Revenue is split three ways:
 1. **Credits** — buy and retire ecological credits on Regen Ledger
 2. **Burn** — buy REGEN tokens on Osmosis DEX and burn them on Regen Network
 3. **Operations** — retained by the company

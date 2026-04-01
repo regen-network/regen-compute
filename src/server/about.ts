@@ -1,5 +1,5 @@
 /**
- * GET /about — About Regen Network & Regenerative Compute.
+ * GET /about — About Regen Network & Regen Compute.
  *
  * Tells the Regen Network story: what the network is, how Regen Compute
  * fits in, ways to get involved, and open-source contribution info.
@@ -19,9 +19,9 @@ export function createAboutRoutes(baseUrl: string): Router {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About — Regenerative Compute</title>
-  <meta name="description" content="Meet the people behind Regenerative Compute and Regen Network — ecologists, permaculturists, and technologists building ecological accountability for AI.">
-  <meta property="og:title" content="About — Regenerative Compute">
+  <title>About — Regen Compute</title>
+  <meta name="description" content="Meet the people behind Regen Compute and Regen Network — ecologists, permaculturists, and technologists building ecological accountability for AI.">
+  <meta property="og:title" content="About — Regen Compute">
   <meta property="og:description" content="Meet the people building ecological accountability for AI — from permaculture farms to the blockchain.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}/about">
@@ -31,7 +31,7 @@ export function createAboutRoutes(baseUrl: string): Router {
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@RegenChristian">
-  <meta name="twitter:title" content="About — Regenerative Compute">
+  <meta name="twitter:title" content="About — Regen Compute">
   <meta name="twitter:description" content="Meet the people building ecological accountability for AI — from permaculture farms to the blockchain.">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
   ${brandFonts()}
@@ -253,7 +253,7 @@ export function createAboutRoutes(baseUrl: string): Router {
   <section class="about-hero">
     <div class="regen-container">
       <h1>Built by People Who <span>Love This Planet</span></h1>
-      <p class="subtitle">Regenerative Compute didn&rsquo;t start in a tech incubator. It started in the soil &mdash; with people who spent decades working alongside farmers, ecologists, and indigenous communities before ever writing a line of code.</p>
+      <p class="subtitle">Regen Compute didn&rsquo;t start in a tech incubator. It started in the soil &mdash; with people who spent decades working alongside farmers, ecologists, and indigenous communities before ever writing a line of code.</p>
     </div>
     <img class="about-banner" src="/team/team-banner.jpg" alt="The Regen Network team at Racebrook retreat, September 2022" loading="lazy">
   </section>
@@ -289,9 +289,9 @@ export function createAboutRoutes(baseUrl: string): Router {
           <div class="person-photo"><img src="/team/christian.png" alt="Christian Shearer" loading="lazy"></div>
           <div class="person-info">
             <h3>Christian Shearer</h3>
-            <div class="role">Co-Founder, Regen Network &middot; Creator, Regenerative Compute</div>
+            <div class="role">Co-Founder, Regen Network &middot; Creator, Regen Compute</div>
             <p>
-              At 24, Christian founded the <a href="https://www.panyaproject.org/" target="_blank" rel="noopener">Panya Project</a> in Chiang Mai, Thailand &mdash; now one of the most well-known permaculture education centers in Southeast Asia. Over 15 years, he worked alongside farmers across Thailand, Malaysia, India, Taiwan, Barbados, Ecuador, Nicaragua, and the Philippines. He co-founded Terra Genesis International with Gregory before co-founding Regen Network, where he served as CEO and later Chief Investment Officer. He built Regenerative Compute because he believes AI developers deserve a real, verifiable way to account for their ecological footprint &mdash; not greenwashing, but actual credits retired on a public ledger.
+              At 24, Christian founded the <a href="https://www.panyaproject.org/" target="_blank" rel="noopener">Panya Project</a> in Chiang Mai, Thailand &mdash; now one of the most well-known permaculture education centers in Southeast Asia. Over 15 years, he worked alongside farmers across Thailand, Malaysia, India, Taiwan, Barbados, Ecuador, Nicaragua, and the Philippines. He co-founded Terra Genesis International with Gregory before co-founding Regen Network, where he served as CEO and later Chief Investment Officer. He built Regen Compute because he believes AI developers deserve a real, verifiable way to account for their ecological footprint &mdash; not greenwashing, but actual credits retired on a public ledger.
             </p>
           </div>
         </div>
@@ -339,19 +339,19 @@ export function createAboutRoutes(baseUrl: string): Router {
         </div>
         <div class="timeline-item">
           <span class="year">2025</span>
-          <p><strong>Regenerative Compute launches</strong> &mdash; bringing Regen Network&rsquo;s ecological infrastructure directly into AI developer workflows via MCP. Individual developers can now fund verified ecological regeneration as part of their daily work.</p>
+          <p><strong>Regen Compute launches</strong> &mdash; bringing Regen Network&rsquo;s ecological infrastructure directly into AI developer workflows via MCP. Individual developers can now fund verified ecological regeneration as part of their daily work.</p>
         </div>
       </div>
 
       <h2>A Personal Note from Christian</h2>
       <p>
-        Regenerative Compute is one of my first &ldquo;vibe coding&rdquo; projects &mdash; built largely in collaboration with AI tools, the very tools this project exists to serve. I say that not as a gimmick, but because it&rsquo;s actually the point.
+        Regen Compute is one of my first &ldquo;vibe coding&rdquo; projects &mdash; built largely in collaboration with AI tools, the very tools this project exists to serve. I say that not as a gimmick, but because it&rsquo;s actually the point.
       </p>
       <p>
         For years, building the ecological asset infrastructure at Regen Network was a slog. Important, necessary, deeply meaningful work &mdash; but slow. Building a blockchain, designing credit registries, negotiating with land stewards across continents, writing smart contracts, wiring up marketplace flows. Every step was hard-won. We were a small team trying to build public goods infrastructure that the world desperately needs, and the pace never felt fast enough for the urgency of the moment.
       </p>
       <p>
-        Then these AI tools arrived. And suddenly, a single person with deep domain knowledge and a clear vision could build in weeks what used to take a team months. Regenerative Compute &mdash; the MCP server, the landing page, the subscription system, the on-chain retirement pipeline, the dashboard, the API, the email notifications &mdash; all of it was built by one person working with Claude Code. Not because I&rsquo;m a 10x engineer (I&rsquo;m not), but because the tools finally caught up to the ambition.
+        Then these AI tools arrived. And suddenly, a single person with deep domain knowledge and a clear vision could build in weeks what used to take a team months. Regen Compute &mdash; the MCP server, the landing page, the subscription system, the on-chain retirement pipeline, the dashboard, the API, the email notifications &mdash; all of it was built by one person working with Claude Code. Not because I&rsquo;m a 10x engineer (I&rsquo;m not), but because the tools finally caught up to the ambition.
       </p>
       <p>
         That&rsquo;s what excites me most about where we are right now. The hard infrastructure is built. The ecological credits are real. The blockchain works. The verification is solid. And now, with AI as a creative partner, we can finally move at the speed the planet needs. We can build the bridges between this ecological infrastructure and the millions of developers who want to do the right thing but didn&rsquo;t have an easy way to do it.
@@ -377,7 +377,7 @@ export function createAboutRoutes(baseUrl: string): Router {
       <div class="dev-section">
         <h2>Calling All Developers</h2>
         <p>
-          Regen Network is open infrastructure. The ecological credit system, the blockchain, the marketplace, the APIs &mdash; they&rsquo;re all public goods. And Regenerative Compute is fully open source. We need developers who care about this planet to help build what comes next.
+          Regen Network is open infrastructure. The ecological credit system, the blockchain, the marketplace, the APIs &mdash; they&rsquo;re all public goods. And Regen Compute is fully open source. We need developers who care about this planet to help build what comes next.
         </p>
         <div class="dev-grid">
           <div class="dev-card">

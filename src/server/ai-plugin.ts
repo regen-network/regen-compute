@@ -20,9 +20,9 @@ export function createAiPluginRoutes(baseUrl: string): Router {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Plugin — Regenerative Compute</title>
-  <meta name="description" content="Install the Regenerative Compute MCP plugin for Claude Code, Cursor, and other AI assistants. Estimate your AI footprint and fund verified ecological regeneration.">
-  <meta property="og:title" content="AI Plugin — Regenerative Compute">
+  <title>AI Plugin — Regen Compute</title>
+  <meta name="description" content="Install the Regen Compute MCP plugin for Claude Code, Cursor, and other AI assistants. Estimate your AI footprint and fund verified ecological regeneration.">
+  <meta property="og:title" content="AI Plugin — Regen Compute">
   <meta property="og:description" content="One command to connect your AI assistant to verified ecological regeneration on Regen Network.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${baseUrl}/ai-plugin">
@@ -32,7 +32,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@RegenChristian">
-  <meta name="twitter:title" content="AI Plugin — Regenerative Compute">
+  <meta name="twitter:title" content="AI Plugin — Regen Compute">
   <meta name="twitter:description" content="One command to connect your AI assistant to verified ecological regeneration on Regen Network.">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
   ${brandFonts()}
@@ -249,7 +249,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
   <section class="plugin-hero">
     <div class="regen-container">
       <div class="regen-hero__label">MCP Plugin</div>
-      <h1>Regenerative Compute <span>AI Plugin</span></h1>
+      <h1>Regen Compute <span>AI Plugin</span></h1>
       <p>A plugin for AI coding assistants that estimates your session's ecological footprint and channels contributions into verified regeneration projects on Regen Network.</p>
     </div>
   </section>
@@ -259,7 +259,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
     <!-- What It Is -->
     <section class="plugin-section">
       <h2>What It Is</h2>
-      <p>Regenerative Compute is an <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">MCP (Model Context Protocol)</a> server that gives your AI assistant ecological awareness. It can:</p>
+      <p>Regen Compute is an <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">MCP (Model Context Protocol)</a> server that gives your AI assistant ecological awareness. It can:</p>
       <ul>
         <li>Estimate the energy and CO2 footprint of your AI sessions</li>
         <li>Browse live ecological credit inventory from Regen Network's on-chain marketplace</li>
@@ -273,7 +273,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
     <!-- Supported AI Tools -->
     <section class="plugin-section">
       <h2>Supported AI Tools</h2>
-      <p>Any AI assistant that supports the Model Context Protocol can use Regenerative Compute:</p>
+      <p>Any AI assistant that supports the Model Context Protocol can use Regen Compute:</p>
       <div class="supported-tools">
         <div class="supported-tool">
           <div class="supported-tool__icon" style="background:#D97757;">C</div>
@@ -464,7 +464,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
     <!-- Subscription vs One-Time -->
     <section class="plugin-section">
       <h2>Subscription vs One-Time</h2>
-      <p>There are two ways to fund ecological regeneration through Regenerative Compute:</p>
+      <p>There are two ways to fund ecological regeneration through Regen Compute:</p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
         <div class="install-block" style="margin:0;">
@@ -483,7 +483,7 @@ export function createAiPluginRoutes(baseUrl: string): Router {
     <!-- Open Source -->
     <section class="plugin-section">
       <h2>Open Source</h2>
-      <p>Regenerative Compute is open source. Inspect the code, contribute, or fork it.</p>
+      <p>Regen Compute is open source. Inspect the code, contribute, or fork it.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;">
         <a class="regen-btn regen-btn--outline regen-btn--sm" href="https://github.com/regen-network/regen-compute" target="_blank" rel="noopener">GitHub</a>
         <a class="regen-btn regen-btn--outline regen-btn--sm" href="https://www.npmjs.com/package/regen-compute" target="_blank" rel="noopener">npm</a>
