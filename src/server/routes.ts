@@ -186,7 +186,8 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
     .hero-gradient { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,6,10,0.4), rgba(5,6,10,0.2) 70%, var(--color-void)); }
     .hero-content { position: relative; z-index: 10; max-width: 1200px; margin: 0 auto; padding: 80px 24px 64px; display: grid; grid-template-columns: 1fr 400px; gap: 80px; align-items: center; }
     @media (max-width: 900px) {
-      .hero-content { grid-template-columns: 1fr; gap: 40px; padding: 120px 24px 48px; }
+      .hero-content { grid-template-columns: 1fr; gap: 40px; padding: 72px 24px 48px; }
+      .hero-inline-logo { display: none; }
     }
 
     /* ---- Problem / Stats section ---- */
@@ -587,7 +588,7 @@ ${brandSchemaOrg()}
     <div class="hero-content">
       <!-- Left: Story -->
       <div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;">
+        <div class="hero-inline-logo" style="display:flex;align-items:center;gap:12px;margin-bottom:32px;">
           <span style="color:var(--color-cream);display:inline-flex;align-items:center;">${regenLogoSVG.replace('width="186" height="84"', 'width="auto" height="36"')}</span>
         </div>
         <h1 style="font-family:var(--font-display);font-size:clamp(2.6rem,5vw,4rem);font-weight:700;line-height:1.08;letter-spacing:-0.01em;margin:0 0 28px;color:var(--color-cream);">
