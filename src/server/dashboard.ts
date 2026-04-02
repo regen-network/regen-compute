@@ -1028,7 +1028,7 @@ function renderDashboardPage(opts: {
         <!-- Share buttons -->
         <div style="padding:16px 24px;text-align:center;border-top:1px solid var(--regen-gray-200);">
           <div class="regen-share-btns">
-            <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("I use @RegenChristian to make my AI sessions fund ecological regeneration. Use my link for a free first month:")}&url=${encodeURIComponent(`${baseUrl}/r/${referralCode}`)}" target="_blank" rel="noopener">Post on X</a>
+            <a class="regen-share-btn regen-share-btn--x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent("I use @Regen_compute to make my AI sessions fund ecological regeneration. Use my link for a free first month:")}&url=${encodeURIComponent(`${baseUrl}/r/${referralCode}`)}" target="_blank" rel="noopener">Post on X</a>
             <a class="regen-share-btn regen-share-btn--linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${baseUrl}/r/${referralCode}`)}" target="_blank" rel="noopener">Share on LinkedIn</a>
           </div>
         </div>

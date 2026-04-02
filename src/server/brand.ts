@@ -60,7 +60,8 @@ export const regenLogoPNG = Buffer.from(
 // ---------------------------------------------------------------------------
 
 export function brandFonts(): string {
-  return `<link rel="icon" href="https://app.regen.network/favicon.ico" type="image/x-icon">
+  return `<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="preload" as="image" href="/public/hero.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Source+Serif+4:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Lato:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -71,6 +72,63 @@ if(localStorage.getItem('regen_consent')==='granted'){gtag('consent','update',{a
 gtag('js',new Date());gtag('config','G-CGCVGY357V');
 </script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-CGCVGY357V"></script>`;
+}
+
+// ---------------------------------------------------------------------------
+// Organization + WebSite JSON-LD (site-wide structured data)
+// ---------------------------------------------------------------------------
+
+export function brandSchemaOrg(): string {
+  return `
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://compute.regen.network/#organization",
+      "name": "Regen Network Development",
+      "url": "https://regen.network",
+      "logo": "https://compute.regen.network/og-card.jpg",
+      "description": "Building ecological accountability infrastructure for the regenerative economy. Regen Network hosts the world's most advanced on-chain ecological credit registry.",
+      "foundingDate": "2017",
+      "sameAs": [
+        "https://x.com/Regen_compute",
+        "https://github.com/regen-network/regen-compute",
+        "https://www.npmjs.com/package/regen-compute",
+        "https://regen.network"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://compute.regen.network/#website",
+      "name": "Regen Compute",
+      "url": "https://compute.regen.network",
+      "description": "Ecological accountability for AI compute — retire verified ecocredits on Regen Network.",
+      "publisher": { "@id": "https://compute.regen.network/#organization" },
+      "inLanguage": "en"
+    }
+  ]
+}
+</script>`;
+}
+
+// ---------------------------------------------------------------------------
+// BreadcrumbList JSON-LD for subpages
+// ---------------------------------------------------------------------------
+
+export function brandBreadcrumb(baseUrl: string, pageName: string, pagePath: string): string {
+  return `
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "${baseUrl}/" },
+    { "@type": "ListItem", "position": 2, "name": "${pageName}", "item": "${baseUrl}/${pagePath}" }
+  ]
+}
+</script>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -761,9 +819,9 @@ export function brandFooter(opts?: FooterOptions): string {
       </nav>
 
       <div class="regen-footer__social">
-        <a href="https://x.com/RegenChristian" target="_blank" rel="noopener" title="Follow @RegenChristian on X" style="display:inline-flex;align-items:center;gap:6px;color:var(--color-muted);font-size:13px;text-decoration:none;transition:color 0.2s;">
+        <a href="https://x.com/Regen_compute" target="_blank" rel="noopener" title="Follow @Regen_compute on X" style="display:inline-flex;align-items:center;gap:6px;color:var(--color-muted);font-size:13px;text-decoration:none;transition:color 0.2s;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          Follow @RegenChristian
+          Follow @Regen_compute
         </a>
       </div>
 

@@ -6,7 +6,7 @@
  */
 
 import { Router, Request, Response } from "express";
-import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter, brandSchemaOrg, brandBreadcrumb } from "./brand.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 
 export function createAboutRoutes(baseUrl: string): Router {
@@ -30,10 +30,11 @@ export function createAboutRoutes(baseUrl: string): Router {
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@RegenChristian">
+  <meta name="twitter:site" content="@Regen_compute">
   <meta name="twitter:title" content="About — Regen Compute">
   <meta name="twitter:description" content="Meet the people building ecological accountability for AI — from permaculture farms to the blockchain.">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
+  <link rel="canonical" href="${baseUrl}/about">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -237,6 +238,49 @@ export function createAboutRoutes(baseUrl: string): Router {
       .dev-grid { grid-template-columns: 1fr; }
     }
   </style>
+${brandSchemaOrg()}
+${brandBreadcrumb(baseUrl, "About", "about")}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About — Regen Compute",
+  "url": "${baseUrl}/about",
+  "mainEntity": {
+    "@id": "https://compute.regen.network/#organization"
+  },
+  "mentions": [
+    {
+      "@type": "Person",
+      "name": "Gregory Landua",
+      "jobTitle": "Co-Founder & CEO",
+      "worksFor": { "@type": "Organization", "name": "Regen Network Development" },
+      "description": "Co-author of Regenerative Enterprise, co-founder of Terra Genesis International. Master's in Regenerative Entrepreneurship."
+    },
+    {
+      "@type": "Person",
+      "name": "Christian Shearer",
+      "jobTitle": "Co-Founder & Creator of Regen Compute",
+      "worksFor": { "@type": "Organization", "name": "Regen Network Development" },
+      "description": "Founded the Panya Project permaculture center in Thailand. 15+ years working with farmers across Southeast Asia and Latin America."
+    },
+    {
+      "@type": "Person",
+      "name": "Gisel Booman",
+      "jobTitle": "Head of Science",
+      "worksFor": { "@type": "Organization", "name": "Regen Network Development" },
+      "description": "Ph.D. in Biological Sciences (Landscape Ecology). Designs MRV systems for ecological credit verification. Former Assistant Professor of GIS."
+    },
+    {
+      "@type": "Person",
+      "name": "Aaron Craelius",
+      "jobTitle": "CTO",
+      "worksFor": { "@type": "Organization", "name": "Regen Network Development" },
+      "description": "Built key Cosmos SDK contributions including the Upgrade Module. Architect of Regen Ledger, the blockchain recording ecological credit retirements."
+    }
+  ]
+}
+</script>
 </head>
 <body>
   ${betaBannerHTML()}

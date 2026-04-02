@@ -31,6 +31,12 @@ export interface ProjectInfo {
   projectPageUrl: string;
   /** Color accent for the credit type badge */
   accentColor: string;
+  /** Image intrinsic width (for CLS prevention) */
+  imageWidth: number;
+  /** Image intrinsic height (for CLS prevention) */
+  imageHeight: number;
+  /** SEO-optimized alt text (includes credit type and location) */
+  imageAlt: string;
 }
 
 /**
@@ -50,6 +56,8 @@ export const PROJECTS: ProjectInfo[] = [
     imageUrl: "/projects/el-globo.webp",
     projectPageUrl: "https://app.regen.network/project/BT01-001",
     accentColor: "#527984",
+    imageWidth: 960, imageHeight: 1440,
+    imageAlt: "El Globo Habitat Bank — biodiversity credits, Antioquia, Colombia",
   },
   {
     projectId: "USS01-002",
@@ -63,6 +71,8 @@ export const PROJECTS: ProjectInfo[] = [
     imageUrl: "/projects/jaguar.webp",
     projectPageUrl: "https://app.regen.network/project/USS01-002",
     accentColor: "#7c3aed",
+    imageWidth: 960, imageHeight: 640,
+    imageAlt: "Biocultural Jaguar Credits — umbrella species stewardship, Sharamentsa Community, Ecuador",
   },
   {
     projectId: "C02-004",
@@ -76,6 +86,8 @@ export const PROJECTS: ProjectInfo[] = [
     imageUrl: "/projects/harvey-manning.webp",
     projectPageUrl: "https://app.regen.network/project/C02-004",
     accentColor: "#4FB573",
+    imageWidth: 960, imageHeight: 720,
+    imageAlt: "Harvey Manning Park Expansion — carbon credits, old-growth forest, Issaquah, Washington",
   },
   {
     projectId: "C02-006",
@@ -89,6 +101,8 @@ export const PROJECTS: ProjectInfo[] = [
     imageUrl: "/projects/st-elmo.webp",
     projectPageUrl: "https://app.regen.network/project/C02-006",
     accentColor: "#4FB573",
+    imageWidth: 960, imageHeight: 1440,
+    imageAlt: "St. Elmo Preservation Project — carbon credits, oak-pine forest, Chattanooga, Tennessee",
   },
   {
     projectId: "C06-002",
@@ -102,6 +116,8 @@ export const PROJECTS: ProjectInfo[] = [
     imageUrl: "/projects/pimlico.webp",
     projectPageUrl: "https://app.regen.network/project/C06-002",
     accentColor: "#4FB573",
+    imageWidth: 960, imageHeight: 540,
+    imageAlt: "Pimlico Farm — soil carbon credits, regenerative agriculture, Oxfordshire, United Kingdom",
   },
   {
     projectId: "KSH01-001",
@@ -115,6 +131,8 @@ export const PROJECTS: ProjectInfo[] = [
     imageUrl: "/projects/grgich-hills.webp",
     projectPageUrl: "https://app.regen.network/project/KSH01-001",
     accentColor: "#a3785c",
+    imageWidth: 960, imageHeight: 640,
+    imageAlt: "Grgich Hills Estate — regenerative sheep grazing credits, Napa Valley, California",
   },
 ];
 

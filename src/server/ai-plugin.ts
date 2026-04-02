@@ -7,7 +7,7 @@
  */
 
 import { Router, Request, Response } from "express";
-import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter, brandSchemaOrg, brandBreadcrumb } from "./brand.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 
 export function createAiPluginRoutes(baseUrl: string): Router {
@@ -31,10 +31,11 @@ export function createAiPluginRoutes(baseUrl: string): Router {
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@RegenChristian">
+  <meta name="twitter:site" content="@Regen_compute">
   <meta name="twitter:title" content="AI Plugin — Regen Compute">
   <meta name="twitter:description" content="One command to connect your AI assistant to verified ecological regeneration on Regen Network.">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
+  <link rel="canonical" href="${baseUrl}/ai-plugin">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -239,6 +240,63 @@ export function createAiPluginRoutes(baseUrl: string): Router {
       .supported-tools { flex-direction: column; align-items: stretch; }
     }
   </style>
+${brandSchemaOrg()}
+${brandBreadcrumb(baseUrl, "AI Plugin", "ai-plugin")}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Regen Compute MCP Server",
+  "applicationCategory": "DeveloperApplication",
+  "description": "MCP server that connects AI assistants to verified ecological credit retirement on Regen Network. Works with Claude Code, Cursor, and any MCP-compatible tool.",
+  "operatingSystem": "Any (Node.js 20+)",
+  "url": "${baseUrl}/ai-plugin",
+  "downloadUrl": "https://www.npmjs.com/package/regen-compute",
+  "installUrl": "https://www.npmjs.com/package/regen-compute",
+  "softwareRequirements": "Node.js 20+",
+  "softwareVersion": "0.3.4",
+  "license": "https://opensource.org/licenses/Apache-2.0",
+  "inLanguage": "en",
+  "provider": {
+    "@type": "Organization",
+    "name": "Regen Network Development",
+    "url": "https://regen.network"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to install Regen Compute for Claude Code",
+  "description": "Connect your AI assistant to verified ecological regeneration in one command.",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Install the MCP server",
+      "text": "Run: claude mcp add -s user regen-compute -- npx regen-compute"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Estimate your footprint",
+      "text": "Ask Claude: What is my AI session's ecological footprint?"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Subscribe and retire credits",
+      "text": "Choose a plan (from $1.25/month) and your subscription automatically retires verified ecological credits each month."
+    }
+  ],
+  "totalTime": "PT2M",
+  "tool": {
+    "@type": "HowToTool",
+    "name": "Claude Code, Cursor, or any MCP-compatible AI tool"
+  }
+}
+</script>
 </head>
 <body>
   ${betaBannerHTML()}

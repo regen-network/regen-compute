@@ -175,7 +175,7 @@ function renderEmailHtml(data: EmailData): string {
   const impactDescription = describeRetiredTypes(data.thisMonth);
 
   const shareText = encodeURIComponent(
-    `I just retired ecological credits through @raboratory's Regen Compute to account for my AI usage. ${formatCredits(totalCumulative)} credits retired and counting. compute.regen.network`
+    `I just retired ecological credits through @Regen_compute to account for my AI usage. ${formatCredits(totalCumulative)} credits retired and counting. compute.regen.network`
   );
   const shareUrl = data.certificateUrl ? encodeURIComponent(data.certificateUrl) : "";
 

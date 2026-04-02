@@ -126,7 +126,7 @@ These are the real projects that subscriber money funds. Each should feel like a
 
 6. **For Developers** -- Smaller section: MCP plugin, one-command install, open source on GitHub. This audience already knows they want it; just show them how.
 
-7. **Footer** -- Links: GitHub, npm, X (@RegenChristian), Regen Network. "Open source. Apache-2.0."
+7. **Footer** -- Links: GitHub, npm, X (@Regen_compute), Regen Network. "Open source. Apache-2.0."
 
 ## Technical Context
 

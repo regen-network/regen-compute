@@ -58,6 +58,12 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   // Static public assets (badge icons, hero images, etc.)
   app.use("/public", express.static(join(process.cwd(), "public"), { maxAge: "1d" }));
 
+  // Self-hosted favicon
+  app.get("/favicon.ico", (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.sendFile("favicon.ico", { root: join(process.cwd(), "public") });
+  });
+
   // Health check
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", version: "0.3.0" });
@@ -264,6 +270,49 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
     });
   });
 
+  // Strip trailing slashes (301 redirect) to prevent duplicate content
+  app.use((req, res, next) => {
+    if (req.path !== "/" && req.path.endsWith("/")) {
+      const query = req.url.slice(req.path.length);
+      res.redirect(301, req.path.slice(0, -1) + query);
+    } else {
+      next();
+    }
+  });
+
+  // llms.txt — AI crawler discovery file
+  app.get("/llms.txt", (_req, res) => {
+    res.type("text/plain").send(
+      `# Regen Compute\n` +
+      `> Ecological accountability for AI compute — retire verified ecocredits on Regen Network.\n\n` +
+      `## What it is\n` +
+      `Regen Compute is an MCP (Model Context Protocol) server that connects AI sessions to verified ecological credit retirement. It is not a carbon offset — it funds regenerative projects with permanent, on-chain proof.\n\n` +
+      `## Key pages\n` +
+      `- Homepage: ${baseUrl}/\n` +
+      `- AI Plugin (MCP installation): ${baseUrl}/ai-plugin\n` +
+      `- Developers (API reference): ${baseUrl}/developers\n` +
+      `- Research (AI emissions methodology): ${baseUrl}/research\n` +
+      `- About (team and mission): ${baseUrl}/about\n\n` +
+      `## Pricing\n` +
+      `- Dabbler: $1.25/month (casual AI users)\n` +
+      `- Builder: $2.50/month (regular AI developers)\n` +
+      `- Agent: $50/year (AI-native teams and autonomous agents)\n\n` +
+      `## Installation\n` +
+      `claude mcp add -s user regen-compute -- npx regen-compute\n\n` +
+      `## Links\n` +
+      `- npm: https://www.npmjs.com/package/regen-compute\n` +
+      `- GitHub: https://github.com/regen-network/regen-compute\n` +
+      `- Regen Network: https://regen.network\n` +
+      `- X/Twitter: https://x.com/Regen_compute\n\n` +
+      `## Credit types supported\n` +
+      `- Carbon (C) — forest conservation, soil carbon\n` +
+      `- Biodiversity (BT) — habitat banks, Terrasos\n` +
+      `- Umbrella Species Stewardship (USS) — jaguar credits\n` +
+      `- Kilo-Sheep-Hour (KSH) — regenerative grazing\n` +
+      `- Marine Biodiversity Stewardship (MBS) — ocean conservation\n`
+    );
+  });
+
   // Allow all crawlers but block auth/redirect-only paths
   app.get("/robots.txt", (_req, res) => {
     res.type("text/plain").send(
@@ -289,18 +338,25 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
 
   app.get("/sitemap.xml", (_req, res) => {
     const langs = ["", "es", "pt", "fr", "de", "zh", "ja", "ko", "hi", "ar", "ru", "id", "tr", "vi", "th", "it", "nl", "pl", "ms", "sw", "uk", "ur"];
-    const pages = ["", "research", "about", "ai-plugin"];
-    const urls: string[] = [];
+    const pages = [
+      { path: "", lastmod: "2026-04-02" },
+      { path: "research", lastmod: "2026-03-15" },
+      { path: "about", lastmod: "2026-03-25" },
+      { path: "ai-plugin", lastmod: "2026-03-20" },
+      { path: "developers", lastmod: "2026-03-26" },
+      { path: "badges", lastmod: "2026-03-25" },
+    ];
+    const entries: string[] = [];
     for (const page of pages) {
-      if (page === "") {
+      if (page.path === "") {
         for (const lang of langs) {
-          urls.push(`${baseUrl}/${lang}`);
+          entries.push(`  <url><loc>${baseUrl}/${lang}</loc><lastmod>${page.lastmod}</lastmod></url>`);
         }
       } else {
-        urls.push(`${baseUrl}/${page}`);
+        entries.push(`  <url><loc>${baseUrl}/${page.path}</loc><lastmod>${page.lastmod}</lastmod></url>`);
       }
     }
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${u}</loc></url>`).join("\n")}\n</urlset>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`;
     res.type("application/xml").send(xml);
   });
 

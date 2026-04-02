@@ -10,7 +10,7 @@
 import { Router, Request, Response } from "express";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter, brandSchemaOrg, brandBreadcrumb } from "./brand.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -30,6 +30,20 @@ function developersPageHTML(): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Developers — Regen Compute</title>
   <meta name="description" content="Build on Regen Compute. MCP server, REST API, and API reference docs."/>
+  <meta property="og:title" content="Developers — Regen Compute">
+  <meta property="og:description" content="Build on Regen Compute. MCP server, REST API, and API reference docs.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://compute.regen.network/developers">
+  <meta property="og:image" content="https://compute.regen.network/og-card.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@Regen_compute">
+  <meta name="twitter:title" content="Developers — Regen Compute">
+  <meta name="twitter:description" content="Build on Regen Compute. MCP server, REST API, and API reference docs.">
+  <meta name="twitter:image" content="https://compute.regen.network/og-card.jpg">
+  <link rel="canonical" href="https://compute.regen.network/developers"/>
   ${brandFonts()}
   <style>
     ${brandCSS()}
@@ -357,6 +371,8 @@ function developersPageHTML(): string {
       .dev-panel { padding: 32px 16px 64px; }
     }
   </style>
+${brandSchemaOrg()}
+${brandBreadcrumb("https://compute.regen.network", "Developers", "developers")}
 </head>
 <body>
 ${brandHeader({ nav: NAV })}

@@ -7,7 +7,7 @@
  */
 
 import { Router, Request, Response } from "express";
-import { brandFonts, brandCSS, brandHeader, brandFooter } from "./brand.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter, brandSchemaOrg, brandBreadcrumb } from "./brand.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 
 export function createResearchRoutes(baseUrl: string): Router {
@@ -31,10 +31,11 @@ export function createResearchRoutes(baseUrl: string): Router {
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@RegenChristian">
+  <meta name="twitter:site" content="@Regen_compute">
   <meta name="twitter:title" content="AI Emissions Research — Regen Compute">
   <meta name="twitter:description" content="How much energy does one person's AI usage consume? A transparent review with citations.">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
+  <link rel="canonical" href="${baseUrl}/research">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -175,6 +176,37 @@ export function createResearchRoutes(baseUrl: string): Router {
       .profiles-grid { grid-template-columns: 1fr; }
     }
   </style>
+${brandSchemaOrg()}
+${brandBreadcrumb(baseUrl, "AI Emissions Research", "research")}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "AI Emissions Research — The Ecological Footprint of AI Usage",
+  "description": "A transparent, citation-backed look at the ecological footprint of AI usage — energy per query, CO2 estimates, water, hardware lifecycle, and why regenerative contribution matters.",
+  "datePublished": "2026-03-15",
+  "dateModified": "2026-03-15",
+  "author": {
+    "@type": "Organization",
+    "name": "Regen Network Development",
+    "url": "https://regen.network"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Regen Network Development",
+    "url": "https://regen.network"
+  },
+  "url": "${baseUrl}/research",
+  "image": "${baseUrl}/og-card.jpg",
+  "inLanguage": "en",
+  "citation": [
+    "Epoch AI, 'AI Energy Use', 2024",
+    "IEEE Spectrum, 'AI Power Consumption', 2024",
+    "IEA, 'Electricity Market Report', 2024",
+    "Li et al., 'Making AI Less Thirsty', arXiv:2304.03271"
+  ]
+}
+</script>
 </head>
 <body>
   ${betaBannerHTML()}

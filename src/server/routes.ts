@@ -65,7 +65,7 @@ import { swapAndBurn, checkOsmosisReadiness } from "../services/swap-and-burn.js
 import { getProjectForBatch, PROJECTS } from "./project-metadata.js";
 import { checkAndSendMonthlyReminder, checkTradableStock, sendTelegram } from "../services/admin-telegram.js";
 import { updateRegistryProfile } from "../services/registry-profile.js";
-import { brandFonts, brandCSS, brandHeader, brandFooter, regenLogoSVG } from "./brand.js";
+import { brandFonts, brandCSS, brandHeader, brandFooter, brandSchemaOrg, regenLogoSVG } from "./brand.js";
 import { t, SUPPORTED_LANGS, LANG_NAMES, LANG_FLAGS, LANG_SHORT, type LangCode } from "./translations.js";
 
 /** Per-subscriber lock to prevent concurrent retirement execution */
@@ -155,11 +155,13 @@ export function createRoutes(stripe: Stripe | null, db: Database.Database, baseU
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@RegenChristian">
+  <meta name="twitter:site" content="@Regen_compute">
   <meta name="twitter:title" content="${t(lang, "page_title")}">
   <meta name="twitter:description" content="${t(lang, "page_description")}">
   <meta name="twitter:image" content="${baseUrl}/og-card.jpg">
+  <link rel="canonical" href="${baseUrl}/${lang === 'en' ? '' : lang}">
 ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${baseUrl}/${l === 'en' ? '' : l}">`).join('\n')}
+  <link rel="alternate" hreflang="x-default" href="${baseUrl}/">
   ${brandFonts()}
   <style>
     ${betaBannerCSS()}
@@ -179,7 +181,8 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 
     /* ---- Hero section ---- */
     .hero-section { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; }
-    .hero-bg { position: absolute; inset: 0; background: url('/public/hero.webp') center 40% / cover; filter: brightness(0.3) saturate(0.8); }
+    .hero-bg { position: absolute; inset: 0; overflow: hidden; }
+    .hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; filter: brightness(0.3) saturate(0.8); }
     .hero-gradient { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,6,10,0.4), rgba(5,6,10,0.2) 70%, var(--color-void)); }
     .hero-content { position: relative; z-index: 10; max-width: 1200px; margin: 0 auto; padding: 80px 24px 64px; display: grid; grid-template-columns: 1fr 400px; gap: 80px; align-items: center; }
     @media (max-width: 900px) {
@@ -545,10 +548,11 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
   "description": "Ecological accountability for AI compute — retire verified ecocredits on Regen Network. MCP server for Claude, Cursor, and any MCP-compatible AI tool.",
   "operatingSystem": "Any",
   "url": "https://compute.regen.network",
+  "inLanguage": "en",
   "offers": [
-    { "@type": "Offer", "name": "Dabbler", "price": "1.25", "priceCurrency": "USD", "billingDuration": "P1M", "description": "For casual AI users" },
-    { "@type": "Offer", "name": "Builder", "price": "2.50", "priceCurrency": "USD", "billingDuration": "P1M", "description": "For regular AI developers" },
-    { "@type": "Offer", "name": "Agent", "price": "50.00", "priceCurrency": "USD", "billingDuration": "P1Y", "description": "For AI-native teams and autonomous agents" }
+    { "@type": "Offer", "name": "Dabbler", "description": "For casual AI users", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "1.25", "priceCurrency": "USD", "unitCode": "MON", "referenceQuantity": { "@type": "QuantitativeValue", "value": "1", "unitCode": "MON" } } },
+    { "@type": "Offer", "name": "Builder", "description": "For regular AI developers", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "2.50", "priceCurrency": "USD", "unitCode": "MON", "referenceQuantity": { "@type": "QuantitativeValue", "value": "1", "unitCode": "MON" } } },
+    { "@type": "Offer", "name": "Agent", "description": "For AI-native teams and autonomous agents", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "50.00", "priceCurrency": "USD", "unitCode": "ANN", "referenceQuantity": { "@type": "QuantitativeValue", "value": "1", "unitCode": "ANN" } } }
   ],
   "provider": {
     "@type": "Organization",
@@ -557,6 +561,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
   }
 }
 </script>
+${brandSchemaOrg()}
 </head>
 <body>
   ${betaBannerHTML()}
@@ -577,7 +582,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
 
   <!-- ==================== HERO ==================== -->
   <section class="hero-section">
-    <div class="hero-bg"></div>
+    <div class="hero-bg"><img src="/public/hero.webp" alt="Regenerative ecological landscape" width="1920" height="1080" fetchpriority="high"></div>
     <div class="hero-gradient"></div>
     <div class="hero-content">
       <!-- Left: Story -->
@@ -707,7 +712,7 @@ ${SUPPORTED_LANGS.map(l => `  <link rel="alternate" hreflang="${l}" href="${base
       return `
     <div class="project-spread${reversed ? ' project-spread--reverse' : ''}">
       <div class="project-spread__img-wrap">
-        <img class="project-spread__img" src="${p.imageUrl}" alt="${p.name}" loading="lazy">
+        <img class="project-spread__img" src="${p.imageUrl}" alt="${p.imageAlt}" width="${p.imageWidth}" height="${p.imageHeight}" loading="lazy">
         <div class="project-spread__img-fade ${fadeClass}"></div>
       </div>
       <div class="project-spread__text">
@@ -2265,7 +2270,7 @@ ${betaBannerJS()}
         // Subscription success page
         const referralLink = `${baseUrl}/r/${user.referral_code}`;
         const shareText = encodeURIComponent(
-          "I just subscribed to @RegenChristian — funding verified ecological regeneration from my AI sessions. Use my link for a free first month:"
+          "I just subscribed to @Regen_compute — funding verified ecological regeneration from my AI sessions. Use my link for a free first month:"
         );
         const shareUrl = encodeURIComponent(referralLink);
         const twitterUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;
