@@ -653,10 +653,6 @@ ${brandSchemaOrg()}
         <!-- Crypto + one-time links -->
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border);">
           <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
-            <span class="crypto-badge" onclick="openCryptoCheckout()" style="margin:0;">
-              <svg width="14" height="14" viewBox="0 0 256 417" fill="none"><path d="M127.96 0l-2.8 9.5v277.7l2.8 2.8 127.96-75.6z" fill="#888"/><path d="M127.96 0L0 214.4l127.96 75.6V155.5z" fill="#aaa"/><path d="M127.96 312.2l-1.6 1.9v98.2l1.6 4.6L256 236.6z" fill="#888"/><path d="M127.96 416.9V312.2L0 236.6z" fill="#aaa"/></svg>
-              Pay with crypto
-            </span>
             <a href="https://app.regen.network/projects/1?buying_options_filters=credit_card" target="_blank" rel="noopener" style="font-family:var(--font-ui);font-size:13px;color:var(--color-muted);text-decoration:underline;text-decoration-color:var(--color-border-light);">${t(lang, "onetime_title")}</a>
           </div>
         </div>
