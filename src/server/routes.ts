@@ -3325,12 +3325,15 @@ async function sendRetirementNotificationEmail(
       );
       console.log(`First retirement email sent to ${sub.email}`);
     } else {
-      // Get cumulative stats
-      const cumulative = getCumulativeAttribution(db, subscriberId);
-      const totalCumCredits = cumulative.total_carbon + cumulative.total_biodiversity + cumulative.total_uss;
+      // Get cumulative stats from subscriber_retirements (attributions may not be written yet)
+      const cumRow = db.prepare(
+        "SELECT COALESCE(SUM(total_credits_retired), 0) AS total_credits, COUNT(DISTINCT strftime('%Y-%m', created_at)) AS months_active FROM subscriber_retirements WHERE subscriber_id = ?"
+      ).get(subscriberId) as { total_credits: number; months_active: number } | undefined;
+      const totalCumCredits = cumRow?.total_credits ?? 0;
+      const monthsActive = cumRow?.months_active ?? 1;
       await sendRetirementReceiptEmail(
         sub.email, dashboardUrl, result.totalCreditsRetired, totalCumCredits,
-        Math.max(1, cumulative.months_active), portfolioUrl, batchSummaries,
+        Math.max(1, monthsActive), portfolioUrl, batchSummaries,
       );
       console.log(`Retirement receipt email sent to ${sub.email}`);
     }
