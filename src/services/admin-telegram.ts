@@ -195,24 +195,114 @@ export async function sendCommunityGoalReminder(dbPath?: string): Promise<void> 
 }
 
 /**
- * Alert admin when no tradable sell orders exist for a batch.
- * Retirement for this batch will be skipped until tradable orders are created.
+ * Alert admin when no sell orders of any type exist for a batch.
+ * Retirement for this batch will be skipped until sell orders are created.
  */
-export async function sendNoTradableOrdersAlert(
+export async function sendNoSellOrdersAlert(
   batchDenom: string,
   subscriberId: number
 ): Promise<void> {
   await sendTelegram(
-    `🚫 *No Tradable Orders Available*\n\n` +
+    `🚫 *No Sell Orders Available*\n\n` +
     `Batch: \`${batchDenom}\`\n` +
     `Subscriber #${subscriberId} retirement *skipped* for this batch.\n\n` +
-    `*Action needed:* Create a sell order with \`disable_auto_retire=true\` ` +
-    `for this batch so credits can be sent to subscriber addresses.`
+    `*Action needed:* Create a sell order for this batch — ` +
+    `either tradable (\`disable_auto_retire=true\`) or retire-only.`
   );
 }
 
 /**
- * Alert admin when tradable supply for a batch drops below 10 credits.
+ * Rich failure alert with balances, sell order state, and smart suggestions.
+ * Sent when a retirement transaction fails for a subscriber.
+ */
+export async function sendRetirementFailureAlert(options: {
+  batchDenom: string;
+  subscriberId: number;
+  error: string;
+  subscriberBalances?: Map<string, bigint>;
+  allSellOrders?: import("./ledger.js").SellOrder[];
+}): Promise<void> {
+  const { batchDenom, subscriberId, error, subscriberBalances, allSellOrders } = options;
+  const classId = batchDenom.replace(/-\d.*$/, "");
+
+  let balanceInfo = "";
+  if (subscriberBalances && subscriberBalances.size > 0) {
+    const lines = Array.from(subscriberBalances.entries())
+      .map(([denom, amount]) => `  ${denom}: ${amount.toString()}`)
+      .join("\n");
+    balanceInfo = `\n*Subscriber wallet balances:*\n${lines}\n`;
+  }
+
+  // Gather sell order state for this batch
+  let orderInfo = "";
+  let suggestions = "";
+  if (allSellOrders) {
+    const batchOrders = allSellOrders.filter(
+      (o) => o.batch_denom === batchDenom &&
+             parseFloat(o.quantity) > 0 &&
+             (!o.expiration || new Date(o.expiration) > new Date())
+    );
+
+    if (batchOrders.length > 0) {
+      const lines = batchOrders.map((o) => {
+        const type = o.disable_auto_retire ? "tradable" : "retire-only";
+        return `  #${o.id}: ${parseFloat(o.quantity).toFixed(2)} credits, ${o.ask_amount} ${o.ask_denom} (${type})`;
+      }).join("\n");
+      orderInfo = `\n*Available sell orders for ${batchDenom}:*\n${lines}\n`;
+    } else {
+      orderInfo = `\n*No active sell orders for ${batchDenom}*\n`;
+    }
+
+    // Smart suggestions: look for alternative orders in same class
+    const altOrders = allSellOrders.filter(
+      (o) => o.batch_denom !== batchDenom &&
+             o.batch_denom.startsWith(classId) &&
+             parseFloat(o.quantity) > 0 &&
+             (!o.expiration || new Date(o.expiration) > new Date())
+    );
+
+    if (altOrders.length > 0) {
+      const altBatches = [...new Set(altOrders.map((o) => o.batch_denom))];
+      const altLines = altBatches.slice(0, 3).map((bd) => {
+        const bdOrders = altOrders.filter((o) => o.batch_denom === bd);
+        const totalQty = bdOrders.reduce((sum, o) => sum + parseFloat(o.quantity), 0);
+        return `  \`${bd}\`: ${totalQty.toFixed(2)} credits across ${bdOrders.length} order(s)`;
+      }).join("\n");
+      suggestions += `\n*Alternative batches in class ${classId}:*\n${altLines}\n`;
+    }
+
+    // Check if there are orders in other credit classes
+    const otherClassOrders = allSellOrders.filter(
+      (o) => !o.batch_denom.startsWith(classId) &&
+             parseFloat(o.quantity) > 0 &&
+             (!o.expiration || new Date(o.expiration) > new Date())
+    );
+    if (otherClassOrders.length > 0) {
+      const otherClasses = [...new Set(otherClassOrders.map((o) => o.batch_denom.replace(/-\d.*$/, "")))];
+      suggestions += `\n*Other credit classes with supply:* ${otherClasses.join(", ")}\n`;
+    }
+  }
+
+  const recommendedActions =
+    `\n*Recommended actions:*\n` +
+    `1. Check if the sell order is still active and has sufficient quantity\n` +
+    `2. If the batch is depleted, consider creating a new sell order or selecting an alternative batch\n` +
+    `3. If this is a payment/gas issue, ensure the master wallet has sufficient funds`;
+
+  await sendTelegram(
+    `🔴 *Retirement Failed*\n\n` +
+    `Batch: \`${batchDenom}\`\n` +
+    `Subscriber: #${subscriberId}\n` +
+    `Error: ${error}\n` +
+    balanceInfo +
+    orderInfo +
+    suggestions +
+    recommendedActions
+  );
+}
+
+/**
+ * Alert admin when credit supply for a batch drops below 10 credits.
  */
 export async function sendLowStockAlert(
   batchDenom: string,
@@ -220,11 +310,11 @@ export async function sendLowStockAlert(
 ): Promise<void> {
   const urgency = remainingCredits < 1 ? "🔴 CRITICAL" : remainingCredits < 5 ? "🟠 LOW" : "🟡 Getting Low";
   await sendTelegram(
-    `${urgency} *— Tradable Credit Supply*\n\n` +
+    `${urgency} *— Credit Supply*\n\n` +
     `Batch: \`${batchDenom}\`\n` +
-    `Remaining tradable supply: *${remainingCredits.toFixed(2)} credits*\n\n` +
-    `*Action needed:* Create more sell orders with \`disable_auto_retire=true\` ` +
-    `for this batch to ensure upcoming retirements can proceed.`
+    `Remaining supply: *${remainingCredits.toFixed(2)} credits*\n\n` +
+    `*Action needed:* Create more sell orders for this batch ` +
+    `to ensure upcoming retirements can proceed.`
   );
 }
 
@@ -232,10 +322,10 @@ const LOW_STOCK_THRESHOLD = 10;
 
 /**
  * Daily stock check for all batches in the current month's credit selection.
- * Alerts via Telegram if any batch has < 10 tradable credits remaining.
+ * Alerts via Telegram if any batch has < 10 credits remaining (tradable + retire-only).
  * Called alongside the daily monthly reminder check.
  */
-export async function checkTradableStock(dbPath?: string): Promise<void> {
+export async function checkCreditStock(dbPath?: string): Promise<void> {
   const db = getDb(dbPath);
   const currentMonth = new Date().toISOString().slice(0, 7);
   const selection = getMonthlyCreditSelection(db, currentMonth);
@@ -246,16 +336,15 @@ export async function checkTradableStock(dbPath?: string): Promise<void> {
   try {
     const sellOrders = await listSellOrders();
     for (const batchDenom of batchDenoms) {
-      const tradableOrders = sellOrders.filter(
+      const activeOrders = sellOrders.filter(
         (o) => o.batch_denom === batchDenom &&
-               o.disable_auto_retire === true &&
                parseFloat(o.quantity) > 0 &&
                (!o.expiration || new Date(o.expiration) > new Date())
       );
-      const totalTradable = tradableOrders.reduce((sum, o) => sum + parseFloat(o.quantity), 0);
+      const totalSupply = activeOrders.reduce((sum, o) => sum + parseFloat(o.quantity), 0);
 
-      if (totalTradable < LOW_STOCK_THRESHOLD) {
-        await sendLowStockAlert(batchDenom, totalTradable);
+      if (totalSupply < LOW_STOCK_THRESHOLD) {
+        await sendLowStockAlert(batchDenom, totalSupply);
       }
     }
   } catch (err) {

@@ -59,11 +59,11 @@ import {
 } from "./db.js";
 import { betaBannerCSS, betaBannerHTML, betaBannerJS } from "./beta-banner.js";
 import { sendWelcomeEmail, sendFirstRetirementEmail, sendRetirementReceiptEmail, sendReferralBonusEmail } from "../services/email.js";
-import { deriveSubscriberAddress } from "../services/subscriber-wallet.js";
+import { deriveSubscriberAddress, sweepSubscriberFunds } from "../services/subscriber-wallet.js";
 import { retireForSubscriber, accumulateBurnBudget, getPendingBurnBudget, markBurnExecuted, calculateNetAfterStripe, type SubscriberRetirementResult } from "../services/retire-subscriber.js";
 import { swapAndBurn, checkOsmosisReadiness } from "../services/swap-and-burn.js";
 import { getProjectForBatch, PROJECTS } from "./project-metadata.js";
-import { checkAndSendMonthlyReminder, checkTradableStock, sendTelegram } from "../services/admin-telegram.js";
+import { checkAndSendMonthlyReminder, checkCreditStock, sendTelegram } from "../services/admin-telegram.js";
 import { updateRegistryProfile } from "../services/registry-profile.js";
 import { brandFonts, brandCSS, brandHeader, brandFooter, brandSchemaOrg, regenLogoSVG } from "./brand.js";
 import { t, SUPPORTED_LANGS, LANG_NAMES, LANG_FLAGS, LANG_SHORT, type LangCode } from "./translations.js";
@@ -2806,7 +2806,7 @@ ${betaBannerJS()}
     checkAndSendMonthlyReminder().catch((err) => {
       console.error("Monthly reminder check error:", err instanceof Error ? err.message : err);
     });
-    checkTradableStock().catch((err) => {
+    checkCreditStock().catch((err) => {
       console.error("Tradable stock check error:", err instanceof Error ? err.message : err);
     });
   }, DAILY_CHECK_INTERVAL_MS);
@@ -2815,7 +2815,7 @@ ${betaBannerJS()}
     checkAndSendMonthlyReminder().catch((err) => {
       console.error("Monthly reminder check error (startup):", err instanceof Error ? err.message : err);
     });
-    checkTradableStock().catch((err) => {
+    checkCreditStock().catch((err) => {
       console.error("Tradable stock check error (startup):", err instanceof Error ? err.message : err);
     });
   }, 15_000);
@@ -3117,6 +3117,17 @@ function handleSubscriptionDeleted(db: Database.Database, sub: Stripe.Subscripti
           }
         }
       }
+      // Sweep remaining funds from subscriber wallet back to master
+      sweepSubscriberFunds(existing.id).then((result) => {
+        if (result.swept.length > 0) {
+          console.log(
+            `Swept subscriber ${existing.id} wallet on cancellation: ` +
+            `${result.swept.map((a) => `${a.amount} ${a.denom}`).join(", ")} tx=${result.txHash}`
+          );
+        }
+      }).catch((err) => {
+        console.error(`Failed to sweep funds for cancelled subscriber ${existing.id}:`, err instanceof Error ? err.message : err);
+      });
     }
 
     console.log(`Subscription cancelled: ${stripeSubId}`);

@@ -326,7 +326,7 @@ export async function executePoolRun(options: {
       // Convert budget to micro-units
       const budgetMicro = BigInt(thisBudgetCents) * BigInt(10 ** Math.max(denomExponent - 2, 0));
 
-      // Greedy fill from cheapest order
+      // Fill from cheapest available order
       let remainingBudget = budgetMicro;
       let totalCredits = 0;
       let totalCostMicro = 0n;

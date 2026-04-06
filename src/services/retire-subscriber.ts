@@ -1,18 +1,28 @@
 /**
  * Per-subscriber retirement service.
  *
- * Triggered on each subscription payment. Buys credits from the marketplace
- * with disableAutoRetire, then sends them to the subscriber's derived Regen
- * address using MsgSend with retiredAmount — credits arrive already retired.
+ * Triggered on each subscription payment. For each of the 3 monthly
+ * selected batches, finds available sell orders and executes retirements.
  *
- * This replaces the monthly pool run batch system.
+ * Two execution paths depending on sell order type:
+ * - Tradable orders (disable_auto_retire=true): Master wallet buys credits,
+ *   then MsgSend with retiredAmount to subscriber address.
+ * - Retire-only orders (disable_auto_retire=false): Funds subscriber wallet
+ *   with payment tokens + gas, subscriber wallet buys directly (credits
+ *   auto-retire to subscriber address on purchase).
  */
 
 import { loadConfig } from "../config.js";
 import { initWallet, signAndBroadcast } from "./wallet.js";
-import { deriveSubscriberAddress } from "./subscriber-wallet.js";
+import {
+  deriveSubscriberAddress,
+  getAddressBalances,
+  calculateFundingNeeded,
+  fundSubscriberWallet,
+  signAndBroadcastAsSubscriber,
+} from "./subscriber-wallet.js";
 import { listSellOrders, listCreditClasses, getAllowedDenoms, type SellOrder } from "./ledger.js";
-import { sendLowStockAlert, sendNoTradableOrdersAlert } from "./admin-telegram.js";
+import { sendLowStockAlert, sendNoSellOrdersAlert, sendRetirementFailureAlert } from "./admin-telegram.js";
 import { buildRetirementReason } from "./retirement-reason.js";
 import {
   getDb,
@@ -183,8 +193,13 @@ export async function retireForSubscriber(options: {
     };
   }
 
-  // The 3 selected batches for this month
+  // The 3 selected batches for this month, with optional target sell order IDs
   const selectedBatchDenoms = [selection.batch1_denom, selection.batch2_denom, selection.batch3_denom];
+  const targetSellOrderIds = [
+    selection.batch1_sell_order_id,
+    selection.batch2_sell_order_id,
+    selection.batch3_sell_order_id,
+  ];
 
   // 4b. Check for prior attempts with same paymentId — skip already-succeeded batches
   const alreadyRetiredBatches = new Set<string>();
@@ -257,12 +272,10 @@ export async function retireForSubscriber(options: {
     if (!selectedBatchDenoms.includes(order.batch_denom)) return false;
     if (order.expiration && new Date(order.expiration) <= now) return false;
     if (parseFloat(order.quantity) <= 0) return false;
-    // ONLY use tradable orders — never auto-retire orders
-    if (!order.disable_auto_retire) return false;
     return true;
   });
 
-  // Group by batch
+  // Group by batch (includes both tradable and retire-only orders)
   const batchOrdersMap = new Map<string, SellOrder[]>();
   for (const order of eligibleOrders) {
     const existing = batchOrdersMap.get(order.batch_denom) ?? [];
@@ -270,18 +283,18 @@ export async function retireForSubscriber(options: {
     batchOrdersMap.set(order.batch_denom, existing);
   }
 
-  // Only include batches that have tradable sell orders AND haven't already succeeded
+  // Only include batches that have sell orders AND haven't already succeeded
   const batchDenoms = selectedBatchDenoms.filter(
     (d) => batchOrdersMap.has(d) && !alreadyRetiredBatches.has(d)
   );
 
-  // Alert for any batches that have NO tradable orders at all
+  // Alert for any batches that have NO sell orders at all
   const missingBatches = selectedBatchDenoms.filter(
     (d) => !batchOrdersMap.has(d) && !alreadyRetiredBatches.has(d)
   );
   if (missingBatches.length > 0) {
     for (const batch of missingBatches) {
-      sendNoTradableOrdersAlert(batch, subscriberId).catch(() => {});
+      sendNoSellOrdersAlert(batch, subscriberId).catch(() => {});
     }
   }
 
@@ -291,7 +304,7 @@ export async function retireForSubscriber(options: {
       grossAmountCents, netAmountCents, creditsBudgetCents,
       burnBudgetCents, opsBudgetCents,
       batches: [], totalCreditsRetired: 0, totalSpentCents: 0,
-      errors: [`No tradable sell orders found for this month's selected batches: ${selectedBatchDenoms.join(", ")}`],
+      errors: [`No sell orders found for this month's selected batches: ${selectedBatchDenoms.join(", ")}`],
     };
   }
 
@@ -313,11 +326,13 @@ export async function retireForSubscriber(options: {
   const denomExponent = paymentDenom?.exponent ?? 6;
   const denomBankDenom = paymentDenom?.bank_denom ?? "uregen";
 
-  // 6. Buy and send-retire for each batch
+  // 6. Buy and retire for each batch
   const batchResults: BatchRetirementResult[] = [];
 
   for (let i = 0; i < batchDenoms.length; i++) {
     const batchDenom = batchDenoms[i];
+    const batchIndex = selectedBatchDenoms.indexOf(batchDenom);
+    const targetOrderId = batchIndex >= 0 ? targetSellOrderIds[batchIndex] : null;
     const orders = batchOrdersMap.get(batchDenom)!;
     const classId = batchDenom.replace(/-\d.*$/, "");
     const typeAbbrev = classTypeMap.get(classId) ?? "?";
@@ -336,29 +351,41 @@ export async function retireForSubscriber(options: {
     }
 
     try {
-      // Filter orders: only consider orders priced in denoms we actually hold
-      // Priority: preferred denom > any held denom > all orders (last resort for dry runs)
+      // Select the order to buy from:
+      // If a target sell order ID is specified, use that exact order.
+      // Otherwise, filter by payment denom and pick cheapest.
       let batchOrders: SellOrder[];
-      if (walletBalanceDenoms.size > 0) {
-        // First try preferred payment denom that we hold
-        batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom && walletBalanceDenoms.has(o.ask_denom));
-        if (batchOrders.length === 0) {
-          // Fall back to any denom we hold
-          batchOrders = orders.filter((o) => walletBalanceDenoms.has(o.ask_denom));
+      if (targetOrderId) {
+        const target = orders.find((o) => o.id === targetOrderId);
+        if (!target) {
+          result.error = `Target sell order #${targetOrderId} not found for batch ${batchDenom}`;
+          errors.push(result.error);
+          await sendRetirementFailureAlert({
+            batchDenom, subscriberId, error: result.error,
+            allSellOrders: sellOrders,
+          }).catch(() => {});
+          batchResults.push(result);
+          continue;
         }
+        batchOrders = [target];
       } else {
-        // No balance info (dry run or fetch failed) — prefer denomBankDenom, then all
-        batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom);
-        if (batchOrders.length === 0) batchOrders = orders;
+        // Filter by payment denom we hold, then sort by price ascending
+        if (walletBalanceDenoms.size > 0) {
+          batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom && walletBalanceDenoms.has(o.ask_denom));
+          if (batchOrders.length === 0) {
+            batchOrders = orders.filter((o) => walletBalanceDenoms.has(o.ask_denom));
+          }
+        } else {
+          batchOrders = orders.filter((o) => o.ask_denom === denomBankDenom);
+          if (batchOrders.length === 0) batchOrders = orders;
+        }
+        batchOrders.sort((a, b) => {
+          const diff = BigInt(a.ask_amount) - BigInt(b.ask_amount);
+          return diff < 0n ? -1 : diff > 0n ? 1 : 0;
+        });
       }
-      // Sort by price ascending (cheapest first).
-      // All orders are already tradable (disable_auto_retire=true) — filtered upstream.
-      batchOrders.sort((a, b) => {
-        const diff = BigInt(a.ask_amount) - BigInt(b.ask_amount);
-        return diff < 0n ? -1 : diff > 0n ? 1 : 0;
-      });
 
-      // Greedy fill
+      // Fill from available orders within budget
       const budgetMicro = BigInt(thisBudget) * BigInt(10 ** Math.max(denomExponent - 2, 0));
       let remainingBudget = budgetMicro;
       let totalCredits = 0;
@@ -386,6 +413,10 @@ export async function retireForSubscriber(options: {
       if (selectedOrders.length === 0) {
         result.error = `No affordable orders for batch ${batchDenom}`;
         errors.push(result.error);
+        await sendRetirementFailureAlert({
+          batchDenom, subscriberId, error: result.error,
+          allSellOrders: sellOrders,
+        }).catch(() => {});
         batchResults.push(result);
         continue;
       }
@@ -398,61 +429,152 @@ export async function retireForSubscriber(options: {
         continue;
       }
 
-      // All orders are tradable (disable_auto_retire=true) — buy then MsgSend to subscriber
-      const buyOrders = selectedOrders.map((s) => ({
-        sellOrderId: BigInt(s.order.id),
-        quantity: s.quantity,
-        bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
-        disableAutoRetire: true,
-        retirementJurisdiction: "",
-        retirementReason: "",
-      }));
+      // Split selected orders into tradable vs retire-only
+      const tradableSelected = selectedOrders.filter((s) => s.order.disable_auto_retire);
+      const retireOnlySelected = selectedOrders.filter((s) => !s.order.disable_auto_retire);
 
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      const sendCredits = selectedOrders.map((s) => ({
-        batchDenom: s.order.batch_denom,
-        tradableAmount: "0",
-        retiredAmount: s.quantity,
-        retirementJurisdiction: config.defaultJurisdiction,
-        retirementReason: buildRetirementReason({
-          note: displayName
-            ? `${displayName}'s monthly ecological contribution`
-            : "Subscription — ecological accountability for AI",
-          subscriberId,
-          period: currentMonth,
-          source: "subscription",
-        }),
-      }));
+      const retirementMonth = new Date().toISOString().slice(0, 7);
+      const retirementReason = buildRetirementReason({
+        note: displayName
+          ? `${displayName}'s monthly ecological contribution`
+          : "Subscription — ecological accountability for AI",
+        subscriberId,
+        period: retirementMonth,
+        source: "subscription",
+      });
 
-      const msgs = [
-        {
-          typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
-          value: { buyer: walletAddress, orders: buyOrders },
-        },
-        {
-          typeUrl: "/regen.ecocredit.v1.MsgSend",
-          value: {
-            sender: walletAddress,
-            recipient: regenAddress,
-            credits: sendCredits,
+      // --- Path A: Tradable orders — buy from master, MsgSend+retire to subscriber ---
+      if (tradableSelected.length > 0) {
+        const buyOrders = tradableSelected.map((s) => ({
+          sellOrderId: BigInt(s.order.id),
+          quantity: s.quantity,
+          bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
+          disableAutoRetire: true,
+          retirementJurisdiction: "",
+          retirementReason: "",
+        }));
+
+        const sendCredits = tradableSelected.map((s) => ({
+          batchDenom: s.order.batch_denom,
+          tradableAmount: "0",
+          retiredAmount: s.quantity,
+          retirementJurisdiction: config.defaultJurisdiction,
+          retirementReason,
+        }));
+
+        const msgs = [
+          {
+            typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
+            value: { buyer: walletAddress, orders: buyOrders },
           },
-        },
-      ];
+          {
+            typeUrl: "/regen.ecocredit.v1.MsgSend",
+            value: {
+              sender: walletAddress,
+              recipient: regenAddress,
+              credits: sendCredits,
+            },
+          },
+        ];
 
-      // Execute buy + send-retire atomically in one transaction
-      const txResult = await signAndBroadcast(msgs);
-
-      if (txResult.code !== 0) {
-        result.error = `Tx failed (code ${txResult.code}): ${txResult.rawLog || "unknown"}`;
-        result.creditsRetired = 0;
-        result.spentCents = 0;
-        errors.push(`${batchDenom}: ${result.error}`);
-      } else {
-        result.buyTxHash = txResult.transactionHash;
-        result.sendRetireTxHash = txResult.transactionHash;
+        const txResult = await signAndBroadcast(msgs);
+        if (txResult.code !== 0) {
+          const errMsg = `Tradable buy+send failed (code ${txResult.code}): ${txResult.rawLog || "unknown"}`;
+          result.error = errMsg;
+          result.creditsRetired = retireOnlySelected.length > 0
+            ? retireOnlySelected.reduce((sum, s) => sum + parseFloat(s.quantity), 0)
+            : 0;
+          result.spentCents = retireOnlySelected.length > 0
+            ? Number(retireOnlySelected.reduce((sum, s) => sum + s.costMicro, 0n) / BigInt(10 ** Math.max(denomExponent - 2, 0)))
+            : 0;
+          errors.push(`${batchDenom}: ${errMsg}`);
+          await sendRetirementFailureAlert({
+            batchDenom, subscriberId, error: errMsg,
+            allSellOrders: sellOrders,
+          }).catch(() => {});
+        } else {
+          result.buyTxHash = txResult.transactionHash;
+          result.sendRetireTxHash = txResult.transactionHash;
+        }
       }
 
-      // Check remaining tradable supply and alert if low
+      // --- Path B: Retire-only orders — fund subscriber wallet, buy from subscriber ---
+      if (retireOnlySelected.length > 0) {
+        try {
+          // Calculate total cost for retire-only orders
+          const retireOnlyCost = retireOnlySelected.reduce((sum, s) => sum + s.costMicro, 0n);
+          const retireOnlyDenom = retireOnlySelected[0].order.ask_denom;
+
+          // Check subscriber wallet balances and calculate funding needed
+          const subBalances = await getAddressBalances(regenAddress);
+          const { transfers } = calculateFundingNeeded(subBalances, retireOnlyDenom, retireOnlyCost);
+
+          // Fund subscriber wallet if needed
+          if (transfers.length > 0) {
+            const fundTxHash = await fundSubscriberWallet(regenAddress, transfers);
+            if (fundTxHash) {
+              console.log(`Funded subscriber ${subscriberId} wallet: ${transfers.map((t) => `${t.amount} ${t.denom}`).join(", ")} tx=${fundTxHash}`);
+            }
+          }
+
+          // Build MsgBuyDirect from subscriber wallet (auto-retire to subscriber)
+          const retireOnlyBuyOrders = retireOnlySelected.map((s) => ({
+            sellOrderId: BigInt(s.order.id),
+            quantity: s.quantity,
+            bidPrice: { denom: s.order.ask_denom, amount: s.order.ask_amount },
+            disableAutoRetire: false,
+            retirementJurisdiction: config.defaultJurisdiction,
+            retirementReason: retirementReason,
+          }));
+
+          const retireOnlyMsgs = [{
+            typeUrl: "/regen.ecocredit.marketplace.v1.MsgBuyDirect",
+            value: {
+              buyer: regenAddress,
+              orders: retireOnlyBuyOrders,
+            },
+          }];
+
+          const roTxResult = await signAndBroadcastAsSubscriber(subscriberId, retireOnlyMsgs);
+          if (roTxResult.code !== 0) {
+            const errMsg = `Retire-only buy failed (code ${roTxResult.code}): ${roTxResult.rawLog || "unknown"}`;
+            // Funds remain in subscriber wallet for next month — not lost
+            if (!result.error) result.error = errMsg;
+            else result.error += `; ${errMsg}`;
+            // Adjust credits/spent to only count tradable success
+            const tradableCredits = tradableSelected.reduce((sum, s) => sum + parseFloat(s.quantity), 0);
+            const tradableCost = Number(tradableSelected.reduce((sum, s) => sum + s.costMicro, 0n) / BigInt(10 ** Math.max(denomExponent - 2, 0)));
+            result.creditsRetired = tradableCredits;
+            result.spentCents = tradableCost;
+            errors.push(`${batchDenom}: ${errMsg}`);
+            await sendRetirementFailureAlert({
+              batchDenom, subscriberId, error: errMsg,
+              subscriberBalances: subBalances,
+              allSellOrders: sellOrders,
+            }).catch(() => {});
+          } else {
+            // Record retire-only tx hash
+            if (!result.buyTxHash) result.buyTxHash = roTxResult.transactionHash;
+            result.sendRetireTxHash = result.sendRetireTxHash ?? roTxResult.transactionHash;
+          }
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          if (!result.error) result.error = errMsg;
+          else result.error += `; ${errMsg}`;
+          // Adjust to only count tradable success
+          const tradableCredits = tradableSelected.reduce((sum, s) => sum + parseFloat(s.quantity), 0);
+          const tradableCost = Number(tradableSelected.reduce((sum, s) => sum + s.costMicro, 0n) / BigInt(10 ** Math.max(denomExponent - 2, 0)));
+          result.creditsRetired = tradableCredits;
+          result.spentCents = tradableCost;
+          errors.push(`${batchDenom} retire-only: ${errMsg}`);
+          await sendRetirementFailureAlert({
+            batchDenom, subscriberId, error: errMsg,
+            allSellOrders: sellOrders,
+          }).catch(() => {});
+        }
+      }
+
+      // Check remaining supply and alert if low
       const remainingSupply = batchOrders.reduce((sum, o) => sum + parseFloat(o.quantity), 0) - totalCredits;
       if (remainingSupply < 10) {
         sendLowStockAlert(batchDenom, remainingSupply).catch(() => {});
@@ -463,6 +585,10 @@ export async function retireForSubscriber(options: {
       result.creditsRetired = 0;
       result.spentCents = 0;
       errors.push(result.error);
+      await sendRetirementFailureAlert({
+        batchDenom, subscriberId, error: msg,
+        allSellOrders: sellOrders,
+      }).catch(() => {});
     }
 
     batchResults.push(result);

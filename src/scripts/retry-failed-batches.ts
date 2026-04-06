@@ -141,7 +141,7 @@ async function main() {
     const orders = ordersByDenom.get(fb.batchDenom)!;
     const budgetMicro = BigInt(fb.budgetCents) * BigInt(10 ** (DENOM_EXPONENT - 2)); // cents → micro
 
-    // Greedy fill (same logic as retire-subscriber.ts)
+    // Fill from available orders (same logic as retire-subscriber.ts)
     let remainingBudget = budgetMicro;
     let totalCredits = 0;
     let totalCostMicro = 0n;

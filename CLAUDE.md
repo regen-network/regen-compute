@@ -39,7 +39,7 @@ src/
 │   ├── indexer.ts        # Regen Indexer GraphQL client (api.regen.network)
 │   ├── estimator.ts      # Footprint estimation heuristics
 │   ├── wallet.ts         # Cosmos wallet init, sign+broadcast (singleton)
-│   ├── order-selector.ts # Best-price sell order routing (cheapest-first greedy fill)
+│   ├── order-selector.ts # Best-price sell order routing (cheapest-first fill)
 │   ├── ecobridge.ts      # ecoBridge API client (registry, tokens, chains, widget URLs)
 │   └── payment/
 │       ├── types.ts      # PaymentProvider interface (authorize → capture two-phase)

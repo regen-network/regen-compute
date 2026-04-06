@@ -2,7 +2,7 @@
  * Best-price sell order routing.
  *
  * Finds the cheapest sell orders that match criteria and fills
- * greedily across multiple orders if needed.
+ * across multiple orders if needed.
  */
 
 import { listSellOrders, listCreditClasses, listBatches, getAllowedDenoms } from "./ledger.js";
@@ -112,7 +112,7 @@ export async function selectBestOrders(
     return 0;
   });
 
-  // Greedy fill
+  // Fill from cheapest available orders
   let remaining = quantity;
   const selected: SelectedOrder[] = [];
   let totalCostMicro = 0n;

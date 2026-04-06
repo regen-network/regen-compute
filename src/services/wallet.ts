@@ -13,6 +13,21 @@ import { regenProtoRegistry, regenAminoConverters } from "@regen-network/api";
 import { loadConfig } from "../config.js";
 import type { EncodeObject } from "@cosmjs/proto-signing";
 
+/**
+ * Build the shared signing options (registry, amino types, gas price)
+ * used by both the master wallet and subscriber wallets.
+ */
+export function buildRegenSigningOptions() {
+  const config = loadConfig();
+  const registry = new Registry([
+    ...defaultRegistryTypes,
+    ...(regenProtoRegistry as ReadonlyArray<[string, any]>),
+  ]);
+  const aminoTypes = new AminoTypes({ ...regenAminoConverters });
+  const gasPrice = GasPrice.fromString(config.gasPrice);
+  return { registry, aminoTypes, gasPrice };
+}
+
 let _wallet: DirectSecp256k1HdWallet | undefined;
 let _client: SigningStargateClient | undefined;
 let _address: string | undefined;
@@ -34,21 +49,10 @@ export async function initWallet(): Promise<{ address: string; client: SigningSt
   const [account] = await _wallet.getAccounts();
   _address = account.address;
 
-  // Build registry with default Cosmos types + all Regen proto types
-  const registry = new Registry([
-    ...defaultRegistryTypes,
-    ...(regenProtoRegistry as ReadonlyArray<[string, any]>),
-  ]);
-  const aminoTypes = new AminoTypes({ ...regenAminoConverters });
-
   _client = await SigningStargateClient.connectWithSigner(
     config.rpcUrl,
     _wallet,
-    {
-      registry,
-      aminoTypes,
-      gasPrice: GasPrice.fromString(config.gasPrice),
-    }
+    buildRegenSigningOptions(),
   );
 
   return { address: _address, client: _client };

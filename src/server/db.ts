@@ -587,6 +587,15 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
     console.log(`Migration: backfilled ${usersWithoutBadgeToken.length} badge tokens`);
   }
 
+  // Migration: add optional sell order IDs to monthly_credit_selection
+  const mcsCols = (_db.prepare("PRAGMA table_info(monthly_credit_selection)").all() as { name: string }[]).map(c => c.name);
+  if (!mcsCols.includes("batch1_sell_order_id")) {
+    _db.exec(`ALTER TABLE monthly_credit_selection ADD COLUMN batch1_sell_order_id TEXT`);
+    _db.exec(`ALTER TABLE monthly_credit_selection ADD COLUMN batch2_sell_order_id TEXT`);
+    _db.exec(`ALTER TABLE monthly_credit_selection ADD COLUMN batch3_sell_order_id TEXT`);
+    console.log("Migration: added sell order ID columns to monthly_credit_selection");
+  }
+
   return _db;
 }
 
@@ -914,6 +923,10 @@ export interface MonthlyCreditSelection {
   batch2_name: string;
   batch3_denom: string;
   batch3_name: string;
+  /** Optional target sell order IDs — when set, buy from this specific order */
+  batch1_sell_order_id: string | null;
+  batch2_sell_order_id: string | null;
+  batch3_sell_order_id: string | null;
   featured_batch: 1 | 2 | 3;
   confirmed: number;
   created_at: string;
@@ -949,17 +962,25 @@ export function upsertMonthlyCreditSelection(
   batch1Denom: string, batch1Name: string,
   batch2Denom: string, batch2Name: string,
   batch3Denom: string, batch3Name: string,
-  featuredBatch: 1 | 2 | 3 = 3
+  featuredBatch: 1 | 2 | 3 = 3,
+  sellOrderIds?: { batch1?: string; batch2?: string; batch3?: string },
 ): MonthlyCreditSelection {
   db.prepare(`
-    INSERT INTO monthly_credit_selection (month, batch1_denom, batch1_name, batch2_denom, batch2_name, batch3_denom, batch3_name, featured_batch)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO monthly_credit_selection (month, batch1_denom, batch1_name, batch2_denom, batch2_name, batch3_denom, batch3_name, featured_batch, batch1_sell_order_id, batch2_sell_order_id, batch3_sell_order_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(month) DO UPDATE SET
       batch1_denom = excluded.batch1_denom, batch1_name = excluded.batch1_name,
       batch2_denom = excluded.batch2_denom, batch2_name = excluded.batch2_name,
       batch3_denom = excluded.batch3_denom, batch3_name = excluded.batch3_name,
-      featured_batch = excluded.featured_batch, updated_at = datetime('now')
-  `).run(month, batch1Denom, batch1Name, batch2Denom, batch2Name, batch3Denom, batch3Name, featuredBatch);
+      featured_batch = excluded.featured_batch,
+      batch1_sell_order_id = excluded.batch1_sell_order_id,
+      batch2_sell_order_id = excluded.batch2_sell_order_id,
+      batch3_sell_order_id = excluded.batch3_sell_order_id,
+      updated_at = datetime('now')
+  `).run(
+    month, batch1Denom, batch1Name, batch2Denom, batch2Name, batch3Denom, batch3Name, featuredBatch,
+    sellOrderIds?.batch1 ?? null, sellOrderIds?.batch2 ?? null, sellOrderIds?.batch3 ?? null,
+  );
   return db.prepare("SELECT * FROM monthly_credit_selection WHERE month = ?").get(month) as MonthlyCreditSelection;
 }
 
