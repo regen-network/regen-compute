@@ -270,13 +270,6 @@ ${brandBreadcrumb(baseUrl, "About", "about")}
       "jobTitle": "Head of Science",
       "worksFor": { "@type": "Organization", "name": "Regen Network Development" },
       "description": "Ph.D. in Biological Sciences (Landscape Ecology). Designs MRV systems for ecological credit verification. Former Assistant Professor of GIS."
-    },
-    {
-      "@type": "Person",
-      "name": "Aaron Craelius",
-      "jobTitle": "CTO",
-      "worksFor": { "@type": "Organization", "name": "Regen Network Development" },
-      "description": "Built key Cosmos SDK contributions including the Upgrade Module. Architect of Regen Ledger, the blockchain recording ecological credit retirements."
     }
   ]
 }
@@ -351,16 +344,6 @@ ${brandBreadcrumb(baseUrl, "About", "about")}
           </div>
         </div>
 
-        <div class="person">
-          <div class="person-photo"><img src="/team/aaron.png" alt="Aaron Craelius" loading="lazy"></div>
-          <div class="person-info">
-            <h3>Aaron Craelius</h3>
-            <div class="role">CTO, Regen Network</div>
-            <p>
-              Aaron is the engineer who made it all real. He built key contributions to the Cosmos SDK, including the Upgrade Module that enables live blockchain upgrades without downtime. Under his technical leadership, Regen Network became a <strong>lead maintainer of the Cosmos SDK</strong> &mdash; a recognition of deep technical trust from the entire Cosmos ecosystem. The Regen Ledger &mdash; the sovereign proof-of-stake blockchain that records every ecological credit retirement &mdash; is his architecture.
-            </p>
-          </div>
-        </div>
       </div>
 
       <h2>What They Built</h2>
