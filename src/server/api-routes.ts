@@ -476,6 +476,20 @@ export function createApiRoutes(
       return;
     }
 
+    // Idempotency-Key support (audit C2). Standard header per Stripe/IETF
+    // draft-ietf-httpapi-idempotency-key-header. Body field is also accepted
+    // for clients that can't set headers easily.
+    const headerKey = req.headers["idempotency-key"];
+    const rawKey =
+      (Array.isArray(headerKey) ? headerKey[0] : headerKey) ??
+      (req.body && typeof req.body.idempotency_key === "string" ? req.body.idempotency_key : undefined);
+    const idempotencyKey = typeof rawKey === "string" && rawKey.trim().length > 0 ? rawKey.trim() : undefined;
+
+    if (idempotencyKey && idempotencyKey.length > 255) {
+      apiError(res, 400, "INVALID_REQUEST", "idempotency_key must be 255 characters or fewer");
+      return;
+    }
+
     try {
       const result = await executeRetirement({
         creditClass: credit_class,
@@ -483,6 +497,8 @@ export function createApiRoutes(
         beneficiaryName: beneficiary_name,
         jurisdiction,
         reason,
+        idempotencyKey,
+        db,
       });
 
       if (result.status === "success") {

@@ -13,6 +13,8 @@ import { CryptoPaymentProvider } from "./payment/crypto.js";
 import { StripePaymentProvider } from "./payment/stripe-stub.js";
 import type { PaymentProvider } from "./payment/types.js";
 import { buildRetirementReason } from "./retirement-reason.js";
+import { cacheRetirementResult, getCachedRetirementResult } from "../server/db.js";
+import type Database from "better-sqlite3";
 
 export interface RetirementParams {
   creditClass?: string;
@@ -20,6 +22,17 @@ export interface RetirementParams {
   beneficiaryName?: string;
   jurisdiction?: string;
   reason?: string;
+  /**
+   * Optional idempotency key. When provided alongside `db`, repeated calls
+   * with the same key return the cached result without re-broadcasting on
+   * chain. See AUDIT.md C2.
+   */
+  idempotencyKey?: string;
+  /**
+   * SQLite handle used to read/write the idempotency cache. The MCP tool
+   * path doesn't have a DB and can omit it; the REST API supplies one.
+   */
+  db?: Database.Database;
 }
 
 export interface RetirementResult {
@@ -131,7 +144,17 @@ function fallback(message: string, params: RetirementParams): RetirementResult {
  * the MCP tool (markdown) and REST API (JSON) can consume.
  */
 export async function executeRetirement(params: RetirementParams): Promise<RetirementResult> {
-  const { creditClass, beneficiaryName } = params;
+  const { creditClass, beneficiaryName, idempotencyKey, db } = params;
+
+  // Idempotency check (audit C2). When the caller supplied an Idempotency-Key
+  // and we have a DB to consult, return any cached result rather than
+  // re-broadcasting on chain. The wallet-level mutex in signAndBroadcast
+  // backstops this for concurrent in-flight calls; the cache covers
+  // serial retries (e.g. an HTTP client that retried after a flaky network).
+  if (idempotencyKey && db) {
+    const cached = getCachedRetirementResult(db, idempotencyKey);
+    if (cached) return cached.result as RetirementResult;
+  }
 
   // Path A: No wallet -> marketplace link
   if (!isWalletConfigured()) {
@@ -305,6 +328,15 @@ export async function executeRetirement(params: RetirementParams): Promise<Retir
       const remaining = await checkPrepaidBalance();
       if (remaining) {
         result.remainingBalanceCents = remaining.balance_cents;
+      }
+    }
+
+    if (idempotencyKey && db) {
+      try {
+        cacheRetirementResult(db, idempotencyKey, result.txHash ?? null, result);
+      } catch (cacheErr) {
+        // Cache failure must not fail the retirement — the on-chain side already succeeded.
+        console.error("Failed to cache idempotent retirement result:", cacheErr);
       }
     }
 

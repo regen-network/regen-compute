@@ -69,9 +69,33 @@ export async function getBalance(denom: string): Promise<bigint> {
   return BigInt(coin.amount);
 }
 
+/**
+ * Per-address mutex chain. CosmJS auto-sequence handling races when two
+ * signAndBroadcast calls overlap (both fetch the same sequence number,
+ * one tx fails). The wallet is also a singleton in this process, so a
+ * single chained-promise per address is enough.
+ */
+const _broadcastChains = new Map<string, Promise<unknown>>();
+
+async function withWalletLock<T>(address: string, fn: () => Promise<T>): Promise<T> {
+  const prior = _broadcastChains.get(address) ?? Promise.resolve();
+  let release: () => void;
+  const next = new Promise<void>((r) => { release = r; });
+  _broadcastChains.set(address, next);
+  try {
+    await prior.catch(() => undefined);
+    return await fn();
+  } finally {
+    release!();
+    if (_broadcastChains.get(address) === next) {
+      _broadcastChains.delete(address);
+    }
+  }
+}
+
 export async function signAndBroadcast(
   messages: EncodeObject[]
 ): Promise<DeliverTxResponse> {
   const { address, client } = await initWallet();
-  return client.signAndBroadcast(address, messages, "auto");
+  return withWalletLock(address, () => client.signAndBroadcast(address, messages, "auto"));
 }
