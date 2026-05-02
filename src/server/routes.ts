@@ -46,6 +46,7 @@ import {
   updateScheduledRetirement,
   cancelScheduledRetirements,
   setUserDisplayName,
+  setUserCountryIfMissing,
   getSubscriberByUserId,
   getCumulativeAttribution,
   isEventProcessed,
@@ -2155,6 +2156,16 @@ ${betaBannerJS()}
       if (!user) {
         user = createUser(db, email, stripeCustomerId);
         console.log(`New user created: ${user.api_key.slice(0, 12)}... (${email})`);
+      }
+
+      // #119: sync country from Stripe billing address into the user record.
+      // Only fills the column when the user hasn't set one explicitly.
+      const stripeCountry = session.customer_details?.address?.country;
+      if (stripeCountry) {
+        const updated = setUserCountryIfMissing(db, user.id, stripeCountry);
+        if (updated) {
+          console.log(`User ${user.id} country set from Stripe: ${stripeCountry}`);
+        }
       }
 
       // Extract billing interval from the Stripe subscription (if subscription mode)
