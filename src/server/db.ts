@@ -287,6 +287,18 @@ export function getDb(dbPath = "data/regen-compute.db"): Database.Database {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- Idempotency cache for on-chain retirement calls. When a caller passes
+    -- the same Idempotency-Key twice (e.g. retried HTTP request), the second
+    -- call returns the cached result without re-broadcasting to the chain.
+    CREATE TABLE IF NOT EXISTS retirement_idempotency_keys (
+      idempotency_key TEXT PRIMARY KEY,
+      tx_hash TEXT,
+      result_json TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_retirement_idempotency_created
+      ON retirement_idempotency_keys(created_at);
+
     CREATE TABLE IF NOT EXISTS crypto_payments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       chain TEXT NOT NULL,
@@ -1607,6 +1619,64 @@ export function isEventProcessed(db: Database.Database, eventId: string): boolea
 
 export function markEventProcessed(db: Database.Database, eventId: string, eventType: string): void {
   db.prepare("INSERT OR IGNORE INTO processed_webhook_events (event_id, event_type) VALUES (?, ?)").run(eventId, eventType);
+}
+
+// --- Retirement idempotency ---
+
+const IDEMPOTENCY_TTL_HOURS = 24;
+
+/**
+ * Look up a previously-cached retirement result for an idempotency key.
+ * Entries older than IDEMPOTENCY_TTL_HOURS are ignored (and lazily purged).
+ * Returns the cached JSON-decoded result, or null if not present / expired.
+ */
+export function getCachedRetirementResult(
+  db: Database.Database,
+  idempotencyKey: string,
+): { result: unknown; txHash: string | null } | null {
+  const row = db.prepare(
+    `SELECT tx_hash, result_json
+     FROM retirement_idempotency_keys
+     WHERE idempotency_key = ?
+       AND created_at > datetime('now', ?)`
+  ).get(idempotencyKey, `-${IDEMPOTENCY_TTL_HOURS} hours`) as
+    | { tx_hash: string | null; result_json: string }
+    | undefined;
+  if (!row) return null;
+  try {
+    return { result: JSON.parse(row.result_json), txHash: row.tx_hash };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Store a completed retirement result against an idempotency key. INSERT OR
+ * IGNORE so that a racing duplicate broadcast (which the wallet mutex should
+ * prevent, but defensively) cannot clobber the first result.
+ */
+export function cacheRetirementResult(
+  db: Database.Database,
+  idempotencyKey: string,
+  txHash: string | null,
+  result: unknown,
+): void {
+  db.prepare(
+    `INSERT OR IGNORE INTO retirement_idempotency_keys
+       (idempotency_key, tx_hash, result_json)
+     VALUES (?, ?, ?)`
+  ).run(idempotencyKey, txHash, JSON.stringify(result));
+}
+
+/**
+ * Best-effort cleanup of expired idempotency entries. Safe to call periodically.
+ */
+export function pruneExpiredIdempotencyKeys(db: Database.Database): number {
+  const result = db.prepare(
+    `DELETE FROM retirement_idempotency_keys
+     WHERE created_at <= datetime('now', ?)`
+  ).run(`-${IDEMPOTENCY_TTL_HOURS} hours`);
+  return result.changes;
 }
 
 // --- Organization helpers (#55) ---

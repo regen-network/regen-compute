@@ -29,7 +29,19 @@
       "post": {
         "operationId": "retireCredits",
         "summary": "Retire ecocredits on Regen Network",
-        "description": "Execute an on-chain credit retirement. When a wallet is configured, credits are purchased and retired via MsgBuyDirect. Otherwise, returns a marketplace link for manual purchase.",
+        "description": "Execute an on-chain credit retirement. When a wallet is configured, credits are purchased and retired via MsgBuyDirect. Otherwise, returns a marketplace link for manual purchase.\n\nIdempotency: pass an `Idempotency-Key` header (or `idempotency_key` body field) to make the call safely retriable. Repeated requests with the same key within 24 hours return the original result without re-broadcasting on chain.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Optional client-supplied key (max 255 chars). Repeated calls with the same key return the cached result without re-broadcasting.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -479,6 +491,11 @@
           "reason": {
             "type": "string",
             "description": "Reason for retirement"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "description": "Optional idempotency key (alternative to the Idempotency-Key header). Repeated calls with the same key within 24 hours return the cached result.",
+            "maxLength": 255
           }
         }
       },
