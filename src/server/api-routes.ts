@@ -28,6 +28,7 @@ import {
   createSubscriber,
   getCryptoPaymentByTxHash,
   createCryptoPayment,
+  normalizeTxHash,
   updateCryptoPaymentStatus,
   createScheduledRetirement,
   clearRenewalReminders,
@@ -222,6 +223,13 @@ export function createApiRoutes(
 
   // POST /api/v1/confirm-payment — agent confirms a crypto payment
   router.post("/api/v1/confirm-payment", async (req: Request, res: Response) => {
+    // Kill switch (fail closed). Crypto payment claims were switched off in Nov 2026 after a
+    // security review: claims are not bound to the sender, unknown tokens are priced on trust,
+    // and a claim can spend the operator wallet. Re-enable only after those are reworked.
+    if (process.env.CRYPTO_PAYMENTS_ENABLED !== "true") {
+      apiError(res, 503, "CRYPTO_PAYMENTS_UNAVAILABLE", "Crypto payments are temporarily unavailable. Please subscribe by card, or contact us.");
+      return;
+    }
     try {
       // IP-based rate limiting
       const ip = req.ip || req.socket.remoteAddress || "unknown";
@@ -237,7 +245,10 @@ export function createApiRoutes(
         rlWindow.count++;
       }
 
-      const { chain, tx_hash, email } = req.body ?? {};
+      const { chain, email } = req.body ?? {};
+      // Canonicalise hex hashes so the same transaction cannot be replayed with different letter case.
+      const rawTxHash = req.body?.tx_hash;
+      const tx_hash = typeof rawTxHash === "string" ? normalizeTxHash(rawTxHash) : rawTxHash;
 
       if (!chain || typeof chain !== "string") {
         apiError(res, 400, "INVALID_REQUEST", "chain is required (ethereum, bitcoin, solana, tron)");
@@ -325,6 +336,7 @@ export function createApiRoutes(
       // thing back so a retry re-provisions cleanly, instead of leaving a paid
       // customer stranded with a half-written, un-retryable record.
       let user!: User;
+      let keyRevealAllowed = false;
       let subscriber!: ReturnType<typeof createSubscriber>;
       const provision = db.transaction(() => {
         const cryptoPayment = createCryptoPayment(db, {
@@ -336,8 +348,13 @@ export function createApiRoutes(
           usd_value_cents: usdCents,
         });
 
+        // An email typed into this unauthenticated request is not proof of ownership:
+        // only hand back the API key when this request created the account. Existing
+        // accounts (matched by email or by paying wallet) get it from their dashboard.
+        const emailMatchedUser = boundUser ? undefined : (contactEmail ? getUserByEmail(db, contactEmail) : undefined);
+        keyRevealAllowed = !emailMatchedUser && !boundUser;
         user = boundUser
-          ?? (contactEmail ? getUserByEmail(db, contactEmail) : undefined)
+          ?? emailMatchedUser
           ?? createUser(db, contactEmail, null);
 
         subscriber = createSubscriber(
@@ -397,7 +414,8 @@ export function createApiRoutes(
 
       res.json({
         status: "provisioned",
-        api_key: user.api_key,
+        api_key: keyRevealAllowed ? user.api_key : undefined,
+        ...(keyRevealAllowed ? {} : { api_key_notice: `Subscription added to your existing account. Sign in at ${baseUrl}/dashboard/login to view your API key.` }),
         subscription: {
           plan,
           amount_usd: (usdCents / 100).toFixed(2),
@@ -417,9 +435,9 @@ export function createApiRoutes(
           ? "Lifetime subscription provisioned. Your ecological impact starts now — all funds deployed within 24 months."
           : `${totalMonths}-month subscription provisioned. Credits will be retired monthly on your behalf.`,
         next_steps: {
-          set_api_key: `export REGEN_API_KEY=${user.api_key}`,
+          set_api_key: `export REGEN_API_KEY=${keyRevealAllowed ? user.api_key : "<your existing key>"}`,
           install_mcp: "claude mcp add -s user regen-compute -- npx regen-compute",
-          check_status: `curl -H 'Authorization: Bearer ${user.api_key}' ${baseUrl}/api/v1/subscription`,
+          check_status: `curl -H 'Authorization: Bearer ${keyRevealAllowed ? user.api_key : "<your existing key>"}' ${baseUrl}/api/v1/subscription`,
         },
       });
     } catch (err) {
@@ -487,7 +505,9 @@ export function createApiRoutes(
     // atomically after the retirement. Without this, any valid API key could drain
     // the wallet. Admins are exempt (operator/testing use).
     const freshUser = getUserByApiKey(db, user.api_key) ?? user;
-    const isAdmin = !!freshUser.email && ADMIN_EMAILS.has(freshUser.email);
+    // No admin exemption: an API key alone must never unlock uncapped operator-wallet spend
+    // (a stolen admin key was used against this endpoint in Nov 2026).
+    const isAdmin = false as boolean;
     if (!isAdmin && freshUser.balance_cents <= 0) {
       apiError(
         res, 402, "INSUFFICIENT_BALANCE",

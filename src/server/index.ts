@@ -56,6 +56,9 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   const baseUrl = process.env.REGEN_SERVER_URL ?? `http://localhost:${port}`;
 
   const app = express();
+  // Behind a local reverse proxy (Caddy): take the client IP from X-Forwarded-For so
+  // per-IP rate limits are per client, not one shared bucket for 127.0.0.1.
+  app.set("trust proxy", "loopback");
 
   // Agent view middleware — intercepts ?view=agent on any page, mount first
   const agentViewRoutes = createAgentViewRoutes(baseUrl);
@@ -531,7 +534,7 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   if (stripe) {
     // x402 payment protocol middleware (opt-in via X402_ENABLED=true)
     // Must be mounted BEFORE API routes so it can intercept unauthenticated requests
-    if (process.env.X402_ENABLED === "true") {
+    if (process.env.X402_ENABLED === "true" && process.env.CRYPTO_PAYMENTS_ENABLED === "true") {
       const x402Middleware = createX402Middleware({ db, baseUrl });
       app.use(x402Middleware);
       console.log("  x402 protocol: enabled (self-settling, no facilitator)");
