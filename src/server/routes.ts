@@ -161,6 +161,19 @@ function ipRateLimiter(maxPerMinute: number) {
   };
 }
 
+/**
+ * A Checkout session only proves who the customer is once it has COMPLETED.
+ * Anyone can create a session with an arbitrary customer_email and never pay,
+ * so an open/expired/unpaid session must never unlock that email's account
+ * (API key, profile). Trials complete with payment_status "no_payment_required".
+ */
+function isCheckoutSessionSettled(session: Stripe.Checkout.Session): boolean {
+  return (
+    session.status === "complete" &&
+    (session.payment_status === "paid" || session.payment_status === "no_payment_required")
+  );
+}
+
 export function createRoutes(stripe: Stripe | null, db: Database.Database, baseUrl: string, config?: Config): Router {
   const router = Router();
 
@@ -2039,6 +2052,10 @@ ${betaBannerJS()}
       let sessionEmail: string | null = null;
       try {
         const session = await stripe.checkout.sessions.retrieve(session_id);
+        if (!isCheckoutSessionSettled(session)) {
+          res.status(403).json({ error: "Checkout session is not completed" });
+          return;
+        }
         if (String(session.metadata?.org_id ?? "") !== String(org.id)) {
           res.status(403).json({ error: "Session does not match this organization" });
           return;
@@ -2383,6 +2400,11 @@ ${betaBannerJS()}
       }
 
       const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (!isCheckoutSessionSettled(session)) {
+        console.warn(`Success page refused: checkout session ${session.id} is not completed/paid (status=${session.status}, payment_status=${session.payment_status})`);
+        res.status(402).send("This checkout has not been completed. If you just paid, refresh in a few seconds.");
+        return;
+      }
       const email = session.customer_email ?? session.customer_details?.email ?? null;
 
       if (!email) {
@@ -2856,6 +2878,10 @@ ${betaBannerJS()}
       }
 
       const session = await stripe.checkout.sessions.retrieve(session_id);
+      if (!isCheckoutSessionSettled(session)) {
+        res.status(403).json({ error: "Checkout session is not completed" });
+        return;
+      }
       const email = session.customer_email ?? session.customer_details?.email ?? null;
       if (!email) {
         res.status(400).json({ error: "No email found for session" });
