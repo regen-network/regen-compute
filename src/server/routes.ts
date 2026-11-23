@@ -174,6 +174,19 @@ function isCheckoutSessionSettled(session: Stripe.Checkout.Session): boolean {
   );
 }
 
+/**
+ * A paid Checkout session proves a payment happened, NOT that the payer owns the
+ * email typed into it (Stripe never verifies it). So a session may only unlock
+ * an account that was created FOR that session (by its webhook, i.e. after the
+ * session was opened). A pre-existing account must log in by magic link, which
+ * does prove email ownership.
+ */
+function userWasCreatedForSession(user: { created_at: string }, session: Stripe.Checkout.Session): boolean {
+  const createdSec = Date.parse(String(user.created_at).replace(" ", "T") + "Z") / 1000;
+  if (!Number.isFinite(createdSec) || !session.created) return false;
+  return createdSec >= session.created - 5;
+}
+
 export function createRoutes(stripe: Stripe | null, db: Database.Database, baseUrl: string, config?: Config): Router {
   const router = Router();
 
@@ -2418,6 +2431,15 @@ ${betaBannerJS()}
         return;
       }
 
+      // Only reveal the API key to the browser when this checkout created the account.
+      const revealKey = userWasCreatedForSession(user, session);
+      const shownKey = revealKey
+        ? user.api_key
+        : `&lt;sign in at ${baseUrl}/dashboard/login to view your API key&gt;`;
+      if (!revealKey) {
+        console.warn(`Success page: API key withheld for pre-existing user ${user.id} (session ${session.id})`);
+      }
+
       res.setHeader("Content-Type", "text/html");
 
       if (isSubscription) {
@@ -2501,12 +2523,12 @@ ${betaBannerJS()}
         <button class="setup-toggle" onclick="toggleSetup()">Show setup instructions</button>
         <div class="setup-details" id="setupDetails">
           <p style="margin:8px 0;"><strong>Your API Key</strong></p>
-          <span class="regen-api-key">${user.api_key}</span>
+          <span class="regen-api-key">${shownKey}</span>
           <p style="font-size:13px;color:var(--regen-gray-500);margin-bottom:16px;">This key links your AI assistant to your subscription. Copy it somewhere safe.</p>
           <p style="margin:8px 0;"><strong>Step 1.</strong> Install the MCP server:</p>
           <pre class="regen-pre">claude mcp add -s user regen-compute -- npx regen-compute</pre>
           <p style="margin:8px 0;"><strong>Step 2.</strong> Set your API key (add to your shell profile or <span class="regen-code">.env</span>):</p>
-          <pre class="regen-pre">export REGEN_API_KEY=${user.api_key}
+          <pre class="regen-pre">export REGEN_API_KEY=${shownKey}
 export REGEN_BALANCE_URL=${baseUrl}</pre>
           <p style="margin:8px 0;"><strong>That's it.</strong> Your assistant can now show your subscription status and ecological impact. Try asking: <em>"What's my regenerative compute impact?"</em></p>
         </div>
@@ -2652,7 +2674,7 @@ ${betaBannerJS()}
     <div class="regen-card" style="margin:24px 0;">
       <div class="regen-card__body">
         <strong style="color:var(--regen-navy);">Your API Key</strong>
-        <span class="regen-api-key">${user.api_key}</span>
+        <span class="regen-api-key">${shownKey}</span>
         <p style="font-size:14px;color:var(--regen-gray-500);"><strong>Save this key!</strong> You'll need it to connect your AI assistant.</p>
       </div>
     </div>
@@ -2661,7 +2683,7 @@ ${betaBannerJS()}
     <p><strong>1. Install the MCP server</strong> (if you haven't already):</p>
     <pre class="regen-pre">claude mcp add -s user regen-compute -- npx regen-compute</pre>
     <p><strong>2. Set your API key</strong> — add to your shell profile or <span class="regen-code">.env</span>:</p>
-    <pre class="regen-pre">export REGEN_API_KEY=${user.api_key}
+    <pre class="regen-pre">export REGEN_API_KEY=${shownKey}
 export REGEN_BALANCE_URL=${baseUrl}</pre>
     <p><strong>3. Done!</strong> In Claude Code, just say "retire 1 carbon credit" and it'll happen automatically from your prepaid balance.</p>
 
@@ -2891,6 +2913,10 @@ ${betaBannerJS()}
       const user = getUserByEmail(db, email);
       if (!user) {
         res.status(404).json({ error: "User not found" });
+        return;
+      }
+      if (!userWasCreatedForSession(user, session)) {
+        res.status(403).json({ error: "Sign in to your dashboard to change your profile" });
         return;
       }
 

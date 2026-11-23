@@ -176,6 +176,10 @@ async function fetchErc20Metadata(
   } catch {
     // default to 18
   }
+  // A hostile token contract can report absurd decimals to stall the server.
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 36) {
+    throw new Error("Unsupported token (decimals out of range)");
+  }
 
   // Try to call symbol() — method sig 0x95d89b41
   try {
@@ -743,6 +747,11 @@ export async function verifyPayment(
 ): Promise<VerifiedPayment> {
   const normalizedChain = CHAIN_ALIASES[chain.toLowerCase().trim()] ?? chain.toLowerCase().trim();
 
+  // Canonical form: lower-case hex hashes so one transaction has exactly one identity.
+  {
+    const h = txHash.trim();
+    txHash = /^(0x)?[0-9a-fA-F]{64}$/.test(h) ? h.toLowerCase() : h;
+  }
   assertValidTxHash(normalizedChain, txHash);
 
   // EVM chains

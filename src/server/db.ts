@@ -1626,7 +1626,7 @@ export function createMagicLinkToken(db: Database.Database, email: string, ttlMi
 export function verifyMagicLinkToken(db: Database.Database, token: string): string | null {
   // Atomic update + fetch in one query — prevents TOCTOU race
   const row = db.prepare(
-    "UPDATE magic_links SET used = 1 WHERE token = ? AND used = 0 AND expires_at > datetime('now') RETURNING email"
+    "UPDATE magic_links SET used = 1 WHERE token = ? AND used = 0 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now') RETURNING email"
   ).get(token) as { email: string } | undefined;
 
   return row?.email ?? null;
@@ -1708,8 +1708,18 @@ export interface CryptoPayment {
   created_at: string;
 }
 
+/** Lower-case hex transaction hashes (EVM/Bitcoin/Tron); leave base58 (Solana) untouched. */
+export function normalizeTxHash(txHash: string): string {
+  const h = txHash.trim();
+  return /^(0x)?[0-9a-fA-F]{64}$/.test(h) ? h.toLowerCase() : h;
+}
+
 export function getCryptoPaymentByTxHash(db: Database.Database, txHash: string): CryptoPayment | undefined {
-  return db.prepare("SELECT * FROM crypto_payments WHERE tx_hash = ?").get(txHash) as CryptoPayment | undefined;
+  const h = normalizeTxHash(txHash);
+  if (h !== txHash.trim() || /^(0x)?[0-9a-f]{64}$/.test(h)) {
+    return db.prepare("SELECT * FROM crypto_payments WHERE tx_hash = ? COLLATE NOCASE").get(h) as CryptoPayment | undefined;
+  }
+  return db.prepare("SELECT * FROM crypto_payments WHERE tx_hash = ?").get(h) as CryptoPayment | undefined;
 }
 
 export function createCryptoPayment(
