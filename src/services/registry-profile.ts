@@ -8,6 +8,7 @@
  * Auth flow (replicating what app.regen.network does via Keplr):
  * 1. GET  /marketplace/v1/csrfToken             → CSRF token + session cookie
  * 2. GET  /marketplace/v1/wallet-auth/nonce      → nonce for signing
+ *    (404 = no account yet → sign with nonce "" and login creates it)
  * 3. Sign ADR-036 arbitrary message with derived key
  * 4. POST /marketplace/v1/wallet-auth/login      → session established
  * 5. POST /marketplace/v1/graphql                → updateAccountById mutation
@@ -129,11 +130,11 @@ export async function updateRegistryProfile(
     const { token: csrfToken } = await csrfRes.json() as { token: string };
     if (!csrfToken) throw new Error("Failed to get CSRF token");
 
-    // 2. Get nonce (may need to create account first)
+    // 2. Get nonce
     const description = profile.description ??
       "Regen Compute subscriber — funding verified ecological regeneration through AI at https://compute.regen.network/";
 
-    let nonceRes = await fetch(
+    const nonceRes = await fetch(
       `${REGISTRY_API}/marketplace/v1/wallet-auth/nonce?` +
         new URLSearchParams({ userAddress: address }),
       {
@@ -145,67 +146,22 @@ export async function updateRegistryProfile(
       },
     );
     jar.addFromResponse(nonceRes);
-    let nonceData = await nonceRes.json() as { nonce?: string; error?: string };
 
-    // Account doesn't exist yet — create it via GraphQL, then retry nonce
-    if (nonceRes.status === 404 || !nonceData.nonce) {
-      console.log(`Registry: creating account for ${address}...`);
-      const createRes = await fetch(`${REGISTRY_API}/marketplace/v1/graphql`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": csrfToken,
-          Cookie: jar.toString(),
-        },
-        body: JSON.stringify({
-          query: `mutation CreateAccount($input: CreateAccountInput!) {
-            createAccount(input: $input) { account { id } }
-          }`,
-          variables: {
-            input: {
-              account: {
-                type: "USER",
-                addr: address,
-                name: profile.name,
-                description,
-                ...(profile.image && { image: profile.image }),
-                ...(profile.bgImage && { bgImage: profile.bgImage }),
-              },
-            },
-          },
-        }),
-      });
-      jar.addFromResponse(createRes);
-      const createData = await createRes.json() as {
-        data?: { createAccount?: { account?: { id: string } } };
-        errors?: Array<{ message: string }>;
-      };
-      if (createData.errors?.length) {
-        throw new Error(`CreateAccount failed: ${createData.errors.map((e) => e.message).join(", ")}`);
+    // No account yet: /wallet-auth/nonce returns 404. Logged-out callers can no
+    // longer create accounts through GraphQL, so do what a first Keplr login on
+    // app.regen.network does — sign the login message with an empty nonce and
+    // let POST /wallet-auth/login create the account.
+    let nonce: string;
+    if (nonceRes.status === 404) {
+      console.log(`Registry: no account for ${address} yet, first login will create it...`);
+      nonce = "";
+    } else {
+      const nonceData = await nonceRes.json().catch(() => ({})) as { nonce?: string; error?: string };
+      if (!nonceRes.ok || !nonceData.nonce) {
+        throw new Error(`Failed to get nonce (HTTP ${nonceRes.status}${nonceData.error ? `: ${nonceData.error}` : ""})`);
       }
-      const createdId = createData.data?.createAccount?.account?.id;
-      if (!createdId) throw new Error("CreateAccount returned no account ID");
-      console.log(`Registry: account created (id=${createdId}), retrying nonce...`);
-
-      // Retry nonce
-      nonceRes = await fetch(
-        `${REGISTRY_API}/marketplace/v1/wallet-auth/nonce?` +
-          new URLSearchParams({ userAddress: address }),
-        {
-          method: "GET",
-          headers: {
-            "X-CSRF-TOKEN": csrfToken,
-            Cookie: jar.toString(),
-          },
-        },
-      );
-      jar.addFromResponse(nonceRes);
-      nonceData = await nonceRes.json() as { nonce?: string };
+      nonce = nonceData.nonce;
     }
-
-    const nonce = nonceData.nonce;
-    if (!nonce) throw new Error("Failed to get nonce after account creation");
 
     // 3. Sign the login message (same format as Keplr signArbitrary)
     const arbitraryData = JSON.stringify({
