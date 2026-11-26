@@ -17,6 +17,7 @@
 
 import { join } from "path";
 import { readFileSync } from "fs";
+import { createHash, timingSafeEqual } from "crypto";
 import express from "express";
 import helmet from "helmet";
 import Stripe from "stripe";
@@ -589,9 +590,16 @@ export function startServer(options: { port?: number; dbPath?: string } = {}) {
   }, 24 * 60 * 60 * 1000);
 
   // --- Password-protected strategy document ---
-  const STRATEGY_PASSWORD = process.env.STRATEGY_PASSWORD ?? "regen";
+  // No default password: unless STRATEGY_PASSWORD is set (16+ chars) the route does not exist.
+  const STRATEGY_PASSWORD = process.env.STRATEGY_PASSWORD ?? "";
+  const strategyDigest = (v: string) => createHash("sha256").update(v).digest();
   app.get("/strategy", (req, res) => {
-    if (req.query.p === STRATEGY_PASSWORD) {
+    if (STRATEGY_PASSWORD.length < 16) {
+      res.status(404).send("Not found");
+      return;
+    }
+    const supplied = typeof req.query.p === "string" ? req.query.p : "";
+    if (timingSafeEqual(strategyDigest(supplied), strategyDigest(STRATEGY_PASSWORD))) {
       try {
         const html = readFileSync(join(process.cwd(), "regen-compute-strategy.html"), "utf-8");
         res.send(html);

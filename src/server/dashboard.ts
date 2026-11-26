@@ -96,13 +96,36 @@ function checkLoginRateLimit(email: string): boolean {
   return true;
 }
 
+// Per-IP cap on login-link requests, on top of the per-email cap above. Stops one
+// client from walking a list of addresses (each attempt costs an outbound email
+// when the address is real).
+const loginAttemptsByIp = new Map<string, { count: number; windowStart: number }>();
+const LOGIN_IP_RATE_LIMIT = 8;
+const LOGIN_IP_RATE_WINDOW_MS = 900_000; // 15 minutes
+
+function checkLoginIpRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const existing = loginAttemptsByIp.get(ip);
+  if (!existing || now - existing.windowStart >= LOGIN_IP_RATE_WINDOW_MS) {
+    loginAttemptsByIp.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  if (existing.count >= LOGIN_IP_RATE_LIMIT) return false;
+  existing.count++;
+  return true;
+}
+
 // Clean up stale rate limit entries every 10 minutes
-setInterval(() => {
+const loginRateCleanup = setInterval(() => {
   const now = Date.now();
   for (const [key, val] of loginAttempts) {
     if (now - val.windowStart > LOGIN_RATE_WINDOW_MS) loginAttempts.delete(key);
   }
+  for (const [key, val] of loginAttemptsByIp) {
+    if (now - val.windowStart > LOGIN_IP_RATE_WINDOW_MS) loginAttemptsByIp.delete(key);
+  }
 }, 600_000);
+if (typeof loginRateCleanup.unref === "function") loginRateCleanup.unref();
 
 // --- Badge system ---
 
@@ -1386,61 +1409,46 @@ export function createDashboardRoutes(
   });
 
   // POST /dashboard/login — send magic link email
-  router.post("/dashboard/login", async (req: Request, res: Response) => {
+  //
+  // The response is identical whether or not the address belongs to a subscriber,
+  // and the email is sent after the response, so neither the page nor its timing
+  // reveals which addresses have accounts.
+  const LOGIN_SENT_MESSAGE = "If an account exists for that email, a login link has been sent. Check your inbox.";
+  router.post("/dashboard/login", (req: Request, res: Response) => {
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    res.setHeader("Content-Type", "text/html");
 
     if (!email || !email.includes("@")) {
-      res.setHeader("Content-Type", "text/html");
       res.send(renderLoginPage("Please enter a valid email address."));
       return;
     }
 
-    // Rate limit
+    // Rate limits: per client IP, then per email address
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    if (!checkLoginIpRateLimit(ip)) {
+      res.status(429).send(renderLoginPage("Too many login attempts. Please try again in a few minutes."));
+      return;
+    }
     if (!checkLoginRateLimit(email)) {
-      res.setHeader("Content-Type", "text/html");
       res.send(renderLoginPage("Too many login attempts. Please try again in an hour."));
       return;
     }
 
-    // Check that this email has a subscriber account
+    res.send(renderLoginPage(undefined, LOGIN_SENT_MESSAGE));
+
+    // Only subscribers get a link; everyone gets the same page.
     const user = getUserByEmail(db, email);
-    if (!user) {
-      res.setHeader("Content-Type", "text/html");
-      res.send(renderLoginPage(
-        undefined,
-        undefined,
-        `No subscription found for <strong>${escapeHtml(email)}</strong>. <a href="/#pricing">Subscribe</a> to get started, or try another email you may have used at checkout.`,
-      ));
-      return;
-    }
+    if (!user || !getSubscriberByUserId(db, user.id)) return;
 
-    const subscriber = getSubscriberByUserId(db, user.id);
-    if (!subscriber) {
-      res.setHeader("Content-Type", "text/html");
-      res.send(renderLoginPage(
-        undefined,
-        undefined,
-        `No active subscription found for <strong>${escapeHtml(email)}</strong>. <a href="/#pricing">Subscribe</a> to get started, or try another email you may have used at checkout.`,
-      ));
-      return;
-    }
-
-    // Create magic link token
-    const token = createMagicLinkToken(db, email, config.magicLinkTtlMinutes);
-    const verifyUrl = `${baseUrl}/dashboard/verify?token=${token}`;
-
-    // Send email
     try {
-      await sendMagicLinkEmail(email, verifyUrl, config.magicLinkTtlMinutes);
+      const token = createMagicLinkToken(db, email, config.magicLinkTtlMinutes);
+      const verifyUrl = `${baseUrl}/dashboard/verify?token=${token}`;
+      sendMagicLinkEmail(email, verifyUrl, config.magicLinkTtlMinutes).catch((err) => {
+        console.error("Failed to send magic link email:", err instanceof Error ? err.message : err);
+      });
     } catch (err) {
-      console.error("Failed to send magic link email:", err instanceof Error ? err.message : err);
-      res.setHeader("Content-Type", "text/html");
-      res.send(renderLoginPage("Failed to send email. Please try again."));
-      return;
+      console.error("Failed to create magic link:", err instanceof Error ? err.message : err);
     }
-
-    res.setHeader("Content-Type", "text/html");
-    res.send(renderLoginPage(undefined, "If an account exists for that email, a login link has been sent. Check your inbox."));
   });
 
   // GET /dashboard/verify?token=...
