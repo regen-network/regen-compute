@@ -163,27 +163,36 @@ export async function updateRegistryProfile(
       nonce = nonceData.nonce;
     }
 
-    // 3. Sign the login message (same format as Keplr signArbitrary)
-    const arbitraryData = JSON.stringify({
-      title: "Regen Network Login",
-      description: "This is a transaction that allows Regen Network to authenticate you with our application.",
-      nonce,
-    });
-    const signature = await signArbitrary(signer, address, arbitraryData);
+    // 3 + 4. Sign the login message (same format as Keplr signArbitrary) and log in
+    const login = async (withNonce: string) => {
+      const arbitraryData = JSON.stringify({
+        title: "Regen Network Login",
+        description: "This is a transaction that allows Regen Network to authenticate you with our application.",
+        nonce: withNonce,
+      });
+      const signature = await signArbitrary(signer, address, arbitraryData);
+      const loginRes = await fetch(`${REGISTRY_API}/marketplace/v1/wallet-auth/login`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken,
+          Cookie: jar.toString(),
+        },
+        body: JSON.stringify({ signature }),
+      });
+      jar.addFromResponse(loginRes);
+      return await loginRes.json().catch(() => ({})) as { user?: { accountId: string }; error?: string };
+    };
 
-    // 4. Login
-    const loginRes = await fetch(`${REGISTRY_API}/marketplace/v1/wallet-auth/login`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": csrfToken,
-        Cookie: jar.toString(),
-      },
-      body: JSON.stringify({ signature }),
-    });
-    jar.addFromResponse(loginRes);
-    const loginData = await loginRes.json() as { user?: { accountId: string }; error?: string };
+    let loginData = await login(nonce);
+    // The nonce endpoint may answer 200 with a throwaway nonce for an address
+    // that has no account yet (so it can't be used to test which addresses
+    // exist). That nonce can't log in; the first login is the empty-nonce one.
+    if (!loginData.user?.accountId && nonce !== "") {
+      console.log(`Registry: login with issued nonce failed for ${address}, retrying as first login...`);
+      loginData = await login("");
+    }
     if (loginData.error || !loginData.user?.accountId) {
       throw new Error(`Login failed: ${loginData.error || "no accountId returned"}`);
     }
