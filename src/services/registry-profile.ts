@@ -7,11 +7,16 @@
  *
  * Auth flow (replicating what app.regen.network does via Keplr):
  * 1. GET  /marketplace/v1/csrfToken             → CSRF token + session cookie
- * 2. GET  /marketplace/v1/wallet-auth/nonce      → nonce for signing
- *    (404 = no account yet → sign with nonce "" and login creates it)
+ * 2. GET  /marketplace/v1/wallet-auth/nonce      → nonce for signing. For an
+ *    address with no account yet it also sets a one-use wallet-signup cookie
+ *    (valid 5 minutes); sending it back with the login creates the account.
  * 3. Sign ADR-036 arbitrary message with derived key
  * 4. POST /marketplace/v1/wallet-auth/login      → session established
  * 5. POST /marketplace/v1/graphql                → updateAccountById mutation
+ *
+ * Registry limits: nonce + login together are capped at 10 requests per minute
+ * per IP (about 5 profile syncs a minute; 429 with Retry-After beyond that), and
+ * new wallet signups at 60 per hour overall.
  */
 
 import { Secp256k1HdWallet, makeSignDoc, serializeSignDoc } from "@cosmjs/amino";
@@ -21,6 +26,17 @@ import { stringToPath } from "@cosmjs/crypto";
 import { loadConfig } from "../config.js";
 
 const REGISTRY_API = process.env.REGEN_REGISTRY_API_URL || "https://api.regen.network";
+
+/** fetch that waits out one 429 (honouring Retry-After, capped at 65s) before giving up. */
+async function registryFetch(url: string, init: RequestInit): Promise<Response> {
+  const res = await fetch(url, init);
+  if (res.status !== 429) return res;
+  const retryAfter = Number(res.headers.get("retry-after"));
+  const waitSec = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter, 65) : 30;
+  console.log(`Registry: rate limited, retrying in ${waitSec}s...`);
+  await new Promise((resolve) => setTimeout(resolve, waitSec * 1000));
+  return fetch(url, init);
+}
 
 /**
  * Derive an Amino signer for a subscriber's Regen address.
@@ -113,11 +129,29 @@ export async function updateRegistryProfile(
   subscriberId: number,
   profile: { name: string; description?: string; image?: string; bgImage?: string },
 ): Promise<ProfileUpdateResult> {
+  try {
+    const signer = await deriveSubscriberSigner(subscriberId);
+    return await syncRegistryProfile(signer, profile, `subscriber=${subscriberId}`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`Registry profile update failed: subscriber=${subscriberId} error=${msg}`);
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Log in to the registry with the given signer (creating the account on first
+ * login) and set its profile. Exported so the flow can be exercised with a
+ * throwaway wallet.
+ */
+export async function syncRegistryProfile(
+  signer: Secp256k1HdWallet,
+  profile: { name: string; description?: string; image?: string; bgImage?: string },
+  label = "wallet",
+): Promise<ProfileUpdateResult> {
   const jar = new CookieJar();
 
   try {
-    // 0. Derive signer and address
-    const signer = await deriveSubscriberSigner(subscriberId);
     const [account] = await signer.getAccounts();
     const address = account.address;
 
@@ -134,7 +168,7 @@ export async function updateRegistryProfile(
     const description = profile.description ??
       "Regen Compute subscriber — funding verified ecological regeneration through AI at https://compute.regen.network/";
 
-    const nonceRes = await fetch(
+    const nonceRes = await registryFetch(
       `${REGISTRY_API}/marketplace/v1/wallet-auth/nonce?` +
         new URLSearchParams({ userAddress: address }),
       {
@@ -147,54 +181,38 @@ export async function updateRegistryProfile(
     );
     jar.addFromResponse(nonceRes);
 
-    // No account yet: /wallet-auth/nonce returns 404. Logged-out callers can no
-    // longer create accounts through GraphQL, so do what a first Keplr login on
-    // app.regen.network does — sign the login message with an empty nonce and
-    // let POST /wallet-auth/login create the account.
-    let nonce: string;
-    if (nonceRes.status === 404) {
-      console.log(`Registry: no account for ${address} yet, first login will create it...`);
-      nonce = "";
-    } else {
-      const nonceData = await nonceRes.json().catch(() => ({})) as { nonce?: string; error?: string };
-      if (!nonceRes.ok || !nonceData.nonce) {
-        throw new Error(`Failed to get nonce (HTTP ${nonceRes.status}${nonceData.error ? `: ${nonceData.error}` : ""})`);
-      }
-      nonce = nonceData.nonce;
+    // The registry issues a nonce for any valid address. For one with no account
+    // yet, the response also sets a one-use wallet-signup cookie (now in the jar);
+    // logging in with this nonce and that cookie creates the account.
+    const nonceData = await nonceRes.json().catch(() => ({})) as { nonce?: string; error?: string };
+    if (!nonceRes.ok || !nonceData.nonce) {
+      throw new Error(`Failed to get nonce (HTTP ${nonceRes.status}${nonceData.error ? `: ${nonceData.error}` : ""})`);
     }
+    const nonce = nonceData.nonce;
 
-    // 3 + 4. Sign the login message (same format as Keplr signArbitrary) and log in
-    const login = async (withNonce: string) => {
-      const arbitraryData = JSON.stringify({
-        title: "Regen Network Login",
-        description: "This is a transaction that allows Regen Network to authenticate you with our application.",
-        nonce: withNonce,
-      });
-      const signature = await signArbitrary(signer, address, arbitraryData);
-      const loginRes = await fetch(`${REGISTRY_API}/marketplace/v1/wallet-auth/login`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": csrfToken,
-          Cookie: jar.toString(),
-        },
-        body: JSON.stringify({ signature }),
-      });
-      jar.addFromResponse(loginRes);
-      return await loginRes.json().catch(() => ({})) as { user?: { accountId: string }; error?: string };
-    };
+    // 3. Sign the login message (same format as Keplr signArbitrary)
+    const arbitraryData = JSON.stringify({
+      title: "Regen Network Login",
+      description: "This is a transaction that allows Regen Network to authenticate you with our application.",
+      nonce,
+    });
+    const signature = await signArbitrary(signer, address, arbitraryData);
 
-    let loginData = await login(nonce);
-    // The nonce endpoint may answer 200 with a throwaway nonce for an address
-    // that has no account yet (so it can't be used to test which addresses
-    // exist). That nonce can't log in; the first login is the empty-nonce one.
-    if (!loginData.user?.accountId && nonce !== "") {
-      console.log(`Registry: login with issued nonce failed for ${address}, retrying as first login...`);
-      loginData = await login("");
-    }
+    // 4. Login (the jar carries the CSRF cookie and, for a new address, the signup cookie)
+    const loginRes = await registryFetch(`${REGISTRY_API}/marketplace/v1/wallet-auth/login`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrfToken,
+        Cookie: jar.toString(),
+      },
+      body: JSON.stringify({ signature }),
+    });
+    jar.addFromResponse(loginRes);
+    const loginData = await loginRes.json().catch(() => ({})) as { user?: { accountId: string }; error?: string };
     if (loginData.error || !loginData.user?.accountId) {
-      throw new Error(`Login failed: ${loginData.error || "no accountId returned"}`);
+      throw new Error(`Login failed (HTTP ${loginRes.status}): ${loginData.error || "no accountId returned"}`);
     }
     const accountId = loginData.user.accountId;
 
@@ -236,14 +254,14 @@ export async function updateRegistryProfile(
     }
 
     console.log(
-      `Registry profile updated: subscriber=${subscriberId} addr=${address} ` +
+      `Registry profile updated: ${label} addr=${address} ` +
       `accountId=${accountId} name="${profile.name}"`
     );
 
     return { success: true, accountId };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`Registry profile update failed: subscriber=${subscriberId} error=${msg}`);
+    console.error(`Registry profile update failed: ${label} error=${msg}`);
     return { success: false, error: msg };
   }
 }
